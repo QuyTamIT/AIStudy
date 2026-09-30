@@ -1,0 +1,110 @@
+@startuml 04_activity_ask_flow
+'============================================================
+' AI Study Mentor — Activity Diagram: hỏi một câu
+' Đối chiếu FR3, FR4, FR5, FR6 + AI Cost Management + N2
+'
+' Quy ước: mọi chuyển lane dùng |Tên| (có pipe đóng),
+'          mọi nhãn nhiều dòng dùng \n.
+'============================================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Segoe UI
+skinparam defaultFontSize 12
+skinparam activityBackgroundColor #F2F3FA
+skinparam activityBorderColor #3F4390
+skinparam activityDiamondBackgroundColor #FFF6E0
+skinparam activityDiamondBorderColor #B8860B
+skinparam activityArrowColor #3F4390
+skinparam activityBarColor #3F4390
+skinparam linetype ortho
+
+title Activity — Hỏi một câu và nhận câu trả lời (FR3, FR4, FR5, FR6, N2)
+
+|Student|
+|UI|
+|Repo|
+|AI|
+|DB|
+
+|Student|
+start
+:Điền câu hỏi\nhoặc chọn ảnh bài tập;
+
+|UI|
+:Nhấn **Ask**;
+
+|Repo|
+:Chuẩn hoá văn bản\nquestionHash = SHA256(normalise(text));
+:Tìm trong cache TRƯỚC khi gọi AI\n(giảm chi phí API theo brief);
+
+|DB|
+:findByHash(questionHash);
+
+if (Tìm thấy bản ghi trùng hash?) then (Có)  :<b>CACHE HIT</b>\nservedFromCache = true\n<b>Chi phí API = 0đ</b>;
+else (Không)
+  |Repo|
+  :Quét 50 câu gần nhất, so khớp mờ\nJaccard với ngưỡng 0.85;
+  if (Có câu nào ≥ 0.85?) then (Có)  :<b>Tái dùng kết quả cũ</b>\nmatchedQuestionId = id gốc\n<b>Chi phí API = 0đ</b>;
+  else (Không)
+    |UI|
+    if (Đang offline?) then (Có)  :Xếp vào PendingSyncQueue\nbáo "sẽ gửi khi có mạng"\n(NFR Offline);
+      stop
+    else (Không)
+      |Repo|
+      :Mã hoá ảnh AES-GCM\n→ path + iv;
+      |AI|
+      :POST generateContent\n(text + ảnh + cấp học + phong cách);
+      :Trả về JSON;
+      |Repo|
+      :Parse thành AiAnswer\n(môn, độ khó, các bước,\ngiải thích rút gọn, cách khác,\nkhái niệm chính, lỗi thường gặp,\ncâu hỏi gợi ý, số token);
+    endif
+  endif
+endif
+
+|Repo|
+:insert QuestionAnswer\n(lưu vào Room — đọc được offline);
+:Gọi award(XpReason.ASK_QUESTION)\n→ XpRules.xpFor = 5 XP;
+:Cập nhật streak ngày;
+
+|DB|
+:BadgeCatalog.evaluate()\ntra huy hiệu FIRST_QUESTION\nnếu đây là câu đầu tiên;
+
+|Repo|
+if (Lặp lại mắc cùng lỗi?) then (Có)
+  :schedule MISTAKE_ALERT;
+else (Không)
+endif
+
+|UI|
+:Hiển thị câu trả lời\n— có nhãn "tái dùng kết quả"\nnếu rơi vào nhánh cache;
+
+|Student|
+:Đọc và học;
+
+if (Muốn hỗ trợ thêm?) then (Có)
+  |Repo|
+  :Gọi improvement\n(SIMPLIFY hoặc ALTERNATIVE);
+  |AI|
+  :Trả về giải thích rút gọn\nhoặc cách làm khác;
+  |UI|
+  :Chèn thêm vào khung câu trả lời;
+else (Không)
+endif
+
+:Chạm nút <b>Bookmark</b>;
+
+|Repo|
+:isBookmarked = true;
+:schedule REVIEW_REMINDER;
+stop
+
+note
+  <b>Điểm mấu chốt của thiết kế này:</b>
+  tra cứu cache diễn ra <b>trước</b> khi gọi AI.
+  Đây là hiện thực hoá trực tiếp yêu cầu
+  "AI Cost Management" của brief —
+  hỏi trùng không tốn tiền, hỏi mới mới tốn.
+end note
+
+@enduml

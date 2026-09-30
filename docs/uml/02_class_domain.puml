@@ -1,0 +1,238 @@
+@startuml 02_class_domain
+'============================================================
+' AI Study Mentor — CLASS DIAGRAM 1/3: Domain Model
+' (entity + enum) — nền tảng cho M1 "software design document"
+'
+' Đối chiếu: docs/PART1_M1_SOFTWARE_DESIGN.md mục 4
+' Phần persistence (DAO / AppDatabase) nằm ở 02b
+'============================================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Segoe UI
+skinparam defaultFontSize 12
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F7F8FC
+skinparam packageBorderColor #8A90B8
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #3F4390
+skinparam classAttributeIconSize 0
+skinparam stereotypeCBackgroundColor #EEF0FB
+skinparam packageFontStyle bold
+skinparam linetype ortho
+
+title Class — Domain Model: 7 entity, 9 enum (AI Study Mentor)
+
+'==================== ENTITY ====================
+package "domain.model.entity" {
+
+  entity User {
+    +Long id <<PK>>
+    +String email <<UK>>
+    +String passwordHash
+    +String passwordSalt
+    +String displayName
+    +String? twoFactorSecret
+    +Int totalXp
+    +Int level
+    +Int currentStreakDays
+    +Long? lastQuestionDate
+    +Long createdAt
+    +Long? lastLoginAt
+  }
+
+  entity Profile {
+    +Long id <<PK>>
+    +Long userId <<FK, UK>>
+    +EducationLevel educationLevel
+    +ExplanationStyle preferredStyle
+    +Set<Subject> subjectCodes
+    +Long? onboardedAt
+  }
+
+  entity QuestionAnswer {
+    +Long id <<PK>>
+    +Long userId <<FK>>
+    +Subject subjectCode
+    +String questionText
+    +String? questionImagePath
+    +String? questionImageIv
+    +String questionHash
+    +Boolean servedFromCache
+    +Long? matchedQuestionId
+    +Difficulty? detectedDifficulty
+    +String answerText
+    +String? simplifiedExplanation
+    +String? alternativeApproach
+    +String? keyConcepts
+    +String? commonMistakes
+    +String? followUpQuestions
+    +Boolean isBookmarked
+    +Int reviewTimeSeconds
+    +Int inputTokens
+    +Int outputTokens
+    +Long createdAt
+  }
+
+  entity QuizItem {
+    +Long id <<PK>>
+    +Long userId <<FK>>
+    +Long? sourceQuestionId <<FK>>
+    +Subject subjectCode
+    +QuestionType questionType
+    +String prompt
+    +String? optionA
+    +String? optionB
+    +String? optionC
+    +String? optionD
+    +String correctAnswer
+    +String? explanation
+    +Boolean? isCorrect <<null = chưa làm>>
+    +Int attempts
+    +Long createdAt
+    +Long? answeredAt
+  }
+
+  entity XpEvent {
+    +Long id <<PK>>
+    +Long userId <<FK>>
+    +XpReason reason
+    +Int xpAwarded
+    +Long createdAt
+  }
+
+  entity UserBadge {
+    +Long userId <<PK, FK>>
+    +String badgeCode <<PK>>
+    +Long earnedAt
+  }
+
+  entity Notification {
+    +Long id <<PK>>
+    +Long userId <<FK>>
+    +NotificationType type
+    +String title
+    +String body
+    +String? deepLink
+    +Boolean isRead
+    +Long createdAt
+  }
+}
+
+'==================== ENUM ====================
+package "domain.model.enums" {
+
+  enum EducationLevel {
+    MIDDLE
+    HIGH
+    UNIVERSITY
+  }
+
+  enum ExplanationStyle {
+    SHORT
+    DETAILED
+    STEP_BY_STEP
+  }
+
+  enum Subject {
+    MATHEMATICS
+    SCIENCE
+    PROGRAMMING
+    HISTORY
+    LANGUAGE
+  }
+
+  enum Difficulty {
+    EASY
+    MEDIUM
+    HARD
+  }
+
+  enum QuestionType {
+    MULTIPLE_CHOICE
+    SHORT_ANSWER
+    FILL_BLANK
+  }
+
+  enum XpReason {
+    ASK_QUESTION
+    REVIEW_ANSWER
+    COMPLETE_QUIZ
+    QUIZ_BONUS
+    DAILY_STREAK
+  }
+
+  enum NotificationType {
+    REVIEW_REMINDER
+    MISTAKE_ALERT
+    MOTIVATIONAL
+    DAILY_SUMMARY
+  }
+
+  enum BadgeCode {
+    FIRST_QUESTION
+    STREAK_7
+    SUBJECT_EXPLORER
+    QUIZ_MASTER
+    EARLY_BIRD
+  }
+}
+
+'==================== QUAN HỆ 1-n ====================
+User "1" -- "0..1" Profile : has
+User "1" -- "*" QuestionAnswer : asks
+User "1" -- "*" QuizItem : owns
+User "1" -- "*" XpEvent : earns
+User "1" -- "*" UserBadge : unlocks
+User "1" -- "*" Notification : receives
+QuestionAnswer "1" -- "0..*" QuizItem : source
+
+'==================== ENTITY dùng ENUM ====================
+Profile --> EducationLevel
+Profile --> ExplanationStyle
+Profile --> Subject
+QuestionAnswer --> Subject
+QuestionAnswer --> Difficulty
+QuizItem --> Subject
+QuizItem --> QuestionType
+XpEvent --> XpReason
+Notification --> NotificationType
+UserBadge --> BadgeCode
+
+note right of QuestionAnswer
+  <b>Bảng trung tâm của hệ thống</b>
+  (phục vụ FR3 – FR6).
+
+  <b>questionHash</b> + <b>servedFromCache</b>
+  là cơ chế <b>AI Cost Management</b>
+  mà brief bắt buộc:
+  "Reduce repeated AI calls through caching"
+  và "Detect similar questions and reuse answers".
+end note
+
+note bottom of Profile
+  <b>Không có bảng nối profile_subjects.</b>
+  Chỉ 5 môn cố định trong brief và luôn
+  đọc trọn hồ sơ ⇒ <i>Set&lt;Subject&gt;</i> +
+  TypeConverter rẻ hơn bảng nối.
+  Đây là denormalise <b>có chủ ý</b>:
+  thống kê theo môn lấy từ
+  question_answers.subjectCode, không lấy từ hồ sơ.
+end note
+
+note bottom of QuizItem
+  <b>isCorrect phải nullable.</b>
+  null = chưa làm, false = làm sai.
+  Nếu dùng false cho cả hai trường hợp
+  thì tỉ lệ chính xác (FR8) bị tính sai.
+end note
+
+note bottom of UserBadge
+  <b>Không có bảng badges.</b>
+  Danh mục huy hiệu là hằng số của nhà phát
+  triển trong <i>BadgeCatalog</i> (xem 02b),
+  không phải dữ liệu người dùng.
+  Khóa chính tổ hợp chặn nhận trùng huy hiệu.
+end note
+
+@enduml

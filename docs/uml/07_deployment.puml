@@ -1,0 +1,81 @@
+@startuml 07_deployment
+'============================================================
+' AI Study Mentor — Deployment Diagram
+' Mục "implementation" của M1
+'============================================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Segoe UI
+skinparam defaultFontSize 12
+skinparam nodeBackgroundColor #FFFFFF
+skinparam nodeBorderColor #3F4390
+skinparam databaseBackgroundColor #F2F3FA
+skinparam databaseBorderColor #3F4390
+skinparam cloudBackgroundColor #F7F8FC
+skinparam cloudBorderColor #8A90B8
+skinparam linetype ortho
+
+title Deployment — nơi mỗi thành phần thực sự chạy
+
+node "Thiết bị Android\nminSdk 33 (Android 13+)\ncompileSdk / targetSdk 37" as Device {
+
+  node "APK — AI Study Mentor\n(1 Activity, ~30 MB debug)" as APK
+
+  node "Tiến trình ứng dụng\nsingle process" as Proc {
+    database "Room / SQLite\n7 bảng, file\ndatabases/ai_study.db" as DB
+    storage "EncryptedSharedPreferences\n(userId, email)" as SP
+    storage "filesDir/questions/*.enc\nAES-GCM-256, khoá trong\nAndroid Keystore" as FS
+  }
+}
+
+cloud "Google Gemini API\ngenerativelanguage.googleapis.com" as G
+
+cloud "Hàng đợi chờ (trong máy)\nPendingSyncQueue\n— không phải server" as Q
+
+node "Công cụ build (máy dev)" as Dev {
+  node "Android Studio\nJBR 25 + AGP 9.3.3\nGradle 9.5.0, KSP 2.3.12,\nRoom 2.7.2" as AS
+  node "Git — local only\n(không push)" as Git
+}
+
+APK -- Proc
+Proc -- DB
+Proc -- SP
+Proc -- FS
+
+Proc ..> G : "HTTPS POST\nBearer <apiKey>\nchỉ khi cache MISS" : HTTPS
+Q -- Proc
+Proc --> Q : "xếp khi offline,\ndrain khi có mạng"
+
+AS --> APK : assembleDebug
+Git -- AS : source
+
+note bottom of G
+  <b>Không có server của BrightPath.</b>
+  Đây là quyết định cố ý cho MVP 14 tuần
+  của team junior — nêu ở P2 như rủi ro:
+  leaderboard không toàn cục, không có đồng bộ
+  nhiều thiết bị.
+  <b>API key</b> đặt trong local.properties →
+  BuildConfig, <b>không</b> commit lên git.
+end note
+
+note right of DB
+  <b>Mã hoá:</b>
+  • Ảnh câu hỏi → AES-GCM (mã hoá thật)
+  • Phiên đăng nhập → EncryptedSharedPreferences
+  • SQLite <b>không</b> mã hoá cột
+    ⇒ câu hỏi/câu trả lời phải mã hoá ở
+    tầng ứng dụng (CryptoBox) — trade-off với
+    khả năng index. Ghi rõ trong design doc.
+end note
+
+note bottom of Dev
+  <b>Ổn định môi trường:</b>
+  thư mục dự án chứa dấu tiếng Việt khiến
+  <b>gradlew.bat</b> không chạy trực tiếp
+  (mã hoá OEM) và AGP chặn path không ASCII.
+  Bằng chứng cho P2 "rủi ro môi trường".
+end note
+
+@enduml

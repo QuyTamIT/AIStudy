@@ -1,0 +1,188 @@
+@startuml 03c_class_platform
+'============================================================
+' AI Study Mentor — CLASS DIAGRAM 5/5: Platform layer
+' Gemini (interface + 2 hiện thực) + mạng + bảo mật
+'============================================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Segoe UI
+skinparam defaultFontSize 12
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F7F8FC
+skinparam packageBorderColor #8A90B8
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #3F4390
+skinparam classAttributeIconSize 0
+skinparam stereotypeCBackgroundColor #EEF0FB
+skinparam packageFontStyle bold
+skinparam linetype ortho
+
+title Class — Platform layer: AI, mạng và bảo mật
+
+'==================== AI ====================
+package "platform.ai" {
+  interface AiClient {
+    +suspend fun generateAnswer(request: AiRequest): Result<AiAnswer>
+    +suspend fun generateQuiz(request: QuizRequest): Result<List<QuizItem>>
+    +suspend fun generateInsights(summary: ProgressSummary): Result<List<String>>
+  }
+
+  class GeminiAiClient {
+    -String endpoint
+    -String apiKey
+    --
+    +suspend fun call(model: String, body: JSONObject): JSONObject
+  }
+
+  class FakeAiClient <<test double>> {
+    +String fixturePath
+    --
+    +suspend fun generateAnswer(request: AiRequest): Result<AiAnswer>
+  }
+
+  class AiRequest {
+    +questionText: String
+    +imageBase64: String?
+    +educationLevel: EducationLevel
+    +preferredStyle: ExplanationStyle
+    +subjectHint: Subject?
+  }
+
+  class QuizRequest {
+    +sourceText: String
+    +subject: Subject
+    +count: Int
+    +types: List<QuestionType>
+  }
+}
+
+'==================== MẠNG ====================
+package "platform.net" {
+  class ConnectivityObserver {
+    +val isOnline: StateFlow<Boolean>
+    --
+    +fun observe(): Flow<Boolean>
+  }
+  class PendingSyncQueue {
+    +suspend fun enqueue(text: String, imagePath: String?)
+    +suspend fun drain(): Int
+  }
+}
+
+'==================== BẢO MẬT ====================
+package "platform.security" {
+  class PasswordHasher {
+    {static} +Int ITERATIONS = 120_000
+    --
+    +suspend fun hash(password: String): HashResult
+    +suspend fun verify(password: String, hash: String, salt: String): Boolean
+    +fun strength(password: String): PasswordStrength
+  }
+
+  class HashResult {
+    +hash: String
+    +salt: String
+  }
+
+  enum PasswordStrength {
+    WEAK
+    FAIR
+    STRONG
+  }
+
+  class CryptoBox {
+    +suspend fun encrypt(plain: String): CipherText
+    +suspend fun decrypt(text: CipherText): String
+  }
+
+  class CipherText {
+    +iv: String
+    +payload: String
+  }
+
+  class ImageStore {
+    +suspend fun encryptToAppStorage(uri: Uri): CipherText
+    +suspend fun read(path: String, iv: String): ByteArray
+  }
+
+  class SessionManager {
+    +fun isLoggedIn(): Boolean
+    +fun currentUserId(): Long?
+    +suspend fun save(userId: Long, email: String)
+    +suspend fun clear()
+  }
+
+  class Totp {
+    +suspend fun generate(secret: String): String
+    +suspend fun verify(secret: String, code: String): Boolean
+  }
+}
+
+'===== XẾP DỌC (hidden edge) để vừa trang A4 =====
+AiClient -[hidden]-> AiRequest
+AiRequest -[hidden]-> QuizRequest
+QuizRequest -[hidden]-> GeminiAiClient
+GeminiAiClient -[hidden]-> FakeAiClient
+FakeAiClient -[hidden]-> ConnectivityObserver
+ConnectivityObserver -[hidden]-> PendingSyncQueue
+PasswordHasher -[hidden]-> HashResult
+HashResult -[hidden]-> PasswordStrength
+PasswordStrength -[hidden]-> CryptoBox
+CryptoBox -[hidden]-> CipherText
+CipherText -[hidden]-> ImageStore
+ImageStore -[hidden]-> SessionManager
+SessionManager -[hidden]-> Totp
+
+'==================== ĐA HÌNH ====================
+AiClient <|.. GeminiAiClient
+AiClient <|.. FakeAiClient
+AiClient ..> AiRequest
+AiClient ..> QuizRequest
+GeminiAiClient ..> AiAnswer : trả về >
+FakeAiClient ..> AiAnswer : trả về >
+
+'==================== MẠNG + BẢO MẬT ====================
+GeminiAiClient ..> ConnectivityObserver : kiểm tra >
+PendingSyncQueue ..> ConnectivityObserver : theo dõi >
+PasswordHasher ..> HashResult : trả về >
+PasswordHasher ..> PasswordStrength : đánh giá >
+CryptoBox ..> CipherText : trả về >
+ImageStore ..> CipherText : trả về >
+ImageStore ..> CryptoBox : dùng >
+Totp ..> SessionManager : đọc secret >
+
+note bottom of AiClient
+  <b>Hợp đồng quan trọng nhất của dự án.</b>
+  Tầng use case chỉ biết interface này, không
+  biết Gemini tồn tại. Hệ quả:
+  (1) test bằng <b>FakeAiClient</b> — không tốn tiền,
+  không phụ thuộc mạng nên test ổn định;
+  (2) đổi sang ChatGPT chỉ cần thêm một lớp mới.
+end note
+
+note bottom of FakeAiClient
+  <b>Không bao giờ gọi Gemini thật trong test.</b>
+  Ba lý do: (1) tốn tiền thật,
+  (2) phụ thuộc mạng nên test không ổn định —
+  một test "flaky" thì vô dụng,
+  (3) NFR Performance đòi chạy lặp lại nhiều vòng.
+end note
+
+note bottom of PasswordHasher
+  <b>PBKDF2-HMAC-SHA256, 120.000 vòng, salt 16 byte
+  ngẫu nhiên mỗi người dùng.</b>
+  Không lưu mật khẩu dạng rõ. Hai tài khoản
+  cùng mật khẩu cho hai hash khác nhau nên
+  không thể dùng hash để dò mật khẩu hàng loạt.
+end note
+
+note bottom of CryptoBox
+  <b>Giới hạn thành thật cần nói trong design doc:</b>
+  Room/SQLite <b>không</b> mã hoá cột. Muốn mã hoá
+  questionText và answerText thì phải mã hoá ở tầng
+  ứng dụng, đổi lại không index/search được plaintext.
+  Đó là trade-off thật, không phải giải pháp hoàn hảo.
+end note
+
+@enduml

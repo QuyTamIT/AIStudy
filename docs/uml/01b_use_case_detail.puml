@@ -1,0 +1,186 @@
+@startuml 01b_use_case_detail
+'============================================================
+' AI Study Mentor — Use Case Diagram (DETAIL theo nhóm FR)
+' Bổ trợ cho 01_use_case.puml — dùng khi cần chứng minh
+' "mọi nhóm yêu cầu trong brief đều được phủ".
+'============================================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Segoe UI
+skinparam defaultFontSize 11
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F7F8FC
+skinparam packageBorderColor #8A90B8
+skinparam usecaseBorderColor #3F4390
+skinparam usecaseBackgroundColor #FFFFFF
+skinparam usecaseArrowColor #3F4390
+skinparam packageFontStyle bold
+skinparam linetype ortho
+
+rectangle "FR1 + FR2 — Account & Onboarding" as R1 {
+  usecase "Manage account" as U1
+  usecase "Register" as U11
+  usecase "Log in / Log out" as U12
+  usecase "Enable 2FA" as U13
+  usecase "View session status" as U15
+  usecase "Complete onboarding" as U2
+  usecase "Pick education level" as U21
+  usecase "Pick subjects" as U22
+  usecase "Pick explanation style" as U23
+  usecase "Edit preferences" as U24
+}
+
+rectangle "FR3 + FR4 + FR5 — Ask the AI" as R2 {
+  usecase "Ask a question" as U3
+  usecase "Submit text" as U31
+  usecase "Upload image" as U32
+  usecase "Get instant answer" as U4
+  usecase "View steps" as U42
+  usecase "See subject & difficulty" as U43
+  usecase "Simplified explanation" as U51
+  usecase "Alternative approach" as U52
+  usecase "Key concepts" as U53
+  usecase "Common mistakes" as U54
+  usecase "Follow-up questions" as U55
+}
+
+rectangle "FR6 + N2 — Personal Library" as R3 {
+  usecase "Use my library" as U6
+  usecase "Browse history" as U61
+  usecase "Search" as U62
+  usecase "Bookmark" as U63
+  usecase "Group by subject" as U64
+  usecase "Frequent-topic tips" as U65
+  usecase "Read offline" as UN4
+  usecase "Queue & sync" as UN5
+}
+
+rectangle "FR7 — Practice" as R4 {
+  usecase "Practise" as U7
+  usecase "Generate questions" as U71
+  usecase "Attempt\n(MC / short / fill-in)" as U72
+  usecase "Instant feedback" as U73
+}
+
+rectangle "FR8 + FR9 + FR10 — Progress" as R5 {
+  usecase "Track progress" as U8
+  usecase "View dashboard" as U81
+  usecase "Total questions" as U82
+  usecase "Most-studied subjects" as U83
+  usecase "Accuracy rate" as U84
+  usecase "Time reviewing" as U85
+  usecase "AI insights" as U86
+  usecase "Earn XP & badges" as U9
+  usecase "Level up" as U92
+  usecase "Unlock avatar" as U93
+  usecase "Leaderboard" as U95
+  usecase "Notifications" as U10
+  usecase "Review reminder" as U101
+  usecase "Mistake alert" as U102
+  usecase "Motivation" as U103
+  usecase "Daily / weekly summary" as U104
+}
+
+rectangle "N1 + N3 — Security & Privacy" as R6 {
+  usecase "Trust the app" as UN
+  usecase "Password strength" as UN1
+  usecase "Encrypted storage" as UN2
+  usecase "Abuse detection" as UN3
+  usecase "Export / delete data" as UN6
+}
+
+'===== XẾP DỌC (hidden edge) để vừa trang A4 =====
+U1 -[hidden]-> U2
+U2 -[hidden]-> U3
+U3 -[hidden]-> U6
+U6 -[hidden]-> U7
+U7 -[hidden]-> U8
+U8 -[hidden]-> U10
+U10 -[hidden]-> UN
+
+' --- FR1 / FR2
+U1 -- U11
+U1 -- U12
+U1 -- U13
+U1 -- U15
+U2 -- U21
+U2 -- U22
+U2 -- U23
+U2 -- U24
+U11 ..> U21 : <<include>>\nfirst run
+U21 ..> U22 : <<include>>
+U22 ..> U23 : <<include>>
+U11 ..> UN1 : <<include>>
+U12 ..> UN1 : <<extend>>\nif weak
+U12 ..> UN1 : <<include>>
+
+' --- FR3 / FR4 / FR5
+U3 -- U31
+U3 -- U32
+U3 -- U4
+U4 -- U42
+U4 -- U43
+U4 -- U51
+U4 -- U52
+U4 -- U53
+U4 -- U54
+U4 -- U55
+U31 ..> U4 : <<include>>
+U32 ..> U4 : <<include>>
+U4 ..> UN3 : <<extend>>\nif abuse pattern
+
+' --- FR6 / N2
+U6 -- U61
+U6 -- U62
+U6 -- U63
+U6 -- U64
+U6 -- U65
+U61 -- UN4 : <<extend>>\nautomatic
+U72 ..> UN5 : <<extend>>\nif offline
+U63 ..> UN2 : <<extend>>\nimages encrypted
+
+' --- FR7
+U7 -- U71
+U7 -- U72
+U7 -- U73
+U61 ..> U71 : <<extend>>
+U72 ..> U73 : <<include>>
+
+' --- FR8 / FR9 / FR10
+U8 -- U81
+U8 -- U82
+U8 -- U83
+U8 -- U84
+U8 -- U85
+U8 -- U86
+U8 -- U9
+U8 -- U10
+U81 ..> U82 : <<include>>
+U81 ..> U83 : <<include>>
+U81 ..> U84 : <<include>>
+U81 ..> U85 : <<include>>
+U81 ..> U86 : <<extend>>
+U9 -- U92
+U9 -- U93
+U9 -- U95
+U92 ..> U93 : <<extend>>
+U4  ..> U9  : <<extend>>
+U72 ..> U9  : <<extend>>
+U81 ..> U95 : <<extend>>\nlocal only
+U10 -- U101
+U10 -- U102
+U10 -- U103
+U10 -- U104
+U63  ..> U101 : <<extend>>
+U72  ..> U102 : <<extend>>
+U81  ..> U103 : <<extend>>
+U81  ..> U104 : <<extend>>
+
+' --- N1 / N3
+UN -- UN1
+UN -- UN2
+UN -- UN3
+UN -- UN6
+
+@enduml

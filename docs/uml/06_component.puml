@@ -1,0 +1,107 @@
+@startuml 06_component
+'============================================================
+' AI Study Mentor — Component Diagram
+' Cho thấy ranh giới module + interface đi qua ranh giới
+'============================================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Segoe UI
+skinparam defaultFontSize 12
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F7F8FC
+skinparam packageBorderColor #8A90B8
+skinparam componentBackgroundColor #FFFFFF
+skinparam componentBorderColor #3F4390
+skinparam componentFontStyle bold
+skinparam packageFontStyle bold
+skinparam linetype ortho
+
+title Component — ranh giới tầng và interface đi qua ranh giới
+
+package "app : Android (Gradle module duy nhất)" {
+
+  package "<<Presentation — Compose>>" as C1 {
+    [MainActivity] as MainActivity
+    [MainShell + AppNavHost] as Shell
+    [Screens ×9] as Screens
+    [ViewModels ×6] as VMs
+    [UiState ×5] as States
+  }
+
+  package "<<Domain — thuần Kotlin>>" as C2 {
+    [Repository interfaces ×6] as Repos
+    [Models: AiAnswer, ProgressSummary,\nQuizFeedback, ProfileDraft, LeaderboardRow] as Models
+    [Rules: XpRules, BadgeCatalog,\nProfileDefaults, QuestionSimilarity] as Rules
+  }
+
+  package "<<Data — Room + Security>>" as C3 {
+    [AppDatabase] as DB
+    [DAOs ×7] as DAOs
+    [PasswordHasher + CryptoBox\n+ ImageStore + SessionManager + Totp] as Sec
+  }
+
+  package "<<Platform — I/O>>" as C4 {
+    [AiClient\n<<interface>>] as AiIface
+    [GeminiAiClient] as Gemini
+    [FakeAiClient] as Fake
+    [ConnectivityObserver\n+ PendingSyncQueue] as Net
+  }
+}
+
+MainActivity --> Shell
+Shell --> Screens
+Screens --> VMs
+VMs --> States
+
+VMs ..> Repos : <<calls>>
+Repos --> Models
+Rules --> Models
+Repos ..> Rules : <<applies>>
+
+Repos ..> DAOs : <<implements DAO>>\nRoom codegen
+DAOs --> DB
+Sec ..> Repos : <<used by>>
+
+Repos ..> AiIface : <<calls>>\nabstract — không phụ thuộc Gemini cụ thể
+AiIface <|.. Gemini
+AiIface <|.. Fake
+Gemini ..> Net : HTTPS
+Repos ..> Net : offline / sync
+
+note as N1
+  <b>Hợp đồng 1 — UI ↔ Domain</b>
+  ViewModel chỉ biết <i>interface</i> Repository.
+  ⇒ test được bằng fake trong unit test.
+  ⇒ đổi Room sang SQLDelight cũng không
+  phải sửa UI.
+end note
+
+note as N2
+  <b>Hợp đồng 2 — Domain ↔ AI</b>
+  Domain chỉ biết <i>interface</i> AiClient.
+  ⇒ <b>FakeAiClient</b> thay thế Gemini trong test
+  (không tốn tiền, không flaky).
+  ⇒ có thể thử model khác (ChatGPT)
+  mà không sửa tầng trên.
+end note
+
+note as N3
+  <b>Hợp đồng 3 — quy tắc phụ thuộc</b>
+  Chỉ đi xuống, không đi ngược.
+  Kiểm tra bằng
+  <b>./gradlew :app:check</b>
+  (Android Lint dependency rule)
+  + unit test cho <i>domain</i> không cần emulator.
+end note
+
+note bottom of C2
+  <b>Vì sao <i>domain</i> phải "thuần Kotlin"?</b>
+  Đây là lập luận định lượng dùng cho D1:
+  XP curve, ngưỡng similarity và kiểm tra mật khẩu
+  là phần khó test nhất. Tách chúng ra package
+  không phụ thuộc Android ⇒ chạy JUnit thuần trong
+  vài giây, chạy lại liên tục, không cần emulator.
+end note
+
+@enduml

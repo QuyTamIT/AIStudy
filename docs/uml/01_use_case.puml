@@ -1,0 +1,71 @@
+@startuml 01_use_case
+'============================================================
+' AI Study Mentor — Use Case Diagram (OVERVIEW)
+' Đối chiếu: Assignment part 1, Activity 3 (M1)
+'
+' Cấu trúc: actor nối tới 7 use case cấp cao nhất.
+' Chi tiết FR1..FR10 nằm ở 01b_use_case_detail.puml
+'============================================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Segoe UI
+skinparam defaultFontSize 13
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F7F8FC
+skinparam packageBorderColor #8A90B8
+skinparam usecaseBorderColor #3F4390
+skinparam usecaseBackgroundColor #FFFFFF
+skinparam usecaseArrowColor #3F4390
+skinparam actorBorderColor #3F4390
+skinparam actorBackgroundColor #EEF0FB
+skinparam rectangleBorderColor #3F4390
+skinparam rectangleFontStyle bold
+skinparam linetype ortho
+
+actor "Student\n(học sinh: trung school → university)" as Student #EEF0FB
+actor "Google\nGemini API" as Gemini <<external system>>
+
+rectangle "AI Study Mentor" {
+  usecase "<<FR1 + FR2>>\nManage account\n& complete onboarding" as UC1
+  usecase "<<FR3 + FR4 + FR5>>\nAsk a question and\nget instant answer" as UC3
+  usecase "<<FR6>>\nUse my library\n(history, search, bookmark)" as UC6
+  usecase "<<FR7>>\nPractise with\nAI-generated questions" as UC7
+  usecase "<<FR8 + FR9>>\nTrack progress,\nearn XP and badges" as UC8
+  usecase "<<FR10>>\nReceive notifications\nand reminders" as UC10
+  usecase "<<N1 + N3>>\nTrust the app\n(security & privacy)" as UCN
+}
+
+Student -- UC1
+Student -- UC3
+Student -- UC6
+Student -- UC7
+Student -- UC8
+Student -- UC10
+Student -- UCN
+
+Gemini ..> UC3 : <<generates answer>>
+Gemini ..> UC7 : <<generates questions>>
+
+UC1  ..> UC3  : <<include>>\nready to ask
+UC3  ..> UC6  : <<include>>\nanswer auto-saved
+UC6  ..> UC7  : <<extend>>\ngenerate from history
+UC3  ..> UC8  : <<extend>>\n+1 question, +XP
+UC7  ..> UC8  : <<extend>>\n+accuracy, +XP
+UC8  ..> UC10 : <<extend>>\nsummaries & streaks
+UC6  ..> UC10 : <<extend>>\nbookmark reminder
+
+note bottom of UCN
+  <b>Giới hạn đã biết — nêu thẳng trong design document:</b>
+  Leaderboard (FR9) chỉ tính trên chính thiết bị này,
+  <b>không phải</b> bảng xếp hạng toàn cục — MVP chưa có server.
+end note
+
+note right of Gemini
+  <b>Hệ thống ngoài phạm vi phát triển.</b>
+  Brief: "AI integration (ChatGPT, Google Gemini)"
+  → chọn <b>Gemini</b>: free tier cho sinh viên,
+  không cần server trung gian.
+end note
+
+@enduml

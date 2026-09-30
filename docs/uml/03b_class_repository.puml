@@ -1,0 +1,175 @@
+@startuml 03b_class_repository
+'============================================================
+' AI Study Mentor — CLASS DIAGRAM 4/5: Use-case layer
+' 7 Repository interface + model nghiệp vụ
+'
+' Luật: ViewModel chỉ biết interface, không biết lớp cụ thể.
+' Chi tiết tầng platform (Gemini, bảo mật) nằm ở 03c.
+'============================================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Segoe UI
+skinparam defaultFontSize 12
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F7F8FC
+skinparam packageBorderColor #8A90B8
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #3F4390
+skinparam classAttributeIconSize 0
+skinparam stereotypeCBackgroundColor #EEF0FB
+skinparam packageFontStyle bold
+skinparam linetype ortho
+
+title Class — Use-case layer: 7 Repository interface và model nghiệp vụ
+
+'==================== REPOSITORY INTERFACE ====================
+package "domain.repository" {
+
+  interface AuthRepository {
+    +suspend fun register(email: String, password: String): Result<User>
+    +suspend fun login(email: String, password: String): Result<User>
+    +suspend fun logout()
+    +suspend fun currentUserId(): Long?
+    +fun isLoggedIn(): Boolean
+  }
+
+  interface ProfileRepository {
+    +fun observeProfile(userId: Long): Flow<Profile?>
+    +suspend fun saveOnboarding(userId: Long, draft: ProfileDraft): Profile
+    +suspend fun updateStyle(userId: Long, style: ExplanationStyle)
+  }
+
+  interface StudyRepository {
+    +suspend fun submitQuestion(userId: Long, text: String, image: Uri?): Result<QuestionAnswer>
+    +fun observeHistory(userId: Long): Flow<List<QuestionAnswer>>
+    +suspend fun search(userId: Long, keyword: String): List<QuestionAnswer>
+    +suspend fun toggleBookmark(id: Long, value: Boolean)
+    +suspend fun loadById(id: Long): QuestionAnswer?
+    +suspend fun recordReviewTime(id: Long, seconds: Int)
+  }
+
+  interface PracticeRepository {
+    +suspend fun generate(userId: Long, subject: Subject?, count: Int): Result<List<QuizItem>>
+    +fun observeItems(userId: Long): Flow<List<QuizItem>>
+    +suspend fun answer(userId: Long, itemId: Long, given: String): Result<QuizFeedback>
+  }
+
+  interface ProgressRepository {
+    +fun observeSummary(userId: Long): Flow<ProgressSummary>
+    +suspend fun refreshInsights(userId: Long): ProgressSummary
+  }
+
+  interface GamificationRepository {
+    +fun observeProgress(userId: Long): Flow<ProgressSummary>
+    +suspend fun award(userId: Long, reason: XpReason)
+    +suspend fun leaderboard(): List<LeaderboardRow>
+  }
+
+  interface NotificationRepository {
+    +fun observeUnread(userId: Long): Flow<List<Notification>>
+    +suspend fun markRead(id: Long)
+    +suspend fun scheduleReminders(userId: Long)
+  }
+}
+
+'==================== MODEL NGHIỆP VỤ ====================
+package "domain.model" {
+  class AiAnswer {
+    +answerText: String
+    +steps: List<String>
+    +detectedSubject: Subject
+    +detectedDifficulty: Difficulty
+    +simplified: String?
+    +alternative: String?
+    +keyConcepts: String?
+    +commonMistakes: String?
+    +followUps: List<String>
+    +inputTokens: Int
+    +outputTokens: Int
+  }
+  class ProgressSummary {
+    +totalQuestions: Int
+    +questionsBySubject: Map<Subject, Int>
+    +quizAccuracy: Double
+    +totalReviewSeconds: Long
+    +totalXp: Int
+    +level: Int
+    +currentStreakDays: Int
+    +insights: List<String>
+  }
+  class QuizFeedback {
+    +isCorrect: Boolean
+    +explanation: String?
+    +xpAwarded: Int
+  }
+  class ProfileDraft {
+    +educationLevel: EducationLevel
+    +subjects: Set<Subject>
+    +preferredStyle: ExplanationStyle
+  }
+  class LeaderboardRow {
+    +displayName: String
+    +totalXp: Int
+    +level: Int
+    +isCurrentUser: Boolean
+  }
+  enum ImprovementKind {
+    SIMPLIFY
+    ALTERNATIVE
+  }
+}
+
+'===== XẾP DỌC (hidden edge) để diagram vừa trang A4 =====
+AuthRepository -[hidden]-> ProfileRepository
+ProfileRepository -[hidden]-> StudyRepository
+StudyRepository -[hidden]-> PracticeRepository
+PracticeRepository -[hidden]-> ProgressRepository
+ProgressRepository -[hidden]-> GamificationRepository
+GamificationRepository -[hidden]-> NotificationRepository
+ProfileDraft -[hidden]-> QuizFeedback
+QuizFeedback -[hidden]-> AiAnswer
+AiAnswer -[hidden]-> ProgressSummary
+ProgressSummary -[hidden]-> LeaderboardRow
+
+'==================== REPOSITORY <-> MODEL ====================
+AuthRepository ..> User : trả về
+ProfileRepository ..> ProfileDraft : nhận >
+ProfileRepository ..> Profile : trả về
+StudyRepository ..> QuestionAnswer : trả về
+StudyRepository ..> AiAnswer : áp dụng
+PracticeRepository ..> QuizItem : trả về
+PracticeRepository ..> QuizFeedback : trả về
+ProgressRepository ..> ProgressSummary : trả về
+GamificationRepository ..> ProgressSummary : đọc >
+GamificationRepository ..> LeaderboardRow : trả về
+NotificationRepository ..> Notification : trả về
+ImprovementKind ..> AiAnswer : yêu cầu >
+
+note bottom of StudyRepository
+  <b>Use case trung tâm của hệ thống.</b>
+  Thứ tự bên trong <i>submitQuestion()</i>:
+  <b>tra cứu cache TRƯỚC, gọi AI SAU.</b>
+  Đây là hiện thực hoá yêu cầu
+  "AI Cost Management" của brief —
+  hỏi trùng 0đ, hỏi mới mới tốn.
+end note
+
+note bottom of LeaderboardRow
+  <b>Giới hạn MVP — nói thẳng, không giấu.</b>
+  <i>leaderboard()</i> hiện tổng hợp trên chính
+  thiết bị này, <b>không phải</b> bảng xếp hạng
+  toàn cục, vì brief không cho xây server
+  trong 14 tuần. Ghi rõ trong design document
+  và nêu ở P2 như một rủi ro đã biết.
+end note
+
+note as N1
+  <b>Vì sao 7 interface thay vì 1 lớp hỗn hợp?</b>
+  Tách theo <b>use case</b> chứ không theo bảng dữ liệu.
+  Nhờ vậy mỗi màn hình chỉ phụ thuộc một interface,
+  và thay Room bằng công cụ khác chỉ đụng tới
+  những interface liên quan thay vì toàn bộ.
+end note
+
+@enduml

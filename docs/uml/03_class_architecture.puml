@@ -1,0 +1,139 @@
+@startuml 03_class_architecture
+'============================================================
+' AI Study Mentor — CLASS DIAGRAM 3/3: Presentation
+' Compose screens + ViewModel + UiState
+'
+' Luật: màn hình KHÔNG gọi thẳng DAO — chỉ qua ViewModel.
+' Phần Repository + Platform nằm ở 03b.
+'============================================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Segoe UI
+skinparam defaultFontSize 12
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F7F8FC
+skinparam packageBorderColor #8A90B8
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #3F4390
+skinparam classAttributeIconSize 0
+skinparam stereotypeCBackgroundColor #EEF0FB
+skinparam packageFontStyle bold
+skinparam linetype ortho
+
+title Class — Presentation layer: 10 màn hình, 6 ViewModel, 5 UiState
+
+package "ui.shell" {
+  class MainActivity {
+    --
+    {static} +onCreate(savedInstanceState: Bundle?)
+  }
+  class MainShell {
+    +NavController navController
+    --
+    {static} +Composable MainShell()
+  }
+  class AppNavHost {
+    +NavHostController navController
+  }
+  class AuthGate {
+    +isLoggedIn: Boolean
+    +isOnboarded: Boolean
+  }
+}
+
+package "ui.screens" {
+  class LoginScreen <<Composable>>
+  class RegisterScreen <<Composable>>
+  class OnboardingScreen <<Composable>>
+  class AskScreen <<Composable>>
+  class QuestionDetailScreen <<Composable>>
+  class HistoryScreen <<Composable>>
+  class PracticeScreen <<Composable>>
+  class ProgressScreen <<Composable>>
+  class ProfileScreen <<Composable>>
+}
+
+package "ui.viewmodel" {
+  class AuthViewModel <<ViewModel>>
+  class ProfileViewModel <<ViewModel>>
+  class AskViewModel <<ViewModel>>
+  class HistoryViewModel <<ViewModel>>
+  class PracticeViewModel <<ViewModel>>
+  class ProgressViewModel <<ViewModel>>
+}
+
+package "ui.state" {
+  class AskUiState
+  class HistoryUiState
+  class PracticeUiState
+  class ProgressUiState
+  class ProfileUiState
+  class AuthUiState
+}
+
+package "ui.components" {
+  class SectionPlaceholder <<Composable>>
+}
+
+'==================== MAIN SHELL ====================
+MainActivity --> MainShell : setContent
+MainShell *-- AppNavHost : hosts
+MainShell *-- AuthGate : quyết định điểm bắt đầu
+AuthGate ..> LoginScreen
+AuthGate ..> OnboardingScreen
+AppNavHost --> AskScreen
+AppNavHost --> HistoryScreen
+AppNavHost --> PracticeScreen
+AppNavHost --> ProgressScreen
+AppNavHost --> ProfileScreen
+AppNavHost --> QuestionDetailScreen
+
+'==================== MÀN HÌNH -> VIEWMODEL ====================
+LoginScreen ..> AuthViewModel
+RegisterScreen ..> AuthViewModel
+OnboardingScreen ..> ProfileViewModel
+AskScreen ..> AskViewModel
+QuestionDetailScreen ..> AskViewModel : dùng lại
+HistoryScreen ..> HistoryViewModel
+PracticeScreen ..> PracticeViewModel
+ProgressScreen ..> ProgressViewModel
+ProfileScreen ..> ProfileViewModel
+SectionPlaceholder ..> AskScreen : tái sử dụng
+
+'==================== VIEWMODEL -> UISTATE ====================
+AuthViewModel ..> AuthUiState : exposes StateFlow
+ProfileViewModel ..> ProfileUiState
+AskViewModel ..> AskUiState
+HistoryViewModel ..> HistoryUiState
+PracticeViewModel ..> PracticeUiState
+ProgressViewModel ..> ProgressUiState
+
+note bottom of QuestionDetailScreen
+  <b>Cố ý dùng lại AskViewModel</b> cho màn chi tiết
+  thay vì tạo QuestionDetailViewModel: cùng một
+  dữ liệu (QuestionAnswer), cùng hành vi (improve,
+  bookmark). Tách thêm chỉ sinh thêm hai lớp
+  gần như trùng nhau — nghịch với OOAD.
+end note
+
+note bottom of AskScreen
+  <b>Màn hình chỉ nhận callback, không tự gọi tầng dưới.</b>
+  vd. <i>onSubmit: (String, Uri?) -> Unit</i> do
+  MainShell/ViewModel cung cấp.
+  ⇒ màn hình test được bằng ComposeTestRule
+  không cần database, không cần mạng.
+end note
+
+note as N1
+  <b>Quy ước Compose bắt buộc toàn dự án</b>
+  (thay cho bảng quy ước View trong Phase 0):
+  • Activity = ComponentActivity + setContent
+  • Chuỗi hiển thị luôn qua stringResource()
+  • Route là hằng trong object Routes
+  • Màu lấy từ MaterialTheme.colorScheme
+  • Modifier luôn là tham số đầu tiên
+  • Trạng thái tạm dùng rememberSaveable
+end note
+
+@enduml

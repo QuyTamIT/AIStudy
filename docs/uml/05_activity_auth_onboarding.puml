@@ -1,0 +1,149 @@
+@startuml 05_activity_auth_onboarding
+'============================================================
+' AI Study Mentor — Activity Diagram:
+' Auth gate + Onboarding (FR1, FR2, N1)
+' Cho thấy MainShell quyết định NavHost bắt đầu ở đâu.
+'============================================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Segoe UI
+skinparam defaultFontSize 12
+skinparam activityBackgroundColor #F2F3FA
+skinparam activityBorderColor #3F4390
+skinparam activityDiamondBackgroundColor #FFF6E0
+skinparam activityDiamondBorderColor #B8860B
+skinparam activityArrowColor #3F4390
+skinparam activityBarColor #3F4390
+skinparam linetype ortho
+
+title Activity — Đăng ký, đăng nhập và onboarding (FR1, FR2, N1)
+
+|Student|
+|UI|
+|Repo|
+|Sec|
+|DB|
+
+|Student|
+start
+:Mở ứng dụng;
+
+|UI|
+:MainShell đọc\nSessionManager.isLoggedIn();
+
+if (Đã đăng nhập?) then (Có)
+  |UI|
+  :Đọc Profile.onboardedAt;
+  if (onboardedAt khác null?) then (Rồi)
+    :NavHost bắt đầu tại Routes.ASK\n→ hiện 5 tab;
+  else (Chưa)
+    |Student|
+    :Chọn cấp học\n(middle / high / university);
+    :Chọn môn quan tâm;
+    :Chọn phong cách giải thích\n(short / detailed / step-by-step);
+    |Repo|
+    :ProfileRepository.saveOnboarding()\nset onboardedAt = now;
+    |UI|
+    :NavHost bắt đầu tại Routes.ASK\n→ hiện 5 tab;
+  endif
+  stop
+else (Không)
+  |UI|
+  :NavHost bắt đầu tại Routes.LOGIN\n→ RegisterScreen / LoginScreen;
+endif
+
+|Student|
+:Chọn Đăng ký\nhoặc Đăng nhập;
+
+if (Đăng ký?) then (Đăng ký)
+  :Nhập email + mật khẩu;
+  |Sec|
+  :PasswordHasher.strength()\n→ WEAK | FAIR | STRONG;
+  if (Kết quả = WEAK?) then (Yếu)
+    |UI|
+    :Chặn đăng ký, yêu cầu\n≥ 8 ký tự có chữ và số;
+    |Student|
+    :Sửa lại mật khẩu;
+    |Sec|
+    :Đo lại strength();
+  else (Đủ mạnh)
+  endif
+  |Repo|
+  :UserDao.findByEmail(email);
+  |DB|
+  if (Email đã tồn tại?) then (Có)
+    |UI|
+    :Báo "email đã được dùng",\nchuyển sang màn Đăng nhập;
+  else (Không)
+    |Sec|
+    :PBKDF2-HMAC-SHA256\n120.000 vòng\n+ salt 16 byte ngẫu nhiên;
+    |DB|
+    :insert User\n(totalXp = 0, level = 1);
+    :insert Profile mặc định\n(ProfileDefaults, chưa onboarded);
+  endif
+else (Đăng nhập)
+  :Nhập email + mật khẩu;
+endif
+
+|Repo|
+:PasswordHasher.verify()\n— chạy ngoài luồng chính\n(Dispatchers.Default);
+
+if (Thông tin đúng?) then (Đúng)
+  |DB|
+  :update lastLoginAt = now;
+  |Sec|
+  :SessionManager.save()\nvào EncryptedSharedPreferences;
+  |Student|
+  :Bật tuỳ chọn 2FA?;
+  if (Bật 2FA?) then (Có)
+    |Sec|
+    :Totp.generate(secret)\n→ mã 6 số, cửa sổ 30 giây;
+    |Student|
+    :Nhập mã hiển thị\ntrên app Authenticator;
+    |Sec|
+    :Totp.verify(secret, code);
+    if (Mã đúng?) then (Đúng)
+      |DB|
+      :twoFactorSecret = secret;
+    else (Sai)
+      |UI|
+      :Cho thử lại\ntối đa 3 lần;
+    endif
+  else (Không)
+  endif
+  |UI|
+  :Điều hướng tới\nRoutes.ONBOARDING;
+else (Sai)
+  |UI|
+  :Báo "sai email hoặc mật khẩu",\ntăng bộ đếm sai;
+  if (Sai ≥ 5 lần?) then (Có)
+    :Tạm khoá 5 phút;
+  else (Không)
+  endif
+  |Student|
+  :Thử lại;
+  :Nhập lại email + mật khẩu;
+  |Repo|
+  :PasswordHasher.verify()\n— chạy ngoài luồng chính;
+  if (Thông tin đúng?) then (Đúng)
+    |UI|
+    :Điều hướng tới\nRoutes.ONBOARDING;
+  else (Sai)
+    :Báo "sai email hoặc mật khẩu";
+  endif
+endif
+
+note
+  <b>Vì sao PBKDF2 120.000 vòng?</b>
+  • Không bao giờ lưu mật khẩu dạng rõ
+  • Salt ngẫu nhiên theo từng người dùng
+    ⇒ hai tài khoản cùng mật khẩu
+    cho hai hash khác nhau
+  • Chi phí khoảng 80 ms mỗi lần
+    ⇒ bắt buộc chạy ngoài luồng chính,
+    và đây cũng là một ca test
+    thời gian cần đưa vào test plan
+end note
+
+@enduml

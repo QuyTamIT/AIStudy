@@ -1,0 +1,164 @@
+@startuml 09_erd
+'============================================================
+' AI Study Mentor — Entity Relationship Diagram
+' Room schema nhìn bằng ký hiệu quan hệ (crow's foot)
+' Đối chiếu docs/PART1_M1_SOFTWARE_DESIGN.md mục 4
+'============================================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Segoe UI
+skinparam defaultFontSize 11
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F7F8FC
+skinparam packageBorderColor #8A90B8
+skinparam entityBackgroundColor #FFFFFF
+skinparam entityBorderColor #3F4390
+skinparam linetype ortho
+
+hide circle
+hide methods
+
+title ERD — 7 bảng, toàn bộ quan hệ đều 1-n (không có bảng nối nào không cần)
+
+entity "users" as users {
+  *Long id <<PK>>
+  --
+  *String email <<UK>>
+  *String passwordHash
+  *String passwordSalt
+  *String displayName
+  String twoFactorSecret
+  *Int totalXp
+  *Int level
+  *Int currentStreakDays
+  Long lastQuestionDate
+  *Long createdAt
+  Long lastLoginAt
+}
+
+entity "profiles" as profiles {
+  *Long id <<PK>>
+  --
+  *Long userId <<FK, UK>>
+  *String educationLevel
+  *String preferredStyle
+  *String subjectCodes
+  Long onboardedAt
+}
+
+entity "question_answers" as qa {
+  *Long id <<PK>>
+  --
+  *Long userId <<FK>>
+  *String subjectCode
+  *String questionText
+  String questionImagePath
+  String questionImageIv
+  *String questionHash
+  *Boolean servedFromCache
+  Long matchedQuestionId
+  String detectedDifficulty
+  *String answerText
+  String simplifiedExplanation
+  String alternativeApproach
+  String keyConcepts
+  String commonMistakes
+  String followUpQuestions
+  *Boolean isBookmarked
+  *Int reviewTimeSeconds
+  *Int inputTokens
+  *Int outputTokens
+  *Long createdAt
+}
+
+entity "quiz_items" as qi {
+  *Long id <<PK>>
+  --
+  *Long userId <<FK>>
+  Long sourceQuestionId <<FK>>
+  *String subjectCode
+  *String questionType
+  *String prompt
+  String optionA
+  String optionB
+  String optionC
+  String optionD
+  *String correctAnswer
+  String explanation
+  Boolean isCorrect
+  *Int attempts
+  *Long createdAt
+  Long answeredAt
+}
+
+entity "xp_events" as xe {
+  *Long id <<PK>>
+  --
+  *Long userId <<FK>>
+  *String reason
+  *Int xpAwarded
+  *Long createdAt
+}
+
+entity "user_badges" as ub {
+  *Long userId <<PK, FK>>
+  *String badgeCode <<PK>>
+  --
+  *Long earnedAt
+}
+
+entity "notifications" as notif {
+  *Long id <<PK>>
+  --
+  *Long userId <<FK>>
+  *String type
+  *String title
+  *String body
+  String deepLink
+  *Boolean isRead
+  *Long createdAt
+}
+
+users ||--o| profiles : has
+users ||--o{ question_answers : owns
+users ||--o{ quiz_items : owns
+users ||--o{ xp_events : owns
+users ||--o{ user_badges : owns
+users ||--o{ notifications : owns
+question_answers ||--o{ quiz_items : generates
+
+note bottom of qa
+  <b>Index trên bảng trung tâm</b>
+  • idx_qa_user (userId)
+  • idx_qa_user_subject (userId, subjectCode)
+  • idx_qa_user_bookmarked (userId, isBookmarked)
+  • idx_qa_user_created (userId, createdAt DESC)
+  • idx_qa_hash (questionHash) — phục vụ cache
+end note
+
+note bottom of qi
+  <b>isCorrect nullable</b>
+  null = chưa làm, false = làm sai.
+  Không dùng false để biểu diễn
+  "chưa làm" — sai dữ liệu tỉ lệ chính xác.
+end note
+
+note right of ub
+  <b>Không có bảng badges.</b>
+  Danh mục huy hiệu là hằng số của
+  nhà phát triển trong <i>BadgeCatalog</i>,
+  không phải dữ liệu người dùng.
+  Composite PK chặn nhận trùng huy hiệu.
+end note
+
+note left of profiles
+  <b>Không có bảng nối profile_subjects.</b>
+  Chỉ 5 môn cố định trong brief, luôn đọc
+  trọn hồ sơ ⇒ <i>Set&lt;Subject&gt;</i> + TypeConverter
+  rẻ hơn bảng nối. Đây là denormalise có chủ ý;
+  thống kê theo môn lấy từ
+  question_answers.subjectCode chứ không lấy từ hồ sơ.
+end note
+
+@enduml

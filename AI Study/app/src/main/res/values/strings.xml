@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AI Study Mentor</string>
+
+    <string name="nav_ask">Hỏi AI</string>
+    <string name="nav_history">Lịch sử</string>
+    <string name="nav_practice">Luyện tập</string>
+    <string name="nav_progress">Tiến độ</string>
+    <string name="nav_profile">Hồ sơ</string>
+
+    <string name="ask_placeholder_title">Hỏi AI</string>
+    <string name="ask_placeholder_body">Đặt câu hỏi bằng chữ hoặc chụp ảnh bài tập. Tính năng này được triển khai ở Phase 5.</string>
+
+    <string name="history_placeholder_title">Lịch sử</string>
+    <string name="history_placeholder_body">Tất cả câu hỏi và câu trả lời sẽ được lưu tự động tại đây.</string>
+
+    <string name="practice_placeholder_title">Luyện tập</string>
+    <string name="practice_placeholder_body">AI sẽ sinh câu hỏi trắc nghiệm và bài tập từ các câu hỏi bạn đã hỏi.</string>
+
+    <string name="progress_placeholder_title">Tiến độ</string>
+    <string name="progress_placeholder_body">Thống kê số câu hỏi, môn hay hỏi, tỉ lệ chính xác và thời gian ôn tập.</string>
+
+    <string name="profile_placeholder_title">Hồ sơ</string>
+    <string name="profile_placeholder_body">Cấp học, môn quan tâm, phong cách giải thích, XP và huy hiệu.</string>
+</resources>

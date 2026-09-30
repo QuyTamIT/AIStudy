@@ -1,0 +1,221 @@
+@startuml 02b_class_persistence
+'============================================================
+' AI Study Mentor — CLASS DIAGRAM 2/3: Persistence & Rules
+' Room codegen + tầng domain thuần Kotlin
+'
+' Đối chiếu: docs/PART1_M1_SOFTWARE_DESIGN.md mục 3, 4
+' Phần entity nằm ở 02_class_domain.puml
+'============================================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Segoe UI
+skinparam defaultFontSize 12
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F7F8FC
+skinparam packageBorderColor #8A90B8
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #3F4390
+skinparam classAttributeIconSize 0
+skinparam stereotypeCBackgroundColor #EEF0FB
+skinparam packageFontStyle bold
+skinparam linetype ortho
+
+title Class — Persistence (Room) và Domain Rules
+
+'==================== PERSISTENCE ====================
+package "data.db" {
+
+  class AppDatabase <<RoomDatabase>> {
+    +UserDao userDao()
+    +ProfileDao profileDao()
+    +QuestionAnswerDao questionAnswerDao()
+    +QuizItemDao quizItemDao()
+    +XpEventDao xpEventDao()
+    +NotificationDao notificationDao()
+    +UserBadgeDao userBadgeDao()
+    --
+    +suspend fun clearAllForUser(userId: Long)
+  }
+
+  class DatabaseProvider <<object>> {
+    {static} +AppDatabase get(context: Context): AppDatabase
+    --
+    {static} -AppDatabase instance
+  }
+
+  class Converters {
+    +String toStringSet(value: Set<Subject>): String
+    +Set<Subject> toSubjectSet(value: String): Set<Subject>
+  }
+}
+
+package "data.db.dao" {
+
+  interface UserDao {
+    +Flow<User?> observeById(id: Long): Flow<User?>
+    +suspend fun findByEmail(email: String): User?
+    +suspend fun insert(user: User): Long
+    +suspend fun update(user: User)
+    +suspend fun addXp(userId: Long, delta: Int, newLevel: Int)
+    +suspend fun touchStreak(userId: Long, today: Long)
+  }
+
+  interface ProfileDao {
+    +Flow<Profile?> observeByUser(userId: Long): Flow<Profile?>
+    +suspend fun findByUser(userId: Long): Profile?
+    +suspend fun insert(profile: Profile): Long
+    +suspend fun update(profile: Profile)
+  }
+
+  interface QuestionAnswerDao {
+    +Flow<List<QuestionAnswer>> observeByUser(userId: Long)
+    +Flow<List<QuestionAnswer>> observeBookmarked(userId: Long)
+    +suspend fun findByHash(hash: String): QuestionAnswer?
+    +suspend fun search(userId: Long, keyword: String): List<QuestionAnswer>
+    +suspend fun bySubject(userId: Long, subject: Subject): List<QuestionAnswer>
+    +suspend fun insert(item: QuestionAnswer): Long
+    +suspend fun setBookmarked(id: Long, value: Boolean)
+    +suspend fun addReviewTime(id: Long, seconds: Int)
+    +suspend fun countByUser(userId: Long): Int
+  }
+
+  interface QuizItemDao {
+    +Flow<List<QuizItem>> observeByUser(userId: Long)
+    +suspend fun insertAll(items: List<QuizItem>): List<Long>
+    +suspend fun recordAttempt(id: Long, isCorrect: Boolean)
+    +suspend fun accuracy(userId: Long): Double
+    +suspend fun countDistinctSubjects(userId: Long): Int
+  }
+
+  interface XpEventDao {
+    +Flow<List<XpEvent>> observeByUser(userId: Long)
+    +suspend fun insert(event: XpEvent): Long
+    +suspend fun sumByUser(userId: Long): Int
+  }
+
+  interface NotificationDao {
+    +Flow<List<Notification>> observeUnread(userId: Long)
+    +suspend fun insert(notification: Notification): Long
+    +suspend fun markRead(id: Long)
+    +suspend fun markAllRead(userId: Long)
+  }
+
+  interface UserBadgeDao {
+    +Flow<List<UserBadge>> observeByUser(userId: Long)
+    +suspend fun insert(userId: Long, code: String, earnedAt: Long)
+    +suspend fun exists(userId: Long, code: String): Boolean
+  }
+}
+
+'==================== DOMAIN RULES (thuần Kotlin) ====================
+package "domain.rules" {
+
+  class XpRules <<object>> {
+    {static} +Int XP_ASK_QUESTION = 5
+    {static} +Int XP_REVIEW_ANSWER = 2
+    {static} +Int XP_COMPLETE_QUIZ = 10
+    {static} +Int XP_QUIZ_BONUS = 5
+    {static} +Int REVIEW_SECONDS_THRESHOLD = 10
+    --
+    {static} +Int xpFor(reason: XpReason): Int
+    {static} +Int totalXpToReach(level: Int): Int
+    {static} +Int levelFor(totalXp: Int): Int
+  }
+
+  class BadgeCatalog <<object>> {
+    {static} +String FIRST_QUESTION = "1 câu hỏi"
+    {static} +String STREAK_7 = "7 ngày liên tiếp"
+    {static} +String SUBJECT_EXPLORER = "5 môn khác nhau"
+    {static} +String QUIZ_MASTER = "50 câu, đúng ≥ 80%"
+    --
+    {static} +List<BadgeCode> evaluate(user: User, stats: ProgressSummary): List<BadgeCode>
+  }
+
+  class ProfileDefaults <<object>> {
+    {static} +ExplanationStyle DEFAULT_STYLE = STEP_BY_STEP
+    {static} +Set<Subject> DEFAULT_SUBJECTS
+    --
+    {static} +Profile forNewUser(userId: Long): Profile
+  }
+
+  class QuestionSimilarity <<object>> {
+    {static} +Double SIMILARITY_THRESHOLD = 0.85
+    --
+    {static} +String normalise(text: String): String
+    {static} +String hashOf(text: String): String
+    {static} +Double jaccard(a: String, b: String): Double
+    {static} +Set<String> tokenize(text: String): Set<String>
+  }
+}
+
+
+
+'===== X?P DAO TH?NH C?T D?C (hidden edge ?? PlantUML t? ?? m?c ngang) =====
+UserDao -[hidden]-> ProfileDao
+ProfileDao -[hidden]-> NotificationDao
+NotificationDao -[hidden]-> UserBadgeDao
+UserBadgeDao -[hidden]-> QuestionAnswerDao
+QuestionAnswerDao -[hidden]-> QuizItemDao
+QuizItemDao -[hidden]-> XpEventDao
+XpEventDao -[hidden]-> Converters
+
+'==================== COMPOSITION ====================
+DatabaseProvider ..> AppDatabase : creates
+AppDatabase *-- UserDao
+AppDatabase *-- ProfileDao
+AppDatabase *-- QuestionAnswerDao
+AppDatabase *-- QuizItemDao
+AppDatabase *-- XpEventDao
+AppDatabase *-- NotificationDao
+AppDatabase *-- UserBadgeDao
+AppDatabase ..> Converters : uses
+Converters ..> Subject : serialises
+
+'==================== DAO -> ENTITY ====================
+UserDao ..> User
+ProfileDao ..> Profile
+QuestionAnswerDao ..> QuestionAnswer
+QuizItemDao ..> QuizItem
+XpEventDao ..> XpEvent
+NotificationDao ..> Notification
+UserBadgeDao ..> UserBadge
+
+
+
+'==================== RULE -> ENTITY ====================
+XpRules ..> XpReason : đọc giá trị
+XpRules ..> User : levelFor(totalXp)
+BadgeCatalog ..> BadgeCode : định nghĩa
+BadgeCatalog ..> UserBadge : trao
+BadgeCatalog ..> ProgressSummary : đọc thống kê
+ProfileDefaults ..> Profile : tạo
+ProfileDefaults ..> ExplanationStyle : mặc định
+QuestionSimilarity ..> QuestionAnswer : tìm câu tái dùng
+
+note right of QuestionAnswerDao
+  <b>Không dùng full-text search.</b>
+  MVP tìm bằng <i>LIKE '%keyword%'</i> trên
+  questionText. Ghi rõ giới hạn này trong
+  phần NFR Performance của design document
+  thay vì giấu đi.
+end note
+
+note right of XpRules
+  <b>Vì sao rule tách riêng, không nhét
+  vào repository?</b>
+  Ngưỡng XP và đường cong level là
+  <b>business rule thuần số</b> — không phụ thuộc
+  Android. Tách ra package <i>domain.rules</i>
+  ⇒ test được bằng JUnit thuần, chạy trong
+  vài mili giây, chạy lại liên tục, không cần emulator.
+end note
+
+note bottom of ProfileDefaults
+  <b>Profile mặc định tạo sẵn lúc đăng ký</b>
+  với <i>onboardedAt = null</i> ⇒ MainShell biết
+  phải chuyển tới màn Onboarding, không cần
+  truy vấn thêm để kiểm tra "đã onboarding chưa".
+end note
+
+@enduml

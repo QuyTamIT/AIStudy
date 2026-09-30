@@ -1,0 +1,124 @@
+@startuml 08_state_question
+'============================================================
+' AI Study Mentor — State Machine Diagram
+' Vòng đời một câu hỏi trong hệ thống (FR3 → FR6)
+' Dùng để chứng minh mọi trạng thái đều có hành vi rõ ràng.
+'============================================================
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Segoe UI
+skinparam defaultFontSize 12
+skinparam stateBackgroundColor #F2F3FA
+skinparam stateBorderColor #3F4390
+skinparam stateArrowColor #3F4390
+skinparam linetype ortho
+
+title State — vòng đời một QuestionAnswer
+
+[*] --> Draft : sinh viên gõ / chọn ảnh
+
+state Draft {
+  Draft : text hoặc ảnh (hoặc cả hai)
+  Draft --> Draft : sửa nội dung
+}
+
+state "Kiểm tra đầu vào" as Check {
+  Check : rỗng? quá 2000 ký tự? ảnh sai định dạng?
+}
+Draft --> Check : nhấn Ask
+
+state Rejected
+note right of Rejected
+  <b>Trả lời, không tạo bản ghi.</b>
+  Ràng buộc này cần test biên:
+  0 ký tự, 1 ký tự, 2000, 2001.
+end note
+
+state "Tra cứu cache" as CacheLookup
+Check --> CacheLookup : hợp lệ
+
+state "CACHE HIT\n(reuse, 0đ API)" as CacheHit
+state "CACHE MISS\n(gọi Gemini)" as CacheMiss
+
+CacheLookup --> CacheHit : hash trùng hoặc Jaccard ≥ 0.85
+CacheLookup --> CacheMiss : không khớp
+
+state "Gọi AI" as AiCall
+CacheMiss --> AiCall : online
+CacheMiss --> Queued : offline
+
+state Queued
+note right of Queued
+  <b>NFR Offline.</b>
+  Giữ trong PendingSyncQueue,
+  tự gửi lại khi có mạng.
+  Người dùng vẫn nhìn thấy
+  trong lịch sử với nhãn
+  "đang chờ gửi".
+end note
+
+state "Lỗi mạng / lỗi AI" as Failed
+note right of Failed
+  Retry có backoff.
+  Không mất nội dung đã gõ.
+  Không trừ XP nếu chưa có
+  câu trả lời.
+end note
+
+AiCall --> Failed : timeout / 4xx / 5xx
+AiCall --> Generating : 200 OK
+Failed --> AiCall : bấm Thử lại
+
+state "Đang tạo bản ghi\n+ cộng XP + streak" as Generating
+Generating --> Saved : insert Room thành công
+
+state Saved {
+  Saved : answerText + steps + simplified
+  Saved : + alternatives + keyConcepts
+  Saved : + commonMistakes + followUps
+  Saved --> Saved : request improvement
+  Saved --> Saved : bookmark / bỏ bookmark
+  Saved --> Saved : + reviewTimeSeconds
+}
+
+state "Có huy hiệu mới" as Badged
+Saved --> Badged : BadgeCatalog.evaluate() trả về mã chưa có
+Badged --> Saved
+
+state Reviewed
+note right of Reviewed
+  Người dùng đánh dấu
+  "đã ôn xong" ⇒
+  ReviewReminder dừng
+  nhắc cho câu này.
+end note
+
+Saved --> Reviewed : đánh dấu đã ôn
+Reviewed --> Saved : bỏ đánh dấu
+
+state Archived
+note right of Archived
+  <b>FR6 — Personal Library.</b>
+  Giữ câu hỏi đã archive
+  (không xoá), ẩn khỏi danh sách
+  chính. Phục vụ "Organise questions
+  by subject" mà vẫn tôn trọng
+  quyền xoá dữ liệu (N3).
+end note
+
+Saved --> Archived : lưu trữ
+Archived --> Saved : bỏ lưu trữ
+
+Saved --> [*] : xoá
+Archived --> [*] : xoá
+
+CacheHit --> Saved : tái dùng, đánh dấu servedFromCache = true
+Saved --> CacheHit : gợi ý "câu tương tự"
+
+state done
+Saved --> done
+Archived --> done
+done --> [*]
+
+@enduml
