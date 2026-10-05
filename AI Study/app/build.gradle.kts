@@ -5,10 +5,19 @@ plugins {
     alias(libs.plugins.room)
 }
 
+import java.util.Properties
+
 room {
     // Room ghi schema JSON ra đây mỗi lần build. Nhờ vậy khi nâng version sau này
     // có dữ liệu so sánh để viết Migration, thay vì đoán mò.
     schemaDirectory("$projectDir/schemas")
+}
+
+// FR4 - đọc API key từ local.properties (KHÔNG commit file này).
+// Thiếu key thì BuildConfig rỗng và app chạy FakeAiClient.
+val aiProperties = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
 }
 
 android {
@@ -25,6 +34,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "GEMINI_API_KEY", "\"${aiProperties.getProperty("GEMINI_API_KEY", "")}\"")
+        buildConfigField("String", "GEMINI_MODEL", "\"${aiProperties.getProperty("GEMINI_MODEL", "gemini-3.8-flash")}\"")
     }
 
     buildTypes {
@@ -40,6 +52,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -56,8 +69,12 @@ dependencies {
     implementation(libs.room.runtime)
     ksp(libs.room.compiler)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.security.crypto)
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)
+    testImplementation(libs.json)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)

@@ -16,9 +16,10 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.aistudy.aistudy.ui.root.AppDependencies
 
 @Composable
-fun MainShell() {
+fun MainShell(deps: AppDependencies) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
@@ -44,6 +45,8 @@ fun MainShell() {
     ) { innerPadding ->
         AppNavHost(
             navController = navController,
+            deps = deps,
+            startDestination = Routes.ASK,
             modifier = Modifier.padding(innerPadding)
         )
     }

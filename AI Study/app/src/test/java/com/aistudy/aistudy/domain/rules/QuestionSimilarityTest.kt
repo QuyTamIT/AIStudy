@@ -63,10 +63,15 @@ class QuestionSimilarityTest {
         assertTrue(QuestionSimilarity.containment(a, b) >= QuestionSimilarity.SIMILARITY_THRESHOLD)
     }
 
-    /** Câu ngắn nằm trọn trong câu dài: chặn kép Jaccard phải loại. */
+    /**
+     * Câu ngắn nằm trọn trong câu dài: chặn kép Jaccard phải loại.
+     *
+     * `short` phải thật sự là tập con token của `long` - nếu không thì
+     * containment = 0 và test khong kiem duoc gi het y thuat "bao phu".
+     */
     @Test
     fun `isSimilar tu choi khi cau ngan nam tron trong cau dai`() {
-        val short = "tính đạo hàm"
+        val short = "lịch sử"
         val long = "cho tôi hỏi một câu rất dài về nhiều chủ đề " +
             "bao gồm lịch sử và ngôn ngữ cùng sinh học và địa lý"
         assertEquals(1.0, QuestionSimilarity.containment(short, long), 0.0001)
@@ -159,8 +164,17 @@ class QuestionSimilarityTest {
 
     @Test
     fun `stripDiacritics bo dau tieng Viet giu nguyen chu cai`() {
-        assertEquals("tinh dao ham", QuestionSimilarity.stripDiacritics("Tính đạo hàm"))
+        // stripDiacritics CHI bo dau, khong ha chu thuong - ha chu thuong la
+        // viec cua normalise(). Test nen ra "Tinh", khong ra "tinh".
+        assertEquals("Tinh dao ham", QuestionSimilarity.stripDiacritics("Tính đạo hàm"))
         assertEquals("nguon gia", QuestionSimilarity.stripDiacritics("nguồn giả"))
         assertEquals("abcdef", QuestionSimilarity.stripDiacritics("abcdef"))
+    }
+
+    /** Chữ "đ"/"Đ" khong phai chu co dau thanh nen Normalizer khong tach duoc. */
+    @Test
+    fun `stripDiacritics chuyen chu co gach sang d thuong`() {
+        assertEquals("dai hoc", QuestionSimilarity.stripDiacritics("đại học"))
+        assertEquals("Da Nang", QuestionSimilarity.stripDiacritics("Đà Nẵng"))
     }
 }

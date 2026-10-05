@@ -44,4 +44,11 @@ interface UserDao {
 
     @Query("UPDATE users SET displayName = :displayName WHERE id = :userId")
     suspend fun setDisplayName(userId: Long, displayName: String)
+
+    /**
+     * N3 GDPR. Xoa tai khoan sau khi [AppDatabase.clearUserData] da goi xoa
+     * cac du lieu sinh hoat - `profiles` bi CASCADE theo `users`.
+     */
+    @Query("DELETE FROM users WHERE id = :userId")
+    suspend fun deleteById(userId: Long)
 }

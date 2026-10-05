@@ -19,6 +19,31 @@ interface NotificationDao {
     @Query("SELECT COUNT(*) FROM notifications WHERE userId = :userId AND isRead = 0")
     fun observeUnreadCount(userId: Long): Flow<Int>
 
+    /**
+     * Ban suspend cua [observeUnreadCount] cho [ProgressRepository] - mot
+     * [ProgressSummary] la mot anh chup mot lan, khong phai dong bo theo luong.
+     */
+    @Query("SELECT COUNT(*) FROM notifications WHERE userId = :userId AND isRead = 0")
+    suspend fun unreadCountNow(userId: Long): Int
+
+    /**
+     * FR10 - bao cao tom tat trong ngay co da sinh chua, dung lam dieu kien
+     * idempotent cho `postDailySummaryIfDue`. Khoang thoi gian do nguoi goi truy
+     * ve, khong hardcode trong SQL de giu cho test.
+     */
+    @Query(
+        """
+        SELECT EXISTS(
+            SELECT 1 FROM notifications
+            WHERE userId = :userId
+              AND type = 'DAILY_SUMMARY'
+              AND createdAt >= :sinceMillis
+              AND createdAt < :untilMillis
+        )
+        """
+    )
+    suspend fun hasDailySummaryBetween(userId: Long, sinceMillis: Long, untilMillis: Long): Boolean
+
     @Query("SELECT * FROM notifications WHERE userId = :userId AND isRead = 0 ORDER BY createdAt DESC LIMIT 1")
     suspend fun latestUnread(userId: Long): Notification?
 

@@ -48,6 +48,6 @@ fun SectionPlaceholder(
 @Composable
 private fun SectionPlaceholderPreview() {
     AIStudyTheme {
-        SectionPlaceholder(R.string.ask_placeholder_title, R.string.ask_placeholder_body)
+        SectionPlaceholder(R.string.ask_empty_title, R.string.ask_empty_body)
     }
 }

@@ -4,7 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.aistudy.aistudy.ui.shell.MainShell
+import com.aistudy.aistudy.ui.root.AppRoot
+import com.aistudy.aistudy.ui.root.rememberAppDependencies
 import com.aistudy.aistudy.ui.theme.AIStudyTheme
 
 class MainActivity : ComponentActivity() {
@@ -13,7 +14,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             AIStudyTheme {
-                MainShell()
+                AppRoot(deps = rememberAppDependencies())
             }
         }
     }

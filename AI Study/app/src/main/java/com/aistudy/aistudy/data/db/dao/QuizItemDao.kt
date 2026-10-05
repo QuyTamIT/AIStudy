@@ -56,6 +56,13 @@ interface QuizItemDao {
     @Query("SELECT COUNT(*) FROM quiz_items WHERE userId = :userId")
     suspend fun countByUser(userId: Long): Int
 
+    /**
+     * So cau DA LAM - `isCorrect IS NOT NULL`, khong phai `attempts`.
+     * Cau chua lam khong duoc tinh vao mau so (TC-QUI-07).
+     */
+    @Query("SELECT COUNT(*) FROM quiz_items WHERE userId = :userId AND isCorrect IS NOT NULL")
+    suspend fun answeredCount(userId: Long): Int
+
     @Query("SELECT COUNT(DISTINCT subjectCode) FROM quiz_items WHERE userId = :userId")
     suspend fun countDistinctSubjects(userId: Long): Int
 

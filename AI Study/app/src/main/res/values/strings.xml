@@ -2,24 +2,268 @@
 <resources>
     <string name="app_name">AI Study Mentor</string>
 
+    <!-- ============ Chuyen man hinh / shell ============ -->
     <string name="nav_ask">Hỏi AI</string>
     <string name="nav_history">Lịch sử</string>
     <string name="nav_practice">Luyện tập</string>
     <string name="nav_progress">Tiến độ</string>
     <string name="nav_profile">Hồ sơ</string>
 
-    <string name="ask_placeholder_title">Hỏi AI</string>
-    <string name="ask_placeholder_body">Đặt câu hỏi bằng chữ hoặc chụp ảnh bài tập. Tính năng này được triển khai ở Phase 5.</string>
+    <string name="common_cancel">Huỷ</string>
+    <string name="common_save">Lưu</string>
+    <string name="common_save_changes">Lưu thay đổi</string>
+    <string name="common_delete">Xoá</string>
+    <string name="common_close">Đóng</string>
+    <string name="common_retry">Thử lại</string>
+    <string name="common_confirm">Xác nhận</string>
+    <string name="common_back">Quay lại</string>
+    <string name="common_next">Tiếp</string>
+    <string name="common_done">Xong</string>
+    <string name="common_loading">Đang tải…</string>
+    <string name="common_error_generic">Có lỗi xảy ra. Vui lòng thử lại.</string>
+    <string name="common_error_no_connection">Không có kết nối mạng.</string>
 
-    <string name="history_placeholder_title">Lịch sử</string>
-    <string name="history_placeholder_body">Tất cả câu hỏi và câu trả lời sẽ được lưu tự động tại đây.</string>
+    <!-- ============ FR1 - Dang ky / Dang nhap ============ -->
+    <string name="auth_welcome_title">Chào mừng đến AI Study Mentor</string>
+    <string name="auth_welcome_subtitle">Hỏi bài bằng chữ hoặc ảnh, nhận lời giải thích theo đúng cấp học của bạn.</string>
+    <string name="auth_sign_in">Đăng nhập</string>
+    <string name="auth_sign_up">Đăng ký</string>
+    <string name="auth_logout">Đăng xuất</string>
+    <string name="auth_have_account">Đã có tài khoản? Đăng nhập</string>
+    <string name="auth_no_account">Chưa có tài khoản? Đăng ký</string>
+    <string name="auth_email">Email</string>
+    <string name="auth_password">Mật khẩu</string>
+    <string name="auth_confirm_password">Xác nhận mật khẩu</string>
+    <string name="auth_display_name">Tên hiển thị</string>
+    <string name="auth_password_helper">Tối thiểu 8 ký tự, gồm chữ và số.</string>
+    <string name="auth_error_email_invalid">Email không hợp lệ.</string>
+    <string name="auth_error_email_taken">Email này đã được dùng.</string>
+    <string name="auth_error_password_short">Mật khẩu phải có ít nhất 8 ký tự.</string>
+    <string name="auth_error_password_weak">Mật khẩu phải gồm cả chữ và số.</string>
+    <string name="auth_error_password_mismatch">Hai mật khẩu không khớp.</string>
+    <string name="auth_error_display_name_empty">Vui lòng nhập tên hiển thị.</string>
+    <string name="auth_error_wrong_credentials">Email hoặc mật khẩu không đúng.</string>
+    <string name="auth_error_generic">Không đăng nhập được. Vui lòng thử lại.</string>
+    <string name="auth_logout_confirm_title">Đăng xuất?</string>
+    <string name="auth_logout_confirm_body">Bạn sẽ phải đăng nhập lại. Dữ liệu học tập vẫn được giữ nguyên.</string>
+    <string name="auth_delete_account">Xoá tài khoản</string>
+    <string name="auth_delete_account_confirm_title">Xoá tài khoản và toàn bộ dữ liệu?</string>
+    <string name="auth_delete_account_confirm_body">Mọi câu hỏi, câu trả lời, XP và huy hiệu của bạn sẽ bị xoá vĩnh viễn. Thao tác này không thể hoàn tác.</string>
+    <string name="auth_delete_account_done">Đã xoá tài khoản.</string>
 
-    <string name="practice_placeholder_title">Luyện tập</string>
-    <string name="practice_placeholder_body">AI sẽ sinh câu hỏi trắc nghiệm và bài tập từ các câu hỏi bạn đã hỏi.</string>
+    <!-- ============ FR2 - Onboarding ============ -->
+    <string name="onboarding_step_of">Bước %1$d/%2$d</string>
+    <string name="onboarding_title_level">Bạn đang học ở cấp nào?</string>
+    <string name="onboarding_subtitle_level">Câu trả lời sẽ được viết theo đúng trình độ này.</string>
+    <string name="onboarding_title_subjects">Bạn đang học môn nào?</string>
+    <string name="onboarding_subtitle_subjects">Chọn ít nhất một môn. Có thể đổi sau trong Hồ sơ.</string>
+    <string name="onboarding_subjects_error">Hãy chọn ít nhất một môn.</string>
+    <string name="onboarding_title_style">Bạn muốn lời giải thích theo kiểu nào?</string>
+    <string name="onboarding_subtitle_style">Áp dụng cho mọi câu trả lời sau này.</string>
 
-    <string name="progress_placeholder_title">Tiến độ</string>
-    <string name="progress_placeholder_body">Thống kê số câu hỏi, môn hay hỏi, tỉ lệ chính xác và thời gian ôn tập.</string>
+    <string name="education_level_middle">Trung học cơ sở</string>
+    <string name="education_level_high">Trung học phổ thông</string>
+    <string name="education_level_university">Đại học</string>
 
-    <string name="profile_placeholder_title">Hồ sơ</string>
-    <string name="profile_placeholder_body">Cấp học, môn quan tâm, phong cách giải thích, XP và huy hiệu.</string>
+    <string name="explanation_style_short">Ngắn gọn</string>
+    <string name="explanation_style_detailed">Chi tiết</string>
+    <string name="explanation_style_step_by_step">Từng bước</string>
+
+    <string name="subject_mathematics">Toán học</string>
+    <string name="subject_science">Khoa học</string>
+    <string name="subject_programming">Lập trình</string>
+    <string name="subject_history">Lịch sử</string>
+    <string name="subject_language">Ngôn ngữ</string>
+
+    <!-- ============ FR3 / FR4 - Hoi AI ============ -->
+    <string name="ask_title">Hỏi AI</string>
+    <string name="ask_input_hint">Nhập câu hỏi của bạn…</string>
+    <string name="ask_input_label">Câu hỏi</string>
+    <string name="ask_subject_label">Môn học</string>
+    <string name="ask_pick_image">Chụp / chọn ảnh bài tập</string>
+    <string name="ask_change_image">Đổi ảnh</string>
+    <string name="ask_remove_image">Bỏ ảnh</string>
+    <string name="ask_image_attached">Đã đính kèm ảnh</string>
+    <string name="ask_submit">Hỏi ngay</string>
+    <string name="ask_clear">Xoá nội dung</string>
+    <string name="ask_error_empty">Hãy nhập câu hỏi trước khi gửi.</string>
+    <string name="ask_error_too_long">Câu hỏi quá dài (tối đa %1$d ký tự).</string>
+    <string name="ask_error_not_configured">Chưa cấu hình API key cho AI. Đang dùng chế độ mô phỏng.</string>
+    <string name="ask_error_provider">AI không phản hồi: %1$s</string>
+    <string name="ask_error_network">Không gọi được AI. Kiểm tra kết nối mạng rồi thử lại.</string>
+    <string name="ask_error_malformed">Câu trả lời AI không đúng định dạng. Thử lại.</string>
+    <string name="ask_answer_loading">AI đang suy nghĩ…</string>
+    <string name="ask_fake_mode_banner">Chế độ mô phỏng — chưa có API key Gemini.</string>
+    <string name="ask_fake_mode_body">Đặt GEMINI_API_KEY trong AI Study/local.properties rồi build lại để dùng AI thật.</string>
+    <string name="ask_cached_badge">Từ bộ nhớ đệm</string>
+    <string name="ask_matched_note">Câu hỏi này gần giống câu bạn đã hỏi, nên không tốn phí gọi AI.</string>
+    <string name="ask_difficulty_label">Độ khó</string>
+    <string name="ask_saved_hint">Đã lưu vào Lịch sử.</string>
+    <string name="ask_empty_title">Chưa có câu hỏi nào</string>
+    <string name="ask_empty_body">Đặt câu hỏi đầu tiên để bắt đầu. Câu trả lời sẽ được lưu lại tự động.</string>
+
+    <string name="difficulty_easy">Dễ</string>
+    <string name="difficulty_medium">Trung bình</string>
+    <string name="difficulty_hard">Khó</string>
+
+    <!-- ============ FR5 - Answer improvement ============ -->
+    <string name="improve_title">Học thêm từ câu trả lời này</string>
+    <string name="improve_simplified">Giải thích rút gọn</string>
+    <string name="improve_alternative">Cách làm khác</string>
+    <string name="improve_key_concepts">Khái niệm then chốt</string>
+    <string name="improve_common_mistakes">Lỗi thường gặp</string>
+    <string name="improve_follow_ups">Câu hỏi nên hỏi tiếp</string>
+    <string name="improve_generate">Tạo nội dung này</string>
+    <string name="improve_regenerate">Tạo lại</string>
+    <string name="improve_loading">Đang tạo…</string>
+    <string name="improve_empty">Bấm "Tạo nội dung này" để AI bổ sung phần này.</string>
+
+    <!-- ============ FR6 - Lich su ============ -->
+    <string name="history_title">Lịch sử</string>
+    <string name="history_search_hint">Tìm trong câu hỏi và câu trả lời…</string>
+    <string name="history_clear_search">Xoá tìm kiếm</string>
+    <string name="history_filter_all">Tất cả</string>
+    <string name="history_filter_bookmarked">Đã lưu</string>
+    <string name="history_group_by_subject">Theo môn</string>
+    <string name="history_result_count">%1$d kết quả</string>
+    <string name="history_bookmark_add">Lưu câu này</string>
+    <string name="history_bookmark_remove">Bỏ lưu</string>
+    <string name="history_empty_title">Chưa có lịch sử</string>
+    <string name="history_empty_body">Các câu hỏi bạn đặt sẽ xuất hiện ở đây.</string>
+    <string name="history_empty_search_title">Không tìm thấy kết quả</string>
+    <string name="history_empty_search_body">Thử từ khoá khác hoặc xoá bộ lọc.</string>
+    <string name="history_empty_bookmark_title">Chưa lưu câu nào</string>
+    <string name="history_empty_bookmark_body">Bấm biểu tượng ghim ở một câu hỏi để lưu lại.</string>
+    <string name="history_ask_first">Hỏi câu đầu tiên</string>
+
+    <!-- ============ Chi tiet cau hoi ============ -->
+    <string name="detail_title">Chi tiết</string>
+    <string name="detail_question_label">Câu hỏi</string>
+    <string name="detail_answer_label">Câu trả lời</string>
+    <string name="detail_time_spent">Đã đọc %1$s</string>
+    <string name="detail_not_found">Không tìm thấy câu hỏi này.</string>
+    <string name="detail_asked_at">Hỏi lúc %1$s</string>
+
+    <!-- ============ FR7 - Luyen tap ============ -->
+    <string name="practice_title">Luyện tập</string>
+    <string name="practice_generate">Sinh câu hỏi luyện tập</string>
+    <string name="practice_generate_hint">AI sẽ tạo câu hỏi từ một câu bạn đã hỏi trước đó.</string>
+    <string name="practice_pick_source">Chọn câu hỏi nguồn</string>
+    <string name="practice_pick_source_empty">Chưa có câu hỏi nào để sinh bài. Hãy hỏi AI trước.</string>
+    <string name="practice_count_label">Số câu cần sinh</string>
+    <string name="practice_generating">AI đang soạn câu hỏi…</string>
+    <string name="practice_empty_title">Chưa có câu luyện tập</string>
+    <string name="practice_empty_body">Sinh câu hỏi từ một câu bạn đã hỏi để bắt đầu luyện tập.</string>
+    <string name="practice_progress">Câu %1$d / %2$d</string>
+    <string name="practice_your_answer">Câu trả lời của bạn</string>
+    <string name="practice_submit_answer">Nộp bài</string>
+    <string name="practice_check_answer">Kiểm tra đáp án</string>
+    <string name="practice_correct">Chính xác!</string>
+    <string name="practice_incorrect">Chưa đúng.</string>
+    <string name="practice_correct_answer">Đáp án đúng: %1$s</string>
+    <string name="practice_explanation">Giải thích</string>
+    <string name="practice_next">Câu tiếp theo</string>
+    <string name="practice_finish">Xem kết quả</string>
+    <string name="practice_result_title">Kết quả luyện tập</string>
+    <string name="practice_result_score">Đúng %1$d / %2$d câu</string>
+    <string name="practice_result_accuracy">Tỉ lệ chính xác %1$d%%</string>
+    <string name="practice_result_xp">Bạn nhận được %1$d XP.</string>
+    <string name="practice_result_done">Về lại Luyện tập</string>
+    <string name="practice_option_a">A</string>
+    <string name="practice_option_b">B</string>
+    <string name="practice_option_c">C</string>
+    <string name="practice_option_d">D</string>
+    <string name="practice_type_multiple_choice">Trắc nghiệm</string>
+    <string name="practice_type_short_answer">Tự luận</string>
+    <string name="practice_type_fill_blank">Điền vào chỗ trống</string>
+    <string name="practice_answer_required">Hãy nhập câu trả lời trước khi nộp.</string>
+
+    <!-- ============ FR8 - Tien do ============ -->
+    <string name="progress_title">Tiến độ</string>
+    <string name="progress_questions_total">Câu đã hỏi</string>
+    <string name="progress_review_time">Thời gian ôn tập</string>
+    <string name="progress_review_time_value">%1$d phút</string>
+    <string name="progress_quiz_accuracy">Tỉ lệ đúng luyện tập</string>
+    <string name="progress_quiz_accuracy_value">%1$d%%</string>
+    <string name="progress_quiz_progress">Đã làm %1$d / %2$d câu luyện tập</string>
+    <string name="progress_xp_week">XP tuần này</string>
+    <string name="progress_xp_week_value">+%1$d XP</string>
+    <string name="progress_by_subject">Câu hỏi theo môn</string>
+    <string name="progress_by_subject_empty">Chưa có dữ liệu theo môn.</string>
+    <string name="progress_empty_title">Chưa có dữ liệu thống kê</string>
+    <string name="progress_empty_body">Hỏi vài câu rồi quay lại đây để xem thống kê.</string>
+    <string name="progress_subject_count">%1$d câu</string>
+
+    <!-- ============ FR9 - Gamification ============ -->
+    <string name="gamification_level">Cấp %1$d</string>
+    <string name="gamification_xp_total">%1$d XP</string>
+    <string name="gamification_xp_to_next">Còn %1$d XP để lên cấp</string>
+    <string name="gamification_max_level">Đã đạt cấp cao nhất</string>
+    <string name="gamification_streak">Chuỗi %1$d ngày</string>
+    <string name="gamification_streak_none">Chưa có chuỗi ngày nào</string>
+    <string name="gamification_level_up_title">Lên cấp %1$d!</string>
+    <string name="gamification_badge_title">Bạn vừa mở khoá huy hiệu</string>
+    <string name="gamification_xp_gain">+%1$d XP</string>
+    <string name="gamification_badges_title">Huy hiệu</string>
+    <string name="gamification_badges_empty">Chưa có huy hiệu nào. Hãy bắt đầu với câu hỏi đầu tiên.</string>
+    <string name="gamification_badge_locked">Chưa mở</string>
+    <string name="gamification_earned_on">Nhận lúc %1$s</string>
+
+    <string name="badge_first_question">Câu hỏi đầu tiên</string>
+    <string name="badge_streak_7">Học 7 ngày liên tiếp</string>
+    <string name="badge_subject_explorer">Thăm dò 5 môn</string>
+    <string name="badge_quiz_master">Bậc thầy luyện tập</string>
+    <string name="badge_early_bird">Chim non sớm</string>
+
+    <string name="badge_desc_first_question">Đặt câu hỏi đầu tiên của bạn</string>
+    <string name="badge_desc_streak_7">Hỏi câu trong 7 ngày liên tiếp</string>
+    <string name="badge_desc_subject_explorer">Hỏi ở 5 môn khác nhau</string>
+    <string name="badge_desc_quiz_master">Trả lời 50 câu luyện tập với tỉ lệ đúng 80%</string>
+    <string name="badge_desc_early_bird">Hỏi câu trước 7 giờ sáng</string>
+
+    <string name="xp_reason_ask_question">Đặt câu hỏi</string>
+    <string name="xp_reason_review_answer">Đọc câu trả lời</string>
+    <string name="xp_reason_complete_quiz">Hoàn thành bài luyện tập</string>
+    <string name="xp_reason_quiz_bonus">Thưởng điểm luyện tập</string>
+    <string name="xp_reason_daily_streak">Chuỗi ngày học</string>
+
+    <!-- ============ FR10 - Thong bao ============ -->
+    <string name="notifications_title">Thông báo</string>
+    <string name="notifications_mark_all_read">Đánh dấu đã đọc tất cả</string>
+    <string name="notifications_empty_title">Không có thông báo</string>
+    <string name="notifications_empty_body">Khi có kết quả luyện tập hoặc huy hiệu mới, chúng sẽ xuất hiện ở đây.</string>
+    <string name="notifications_unread_count">%1$d chưa đọc</string>
+    <string name="notifications_open">Mở thông báo</string>
+    <string name="notifications_back">Quay lại</string>
+
+    <string name="notification_type_review_reminder">Nhắc ôn tập</string>
+    <string name="notification_type_mistake_alert">Cảnh báo sai sót</string>
+    <string name="notification_type_motivational">Động viên</string>
+    <string name="notification_type_daily_summary">Tóm tắt trong ngày</string>
+
+    <!-- ============ Ho so ============ -->
+    <string name="profile_title">Hồ sơ</string>
+    <string name="profile_level_label">Cấp học</string>
+    <string name="profile_subjects_label">Môn quan tâm</string>
+    <string name="profile_style_label">Phong cách giải thích</string>
+    <string name="profile_edit_preferences">Sửa tuỳ chọn học tập</string>
+    <string name="profile_open_notifications">Xem thông báo</string>
+    <string name="profile_badges_count">%1$d / %2$d huy hiệu</string>
+    <string name="profile_stats_questions">Câu đã hỏi</string>
+    <string name="profile_stats_review">Phút ôn tập</string>
+    <string name="profile_stats_accuracy">Tỉ lệ đúng</string>
+    <string name="profile_danger_zone">Khu vực nguy hiểm</string>
+
+    <!-- ============ N3 - Quyen rieng tu ============ -->
+    <string name="privacy_section_title">Dữ liệu của bạn</string>
+    <string name="privacy_local_only_title">Dữ liệu lưu trên máy</string>
+    <string name="privacy_local_only_body">Mọi câu hỏi, câu trả lời và ảnh bài tập được lưu trong bộ nhớ riêng của ứng dụng, mã hoá bằng khóa sinh ra trên máy bạn. App không tải dữ liệu học tập lên máy chủ nào.</string>
+    <string name="privacy_delete_confirm_title">Xoá toàn bộ dữ liệu học tập?</string>
+    <string name="privacy_delete_confirm_body">Câu hỏi, câu trả lời, ảnh, XP và huy hiệu sẽ bị xoá. Tài khoản vẫn còn.</string>
+    <string name="privacy_delete_done">Đã xoá dữ liệu học tập.</string>
+    <string name="privacy_photos_note">Ảnh bài tập được mã hoá AES-GCM trước khi lưu.</string>
+
+    <!-- ============ N2 - Offline ============ -->
+    <string name="offline_banner_title">Đang offline</string>
+    <string name="offline_banner_body">Câu hỏi đã lưu vẫn xem được. Hỏi AI sẽ cần kết nối mạng.</string>
 </resources>

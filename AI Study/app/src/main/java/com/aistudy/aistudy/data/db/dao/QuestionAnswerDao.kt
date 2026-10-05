@@ -59,6 +59,17 @@ interface QuestionAnswerDao {
     @Query("UPDATE question_answers SET alternativeApproach = :text WHERE id = :id")
     suspend fun setAlternativeApproach(id: Long, text: String)
 
+    // ----- FR5: ba phan con thieu setter, bo sung khi lam repository -----
+
+    @Query("UPDATE question_answers SET keyConcepts = :text WHERE id = :id")
+    suspend fun setKeyConcepts(id: Long, text: String)
+
+    @Query("UPDATE question_answers SET commonMistakes = :text WHERE id = :id")
+    suspend fun setCommonMistakes(id: Long, text: String)
+
+    @Query("UPDATE question_answers SET followUpQuestions = :text WHERE id = :id")
+    suspend fun setFollowUpQuestions(id: Long, text: String)
+
     @Query("SELECT COUNT(*) FROM question_answers WHERE userId = :userId")
     suspend fun countByUser(userId: Long): Int
 
