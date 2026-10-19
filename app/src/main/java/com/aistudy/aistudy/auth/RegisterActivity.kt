@@ -14,7 +14,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
-import com.aistudy.aistudy.MainActivity
 import com.aistudy.aistudy.R
 import com.aistudy.aistudy.database.AppDatabase
 import com.aistudy.aistudy.database.User
@@ -105,13 +104,8 @@ class RegisterActivity : AppCompatActivity() {
                 }
 
                 check(userId > 0)
-                getSharedPreferences(LoginActivity.PREFS_AUTH, MODE_PRIVATE)
-                    .edit()
-                    .putLong(LoginActivity.KEY_USER_ID, userId)
-                    .apply()
-
                 showToast(R.string.auth_success_register)
-                startActivity(Intent(this@RegisterActivity, MainActivity::class.java).apply {
+                startActivity(Intent(this@RegisterActivity, LoginActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 })
                 finish()

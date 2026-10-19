@@ -28,5 +28,5 @@
     <string name="auth_error_email_taken">This email is already registered.</string>
     <string name="auth_error_invalid_credentials">Invalid email or password.</string>
     <string name="auth_error_unknown">Something went wrong. Please try again.</string>
-    <string name="auth_success_register">Account created successfully.</string>
+    <string name="auth_success_register">Đăng ký tài khoản thành công!</string>
 </resources>
