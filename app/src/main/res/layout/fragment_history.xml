@@ -134,6 +134,21 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/chip_language"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/bg_history_chip"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:paddingHorizontal="16dp"
+                    android:text="@string/subject_language"
+                    android:textColor="@color/answer_foreground"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <TextView
                     android:id="@+id/chip_starred"
                     android:layout_width="wrap_content"
                     android:layout_height="36dp"
@@ -148,6 +163,16 @@
                     android:textStyle="bold" />
             </LinearLayout>
         </HorizontalScrollView>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_practice"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/quiz_practice"
+            android:visibility="gone"
+            app:backgroundTint="@color/auth_brand"
+            app:cornerRadius="12dp" />
 
         <!-- Question List / Empty State -->
         <FrameLayout

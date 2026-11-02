@@ -16,6 +16,7 @@ object AnswerPrompts {
 
     fun answerSchema(): JSONObject = objectSchema(JSONObject()
         .put("subject", string().put("enum", JSONArray(listOf("math", "science", "code", "history", "language", "other"))))
+        .put("difficulty", string().put("enum", JSONArray(listOf("easy", "medium", "hard"))))
         .put("answerType", typeSchema()).put("finalAnswerRedundant", JSONObject().put("type", "boolean"))
         .put("steps", stepsSchema().put("minItems", 1)).put("finalAnswer", string()))
 

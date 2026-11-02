@@ -60,13 +60,31 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintWidth_max="@dimen/answer_column_width" tools:visibility="visible">
 
-                <TextView android:id="@+id/tv_subject"
-                    android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:background="@drawable/bg_answer_subject"
-                    android:paddingHorizontal="@dimen/answer_space_3" android:paddingVertical="@dimen/answer_space_2"
-                    android:drawableStart="@drawable/ic_answer_book" android:drawablePadding="@dimen/answer_space_2"
+                <!-- Header: Subject + Difficulty Badge -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     android:gravity="center_vertical"
-                    android:textAppearance="@style/TextAppearance.AIStudy.Answer.Subject" tools:text="Math" />
+                    android:orientation="horizontal">
+
+                    <TextView android:id="@+id/tv_subject"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:background="@drawable/bg_answer_subject"
+                        android:paddingHorizontal="@dimen/answer_space_3" android:paddingVertical="@dimen/answer_space_2"
+                        android:drawableStart="@drawable/ic_answer_book" android:drawablePadding="@dimen/answer_space_2"
+                        android:gravity="center_vertical"
+                        android:textAppearance="@style/TextAppearance.AIStudy.Answer.Subject" tools:text="Math" />
+
+                    <TextView android:id="@+id/tv_difficulty"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/answer_space_2"
+                        android:background="@drawable/bg_difficulty_badge"
+                        android:paddingHorizontal="10dp" android:paddingVertical="4dp"
+                        android:textColor="@color/answer_primary"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        tools:text="Medium" />
+                </LinearLayout>
 
                 <TextView android:id="@+id/tv_question"
                     android:layout_width="match_parent" android:layout_height="wrap_content"
@@ -74,6 +92,43 @@
                     android:breakStrategy="high_quality" android:textIsSelectable="true"
                     android:textAppearance="@style/TextAppearance.AIStudy.Answer.Question"
                     tools:text="Solve x² − 5x + 6 = 0." />
+
+                <!-- Attached image (Phase 10) -->
+                <LinearLayout
+                    android:id="@+id/layout_answer_image"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/answer_space_4"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        android:text="@string/answer_image_label"
+                        android:textAllCaps="true"
+                        android:textColor="@color/answer_foreground_secondary"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="0dp"
+                        app:strokeWidth="1dp"
+                        app:strokeColor="@color/answer_divider">
+
+                        <ImageView
+                            android:id="@+id/img_answer"
+                            android:layout_width="match_parent"
+                            android:layout_height="200dp"
+                            android:adjustViewBounds="true"
+                            android:contentDescription="@string/answer_image_label"
+                            android:scaleType="centerCrop" />
+                    </com.google.android.material.card.MaterialCardView>
+                </LinearLayout>
 
                 <View android:layout_width="match_parent" android:layout_height="@dimen/answer_rule_width"
                     android:layout_marginTop="@dimen/answer_space_8"
@@ -161,6 +216,148 @@
                         app:icon="@drawable/ic_answer_more" app:iconGravity="textEnd"
                         app:iconPadding="@dimen/answer_space_3" app:iconSize="20dp" />
                 </LinearLayout>
+
+                <!-- Learning Extras Section (Phase 9) -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/answer_rule_width"
+                    android:layout_marginTop="@dimen/answer_space_6"
+                    android:layout_marginBottom="@dimen/answer_space_4"
+                    android:background="@color/answer_divider"
+                    android:importantForAccessibility="no" />
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:overScrollMode="never"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/btn_simplify"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_answer_action"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:paddingHorizontal="14dp"
+                            android:paddingVertical="8dp"
+                            android:text="@string/answer_action_simplify"
+                            android:textColor="@color/answer_foreground"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/btn_alternative"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:background="@drawable/bg_answer_action"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:paddingHorizontal="14dp"
+                            android:paddingVertical="8dp"
+                            android:text="@string/answer_action_alternative"
+                            android:textColor="@color/answer_foreground"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/btn_concepts"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:background="@drawable/bg_answer_action"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:paddingHorizontal="14dp"
+                            android:paddingVertical="8dp"
+                            android:text="@string/answer_action_concepts"
+                            android:textColor="@color/answer_foreground"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/btn_mistakes"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:background="@drawable/bg_answer_action"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:paddingHorizontal="14dp"
+                            android:paddingVertical="8dp"
+                            android:text="@string/answer_action_mistakes"
+                            android:textColor="@color/answer_foreground"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/btn_followups"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:background="@drawable/bg_answer_action"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:paddingHorizontal="14dp"
+                            android:paddingVertical="8dp"
+                            android:text="@string/answer_action_followups"
+                            android:textColor="@color/answer_foreground"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </HorizontalScrollView>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_answer_extras_card"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <ProgressBar
+                        android:id="@+id/progress_extras"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:indeterminateTint="@color/answer_primary"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/tv_extras"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:lineSpacingExtra="4dp"
+                        android:text="@string/answer_extras_empty"
+                        android:textColor="@color/answer_foreground"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_practice"
+                    style="@style/Widget.AIStudy.Answer.More"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/quiz_practice"
+                    app:backgroundTint="@color/answer_primary"
+                    app:cornerRadius="12dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_mark_reviewed"
+                    style="@style/Widget.AIStudy.Answer.More"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/answer_mark_reviewed"
+                    app:backgroundTint="@color/answer_primary"
+                    app:cornerRadius="12dp" />
             </LinearLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>

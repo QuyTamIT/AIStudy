@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -21,8 +22,14 @@ import com.aistudy.aistudy.auth.LoginActivity
 import com.aistudy.aistudy.database.AppDatabase
 import com.aistudy.aistudy.database.QuestionAnswer
 import com.aistudy.aistudy.database.QuestionAnswerDao
+import com.aistudy.aistudy.quiz.QuizActivity
+import com.google.android.material.button.MaterialButton
 
 class HistoryFragment : Fragment() {
+
+    companion object {
+        private const val MIN_PRACTICE_QA = 2
+    }
 
     private lateinit var etSearch: EditText
     private lateinit var chipAll: TextView
@@ -30,12 +37,15 @@ class HistoryFragment : Fragment() {
     private lateinit var chipScience: TextView
     private lateinit var chipCode: TextView
     private lateinit var chipHistory: TextView
+    private lateinit var chipLanguage: TextView
     private lateinit var chipStarred: TextView
+    private lateinit var btnPractice: MaterialButton
     private lateinit var rvHistory: RecyclerView
     private lateinit var tvEmpty: TextView
 
     private lateinit var adapter: HistoryAdapter
     private var qaDao: QuestionAnswerDao? = null
+    private var userId = -1L
     private val allItems = mutableListOf<QuestionAnswer>()
 
     private var subjectFilter = "all"
@@ -59,9 +69,29 @@ class HistoryFragment : Fragment() {
         chipScience = view.findViewById(R.id.chip_science)
         chipCode = view.findViewById(R.id.chip_code)
         chipHistory = view.findViewById(R.id.chip_history)
+        chipLanguage = view.findViewById(R.id.chip_language)
         chipStarred = view.findViewById(R.id.chip_starred)
+        btnPractice = view.findViewById(R.id.btn_practice)
         rvHistory = view.findViewById(R.id.rv_history)
         tvEmpty = view.findViewById(R.id.tv_empty)
+
+        btnPractice.setOnClickListener {
+            if (subjectFilter == "all" || starredOnly) {
+                return@setOnClickListener
+            }
+            val dao = qaDao
+            if (dao == null || userId == -1L) {
+                return@setOnClickListener
+            }
+            val count = dao.countBySubject(userId, subjectFilter)
+            if (count < MIN_PRACTICE_QA) {
+                Toast.makeText(requireContext(), R.string.quiz_need_more, Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
+            val intent = Intent(requireContext(), QuizActivity::class.java)
+            intent.putExtra(QuizActivity.EXTRA_SUBJECT, subjectFilter)
+            startActivity(intent)
+        }
 
         adapter = HistoryAdapter(
             object : HistoryAdapter.Listener {
@@ -114,6 +144,12 @@ class HistoryFragment : Fragment() {
             refreshChips()
             applyFilter()
         }
+        chipLanguage.setOnClickListener {
+            subjectFilter = "language"
+            starredOnly = false
+            refreshChips()
+            applyFilter()
+        }
         chipStarred.setOnClickListener {
             subjectFilter = "all"
             starredOnly = true
@@ -146,6 +182,7 @@ class HistoryFragment : Fragment() {
         if (userId <= 0L) {
             return
         }
+        this.userId = userId
 
         val dao = AppDatabase.getInstance(currentContext).questionAnswerDao()
         qaDao = dao
@@ -172,6 +209,17 @@ class HistoryFragment : Fragment() {
         val empty = filtered.isEmpty()
         tvEmpty.visibility = if (empty) View.VISIBLE else View.GONE
         rvHistory.visibility = if (empty) View.GONE else View.VISIBLE
+        refreshPracticeButton()
+    }
+
+    private fun refreshPracticeButton() {
+        val show = !starredOnly && subjectFilter != "all"
+        if (!show) {
+            btnPractice.visibility = View.GONE
+            return
+        }
+        btnPractice.visibility = View.VISIBLE
+        btnPractice.text = getString(R.string.quiz_practice_on, subjectLabel(subjectFilter))
     }
 
     private fun refreshChips() {
@@ -180,6 +228,7 @@ class HistoryFragment : Fragment() {
         styleChip(chipScience, subjectFilter == "science" && !starredOnly)
         styleChip(chipCode, subjectFilter == "code" && !starredOnly)
         styleChip(chipHistory, subjectFilter == "history" && !starredOnly)
+        styleChip(chipLanguage, subjectFilter == "language" && !starredOnly)
         styleChip(chipStarred, starredOnly)
     }
 

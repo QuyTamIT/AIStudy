@@ -1,16 +1,29 @@
 package com.aistudy.aistudy.ask
 
+import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Bundle
+import android.util.Base64
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.view.ContextThemeWrapper
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -25,8 +38,13 @@ import com.aistudy.aistudy.auth.LoginActivity
 import com.aistudy.aistudy.database.AppDatabase
 import com.aistudy.aistudy.database.ProfileDefaults
 import com.aistudy.aistudy.database.QuestionAnswer
+import com.aistudy.aistudy.xp.XpRules
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputLayout
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.io.IOException
 import java.net.SocketTimeoutException
 import java.util.concurrent.ExecutorService
@@ -37,13 +55,77 @@ import org.json.JSONObject
 class AskFragment : Fragment() {
     private lateinit var editQuestion: EditText
     private lateinit var buttonSend: MaterialButton
+    private lateinit var buttonCamera: MaterialButton
+    private lateinit var buttonGallery: MaterialButton
+    private lateinit var layoutImagePreview: LinearLayout
+    private lateinit var imgPreview: ImageView
+    private var btnRemoveImage: View? = null
     private lateinit var progressLoading: View
     private lateinit var textError: TextView
+
     private var suggestionButtons = emptyList<MaterialButton>()
     private var executor: ExecutorService? = null
     private var loading = false
     private var pendingAnswerId = 0L
     private var pendingUserId = 0L
+
+    // Phase 10: Selected image state and ActivityResult launchers
+    private var selectedImageFile: File? = null
+    private var selectedMimeType: String? = null
+    private var cameraFile: File? = null
+
+    private lateinit var requestCameraPermission: ActivityResultLauncher<String>
+    private lateinit var requestGalleryPermission: ActivityResultLauncher<String>
+    private lateinit var takePicture: ActivityResultLauncher<Uri>
+    private lateinit var pickImage: ActivityResultLauncher<String>
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        requestCameraPermission = registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { granted ->
+            if (granted) {
+                launchCamera()
+            } else {
+                Toast.makeText(requireContext(), R.string.ask_permission_camera, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        requestGalleryPermission = registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { granted ->
+            if (granted) {
+                pickImage.launch("image/*")
+            } else {
+                Toast.makeText(requireContext(), R.string.ask_permission_gallery, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        takePicture = registerForActivityResult(
+            ActivityResultContracts.TakePicture()
+        ) { success ->
+            val file = cameraFile
+            if (success && file != null && file.exists()) {
+                setSelectedImage(file, "image/jpeg")
+            } else {
+                Toast.makeText(requireContext(), R.string.ask_image_error, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        pickImage = registerForActivityResult(
+            ActivityResultContracts.GetContent()
+        ) { uri ->
+            if (uri == null) return@registerForActivityResult
+            try {
+                val (copied, mime) = copyUriToQaImages(uri)
+                setSelectedImage(copied, mime)
+            } catch (e: Exception) {
+                Log.e(TAG, "gallery copy failed", e)
+                Toast.makeText(requireContext(), R.string.ask_image_error, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -56,12 +138,19 @@ class AskFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         editQuestion = view.findViewById(R.id.edit_question)
         buttonSend = view.findViewById(R.id.btn_send)
+        buttonCamera = view.findViewById(R.id.btn_camera)
+        buttonGallery = view.findViewById(R.id.btn_gallery)
+        layoutImagePreview = view.findViewById(R.id.layout_image_preview)
+        imgPreview = view.findViewById(R.id.img_preview)
+        btnRemoveImage = view.findViewById(R.id.btn_remove_image)
         progressLoading = view.findViewById(R.id.progress_loading)
         textError = view.findViewById(R.id.tv_ask_error)
+
         editQuestion.doAfterTextChanged {
             view.findViewById<TextInputLayout>(R.id.input_question).error = null
             textError.visibility = View.GONE
         }
+
         // Main already handles system bars. Only the remaining IME overlap belongs to Ask.
         ViewCompat.setOnApplyWindowInsetsListener(view) { root, insets ->
             val ime = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
@@ -71,6 +160,11 @@ class AskFragment : Fragment() {
             insets
         }
         ViewCompat.requestApplyInsets(view)
+
+        buttonCamera.setOnClickListener { ensureCameraPermission() }
+        buttonGallery.setOnClickListener { ensureGalleryPermission() }
+        btnRemoveImage?.setOnClickListener { clearSelectedImage() }
+
         suggestionButtons = listOf(
             R.id.btn_suggestion_1, R.id.btn_suggestion_2,
             R.id.btn_suggestion_3, R.id.btn_suggestion_4
@@ -110,17 +204,137 @@ class AskFragment : Fragment() {
         executor?.shutdownNow()
         executor = null
         suggestionButtons = emptyList()
+        btnRemoveImage = null
         super.onDestroyView()
+    }
+
+    // Phase 10: Camera & Gallery helpers
+    private fun ensureCameraPermission() {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
+            == PackageManager.PERMISSION_GRANTED
+        ) {
+            launchCamera()
+        } else {
+            requestCameraPermission.launch(Manifest.permission.CAMERA)
+        }
+    }
+
+    private fun ensureGalleryPermission() {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_MEDIA_IMAGES)
+            == PackageManager.PERMISSION_GRANTED
+        ) {
+            pickImage.launch("image/*")
+        } else {
+            requestGalleryPermission.launch(Manifest.permission.READ_MEDIA_IMAGES)
+        }
+    }
+
+    private fun launchCamera() {
+        try {
+            val dir = File(requireContext().cacheDir, "camera")
+            if (!dir.exists() && !dir.mkdirs()) {
+                throw Exception("cannot create camera cache")
+            }
+            val file = File(dir, "capture_${System.currentTimeMillis()}.jpg")
+            cameraFile = file
+            val uri = FileProvider.getUriForFile(
+                requireContext(),
+                requireContext().packageName + ".fileprovider",
+                file
+            )
+            takePicture.launch(uri)
+        } catch (e: Exception) {
+            Log.e(TAG, "launch camera failed", e)
+            Toast.makeText(requireContext(), R.string.ask_image_error, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun copyUriToQaImages(uri: Uri): Pair<File, String> {
+        val dir = File(requireContext().filesDir, "qa_images")
+        if (!dir.exists() && !dir.mkdirs()) {
+            throw Exception("cannot create qa_images")
+        }
+        var mime = requireContext().contentResolver.getType(uri)
+        if (mime == null || !mime.startsWith("image/")) {
+            mime = "image/jpeg"
+        }
+        val ext = when (mime) {
+            "image/png" -> ".png"
+            "image/webp" -> ".webp"
+            "image/gif" -> ".gif"
+            else -> ".jpg"
+        }
+        val out = File(dir, "qa_${System.currentTimeMillis()}$ext")
+        val input = requireContext().contentResolver.openInputStream(uri)
+        input.use { ins ->
+            FileOutputStream(out).use { fos ->
+                if (ins == null) throw Exception("null input stream")
+                val buf = ByteArray(8192)
+                var n = ins.read(buf)
+                while (n >= 0) {
+                    fos.write(buf, 0, n)
+                    n = ins.read(buf)
+                }
+            }
+        }
+        return Pair(out, mime)
+    }
+
+    private fun persistCameraToQaImages(source: File): File {
+        val dir = File(requireContext().filesDir, "qa_images")
+        if (!dir.exists() && !dir.mkdirs()) {
+            throw Exception("cannot create qa_images")
+        }
+        val out = File(dir, "qa_${System.currentTimeMillis()}.jpg")
+        FileInputStream(source).use { input ->
+            FileOutputStream(out).use { fos ->
+                val buf = ByteArray(8192)
+                var n = input.read(buf)
+                while (n >= 0) {
+                    fos.write(buf, 0, n)
+                    n = input.read(buf)
+                }
+            }
+        }
+        return out
+    }
+
+    private fun setSelectedImage(file: File, mimeType: String) {
+        selectedImageFile = file
+        selectedMimeType = mimeType
+        // Decode downsampled bitmap for preview to avoid main-thread OOM
+        val previewBitmap = decodeSampledBitmap(file.absolutePath, 600, 600)
+        if (previewBitmap != null) {
+            imgPreview.setImageBitmap(previewBitmap)
+            layoutImagePreview.visibility = View.VISIBLE
+        } else {
+            clearSelectedImage()
+            Toast.makeText(requireContext(), R.string.ask_image_error, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun clearSelectedImage() {
+        selectedImageFile = null
+        selectedMimeType = null
+        imgPreview.setImageDrawable(null)
+        layoutImagePreview.visibility = View.GONE
     }
 
     private fun submit() {
         if (loading) return
-        val question = editQuestion.text.toString().trim()
-        if (question.isBlank()) {
-            view?.findViewById<TextInputLayout>(R.id.input_question)?.error = getString(R.string.ask_error_empty)
+        var question = editQuestion.text.toString().trim()
+        val hasImage = selectedImageFile?.exists() == true
+
+        if (question.isBlank() && !hasImage) {
+            view?.findViewById<TextInputLayout>(R.id.input_question)?.error = getString(R.string.ask_empty_both)
             editQuestion.requestFocus()
             return
         }
+
+        if (question.isBlank()) {
+            question = getString(R.string.ask_image_default_question)
+        }
+
         val apiKey = BuildConfig.GEMINI_API_KEY
         if (apiKey.isBlank() || apiKey.startsWith("YOUR_", ignoreCase = true)) {
             showError(R.string.ask_error_key_missing)
@@ -142,16 +356,46 @@ class AskFragment : Fragment() {
         textError.visibility = View.GONE
         view?.findViewById<TextInputLayout>(R.id.input_question)?.error = null
         setLoading(true)
-        Log.d(TAG, "submit start")
+
+        val questionFinal = question
+        val imageFile = selectedImageFile
+        val mimeType = selectedMimeType
+        val useImage = hasImage
+
+        Log.d(TAG, "submit start questionLength=${questionFinal.length} hasImage=$useImage")
         worker.execute {
             try {
+                var imageBase64: String? = null
+                var imagePath: String? = null
+                var mime = mimeType
+
+                if (useImage && imageFile != null && imageFile.exists()) {
+                    val parent = imageFile.parentFile
+                    val persisted = if (parent != null && "qa_images" == parent.name) {
+                        imageFile
+                    } else {
+                        persistCameraToQaImages(imageFile)
+                    }
+                    imagePath = persisted.absolutePath
+                    imageBase64 = encodeFileBase64(persisted)
+                    if (mime.isNullOrEmpty()) {
+                        mime = "image/jpeg"
+                    }
+                    Log.d(TAG, "image ready path=$imagePath base64Length=${imageBase64.length}")
+                }
+
                 val profile = ProfileDefaults.ensureExists(database.profileDao(), userId)
-                val prompt = buildPrompt(question, profile.level, profile.style)
-                val item = parseAnswer(GeminiClient.ask(apiKey, prompt, AnswerPrompts.answerSchema()))
+                val prompt = buildPrompt(questionFinal, profile.level, profile.style)
+                val rawResponse = GeminiClient.ask(apiKey, prompt, AnswerPrompts.answerSchema(), imageBase64, mime)
+                val item = parseAnswer(rawResponse)
                 if (Thread.currentThread().isInterrupted) throw InterruptedException()
+
                 item.userId = userId
-                item.question = question
+                item.question = questionFinal
+                item.imagePath = imagePath
+                item.reviewedSeconds = 0
                 item.createdAt = System.currentTimeMillis()
+
                 val qaId = database.runInTransaction<Long> {
                     if (Thread.currentThread().isInterrupted) throw InterruptedException()
                     if (preferences.getLong(LoginActivity.KEY_USER_ID, 0L) != userId) {
@@ -159,14 +403,16 @@ class AskFragment : Fragment() {
                     }
                     val currentProfile = ProfileDefaults.ensureExists(database.profileDao(), userId)
                     val id = database.questionAnswerDao().insert(item)
-                    // Read XP inside the same transaction so concurrent saves cannot overwrite it.
-                    currentProfile.xp += XP_PER_QUESTION
-                    check(database.profileDao().update(currentProfile) == 1)
+                    XpRules.recordDailyActivity(currentProfile, database.profileDao())
+                    XpRules.addXp(currentProfile, database.profileDao(), XpRules.ASK)
+                    Log.d(TAG, "xp updated to ${currentProfile.xp}")
                     id
                 }
-                Log.d(TAG, "saved qaId=$qaId")
+                Log.d(TAG, "saved qaId=$qaId imagePath=$imagePath")
                 postToView(host, requestView) {
                     setLoading(false)
+                    clearSelectedImage()
+                    editQuestion.setText("")
                     pendingAnswerId = qaId
                     pendingUserId = userId
                     openPendingAnswer()
@@ -178,6 +424,7 @@ class AskFragment : Fragment() {
                 Log.w(TAG, "submit failed (${error.javaClass.simpleName})")
                 postToView(host, requestView) {
                     setLoading(false)
+                    // Do NOT clear the user's question or attached image on error so they can retry
                     showError(errorMessage(error))
                 }
             }
@@ -207,6 +454,9 @@ class AskFragment : Fragment() {
         editQuestion.isEnabled = !value
         view?.findViewById<TextInputLayout>(R.id.input_question)?.isEnabled = !value
         buttonSend.isEnabled = !value
+        buttonCamera.isEnabled = !value
+        buttonGallery.isEnabled = !value
+        btnRemoveImage?.isEnabled = !value
         suggestionButtons.forEach { it.isEnabled = !value }
         progressLoading.visibility = if (value) View.VISIBLE else View.GONE
         buttonSend.setText(if (value) R.string.ask_sending else R.string.ask_send)
@@ -248,12 +498,69 @@ class AskFragment : Fragment() {
 
     companion object {
         private const val TAG = "AskFragment"
-        private const val XP_PER_QUESTION = 50
         private val SUBJECTS = setOf(
             ProfileDefaults.SUBJECT_MATH, ProfileDefaults.SUBJECT_SCIENCE,
             ProfileDefaults.SUBJECT_CODE, ProfileDefaults.SUBJECT_HISTORY,
             ProfileDefaults.SUBJECT_LANGUAGE, ProfileDefaults.SUBJECT_OTHER
         )
+
+        private fun isValidDifficulty(difficulty: String): Boolean {
+            return difficulty == "easy" || difficulty == "medium" || difficulty == "hard"
+        }
+
+        fun decodeSampledBitmap(path: String, reqWidth: Int, reqHeight: Int): Bitmap? {
+            val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeFile(path, options)
+            if (options.outWidth <= 0 || options.outHeight <= 0) return null
+            options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight)
+            options.inJustDecodeBounds = false
+            return try {
+                BitmapFactory.decodeFile(path, options)
+            } catch (_: OutOfMemoryError) {
+                null
+            }
+        }
+
+        private fun calculateInSampleSize(options: BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int {
+            val height = options.outHeight
+            val width = options.outWidth
+            var inSampleSize = 1
+            if (height > reqHeight || width > reqWidth) {
+                val halfHeight = height / 2
+                val halfWidth = width / 2
+                while ((halfHeight / inSampleSize) >= reqHeight && (halfWidth / inSampleSize) >= reqWidth) {
+                    inSampleSize *= 2
+                }
+            }
+            return inSampleSize
+        }
+
+        private fun encodeFileBase64(file: File): String {
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeFile(file.absolutePath, bounds)
+            // Downsample large camera photos (e.g. > 1600px or > 2MB) to prevent OOM and request timeouts
+            if (bounds.outWidth > 1600 || bounds.outHeight > 1600 || file.length() > 2 * 1024 * 1024) {
+                val bitmap = decodeSampledBitmap(file.absolutePath, 1600, 1600)
+                if (bitmap != null) {
+                    val stream = ByteArrayOutputStream()
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 85, stream)
+                    val bytes = stream.toByteArray()
+                    bitmap.recycle()
+                    return Base64.encodeToString(bytes, Base64.NO_WRAP)
+                }
+            }
+            FileInputStream(file).use { input ->
+                ByteArrayOutputStream().use { out ->
+                    val buf = ByteArray(8192)
+                    var n = input.read(buf)
+                    while (n >= 0) {
+                        out.write(buf, 0, n)
+                        n = input.read(buf)
+                    }
+                    return Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP)
+                }
+            }
+        }
 
         // Keep the user's task separate from presentation preferences and the JSON format.
         // Source: https://ai.google.dev/gemini-api/docs/prompting-strategies
@@ -298,9 +605,11 @@ class AskFragment : Fragment() {
                 - Other tasks: choose a useful structure that directly fulfills the request.
 
                 OUTPUT CONTRACT:
-                Return only one valid JSON object with subject, answerType, finalAnswerRedundant, steps, and finalAnswer.
+                Return only one valid JSON object with subject, difficulty, answerType, finalAnswerRedundant, steps, and finalAnswer.
                 No surrounding text or markdown fences. Follow the supplied JSON schema.
                 subject: a string classified from the actual request, one of: ${SUBJECTS.joinToString(", ")}.
+                difficulty: rate difficulty as easy, medium, or hard for this student.
+                If an image is attached, read the problem from the image carefully.
                 answerType: topic_list for independent topics, suggestions, recommendations, ideas or list items;
                 solution for a worked problem with a result (especially math); explanation for other explanatory answers.
                 Classify by the actual requested response structure, not by isolated words in the question.
@@ -336,9 +645,16 @@ class AskFragment : Fragment() {
                     throw JSONException("Missing step explanation")
                 }
             }
+            var difficulty = (json.opt("difficulty") as? String)?.lowercase()?.trim() ?: "medium"
+            if (!isValidDifficulty(difficulty)) {
+                difficulty = "medium"
+            }
             return QuestionAnswer().apply {
                 subject = (json.opt("subject") as? String)?.takeIf { it in SUBJECTS }
                     ?: ProfileDefaults.SUBJECT_OTHER
+                this.difficulty = difficulty
+                this.extrasJson = null
+                this.reviewedAt = 0
                 this.steps = AnswerContent.generated(json).toJson()
                 this.finalAnswer = finalAnswer
             }

@@ -68,6 +68,7 @@ dependencies {
     implementation(libs.recyclerview)
     implementation(libs.room.runtime)
     ksp(libs.room.compiler)
+    implementation(libs.work.runtime)
     testImplementation(libs.junit)
     testImplementation("org.json:json:20250517")
     androidTestImplementation(libs.androidx.espresso.core)

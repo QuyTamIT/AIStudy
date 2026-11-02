@@ -3,29 +3,30 @@ package com.aistudy.aistudy.home
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.aistudy.aistudy.MainActivity
 import com.aistudy.aistudy.R
 import com.aistudy.aistudy.answer.AnswerActivity
 import com.aistudy.aistudy.auth.LoginActivity
 import com.aistudy.aistudy.database.AppDatabase
-import com.aistudy.aistudy.database.Profile
-import com.aistudy.aistudy.database.ProfileDefaults
+import com.aistudy.aistudy.database.QuestionAnswerDao
+import com.aistudy.aistudy.quiz.QuizActivity
+import com.aistudy.aistudy.xp.UnlockCatalog
+import com.aistudy.aistudy.xp.XpRules
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.button.MaterialButton
-import java.util.Calendar
-import kotlin.math.roundToInt
 
 class HomeFragment : Fragment() {
 
     companion object {
-        private const val XP_MAX = 1200
+        private const val MIN_PRACTICE_QA = 2
     }
 
     private lateinit var tvLevelBadge: TextView
@@ -35,12 +36,14 @@ class HomeFragment : Fragment() {
     private lateinit var progressXp: ProgressBar
     private lateinit var tvGreeting: TextView
     private lateinit var btnAsk: MaterialButton
-    private var btnLogout: View? = null
+    private lateinit var btnPracticeRecent: MaterialButton
 
-    // Phase 6: Recent Question & Subject Stats
-    private lateinit var sectionRecent: View
+    private lateinit var cardReviewSuggest: LinearLayout
+    private lateinit var tvReviewSubtitle: TextView
+
+    private lateinit var sectionRecent: LinearLayout
     private lateinit var tvViewAll: TextView
-    private lateinit var cardRecent: View
+    private lateinit var cardRecent: LinearLayout
     private lateinit var tvRecentQuestion: TextView
     private lateinit var tvRecentSubject: TextView
 
@@ -48,16 +51,20 @@ class HomeFragment : Fragment() {
     private lateinit var tvCountScience: TextView
     private lateinit var tvCountCode: TextView
     private lateinit var tvCountHistory: TextView
+    private lateinit var tvCountLanguage: TextView
 
     private var latestQaId = -1L
+    private var latestSubject: String? = null
+    private var reviewSubject: String? = null
+    private var currentUserId = -1L
+    private var qaDao: QuestionAnswerDao? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
-        val themedInflater = inflater.cloneInContext(ContextThemeWrapper(requireContext(), R.style.Theme_AIStudy_Study))
-        return themedInflater.inflate(R.layout.fragment_home, container, false)
+    ): View? {
+        return inflater.inflate(R.layout.fragment_home, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -69,9 +76,11 @@ class HomeFragment : Fragment() {
         progressXp = view.findViewById(R.id.progress_xp)
         tvGreeting = view.findViewById(R.id.tv_greeting)
         btnAsk = view.findViewById(R.id.btn_ask)
-        btnLogout = view.findViewById(R.id.btn_logout)
+        btnPracticeRecent = view.findViewById(R.id.btn_practice_recent)
 
-        // Phase 6: Bind Views
+        cardReviewSuggest = view.findViewById(R.id.card_review_suggest)
+        tvReviewSubtitle = view.findViewById(R.id.tv_review_subtitle)
+
         sectionRecent = view.findViewById(R.id.section_recent)
         tvViewAll = view.findViewById(R.id.tv_view_all)
         cardRecent = view.findViewById(R.id.card_recent)
@@ -82,31 +91,29 @@ class HomeFragment : Fragment() {
         tvCountScience = view.findViewById(R.id.tv_count_science)
         tvCountCode = view.findViewById(R.id.tv_count_code)
         tvCountHistory = view.findViewById(R.id.tv_count_history)
+        tvCountLanguage = view.findViewById(R.id.tv_count_language)
 
-        // Clicks & Navigation
         btnAsk.setOnClickListener { selectTab(R.id.nav_ask) }
+        btnPracticeRecent.setOnClickListener {
+            latestSubject?.let { openPractice(it) }
+        }
+        cardReviewSuggest.setOnClickListener {
+            reviewSubject?.let { openPractice(it) }
+        }
         tvViewAll.setOnClickListener { selectTab(R.id.nav_history) }
         cardRecent.setOnClickListener {
             if (latestQaId != -1L) {
-                val intent = Intent(requireContext(), AnswerActivity::class.java).apply {
-                    putExtra(AnswerActivity.EXTRA_QA_ID, latestQaId)
-                }
+                val intent = Intent(requireContext(), AnswerActivity::class.java)
+                intent.putExtra(AnswerActivity.EXTRA_QA_ID, latestQaId)
                 startActivity(intent)
             }
         }
 
-        btnLogout?.setOnClickListener {
-            val activity = requireActivity()
-            activity.getSharedPreferences(LoginActivity.PREFS_AUTH, Context.MODE_PRIVATE)
-                .edit()
-                .remove(LoginActivity.KEY_USER_ID)
-                .apply()
-
-            startActivity(Intent(activity, LoginActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            })
-            activity.finish()
-        }
+        view.findViewById<View>(R.id.card_subject_math).setOnClickListener { openPractice("math") }
+        view.findViewById<View>(R.id.card_subject_science).setOnClickListener { openPractice("science") }
+        view.findViewById<View>(R.id.card_subject_code).setOnClickListener { openPractice("code") }
+        view.findViewById<View>(R.id.card_subject_history).setOnClickListener { openPractice("history") }
+        view.findViewById<View>(R.id.card_subject_language).setOnClickListener { openPractice("language") }
     }
 
     override fun onResume() {
@@ -115,63 +122,95 @@ class HomeFragment : Fragment() {
     }
 
     private fun loadDashboard() {
-        val currentContext = context ?: return
-
-        val userId = currentContext
-            .getSharedPreferences(LoginActivity.PREFS_AUTH, Context.MODE_PRIVATE)
-            .getLong(LoginActivity.KEY_USER_ID, -1L)
-        if (userId <= 0L) {
+        if (context == null) {
             return
         }
 
-        val db = AppDatabase.getInstance(currentContext)
+        val userId = requireContext()
+            .getSharedPreferences(LoginActivity.PREFS_AUTH, Context.MODE_PRIVATE)
+            .getLong(LoginActivity.KEY_USER_ID, -1L)
+        if (userId == -1L) {
+            return
+        }
+
+        val db = AppDatabase.getInstance(requireContext())
         val user = db.userDao().getById(userId)
         val profile = db.profileDao().getByUserId(userId)
         val qaDao = db.questionAnswerDao()
+        this.qaDao = qaDao
+        currentUserId = userId
 
-        val fullName = user?.fullName?.trim().orEmpty()
+        val fullName = user?.fullName ?: ""
         val xp = profile?.xp ?: 0
         val streak = profile?.streak ?: 0
-        val level = maxOf(1, xp / 100)
-        val xpPct = minOf(100, ((xp * 100f) / XP_MAX).roundToInt())
+        val level = XpRules.levelFromXp(xp)
+        val xpPct = XpRules.progressPercentToNext(xp)
+        val nextXp = XpRules.nextLevelThreshold(xp)
 
-        // Phase 5: Metrics & Greeting
         tvLevelBadge.text = level.toString()
         tvStreak.text = getString(R.string.home_streak_days, streak)
-        tvXpLabel.text = getString(R.string.home_xp_progress, xp, XP_MAX)
+        tvXpLabel.text = getString(R.string.home_xp_progress, xp, nextXp)
         tvXpPercent.text = getString(R.string.home_xp_percent, xpPct)
         progressXp.progress = xpPct
+        tvGreeting.text = getString(R.string.home_greeting, fullName)
 
-        tvGreeting.text = if (fullName.isNotEmpty()) {
-            getString(R.string.home_greeting, fullName)
-        } else {
-            val greetingTime = when (Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) {
-                in 5..11 -> getString(R.string.home_morning)
-                in 12..17 -> getString(R.string.home_afternoon)
-                else -> getString(R.string.home_evening)
-            }
-            "$greetingTime."
+        if (profile != null) {
+            activity?.findViewById<View>(R.id.main)?.setBackgroundResource(
+                UnlockCatalog.backgroundColorRes(UnlockCatalog.normalizeThemeId(profile.themeId))
+            )
         }
 
-        bindProfile(profile)
-
-        // Phase 6: Recent Question
         val latest = qaDao.getLatestByUserId(userId)
         if (latest != null) {
             latestQaId = latest.id
+            latestSubject = latest.subject
             sectionRecent.visibility = View.VISIBLE
             tvRecentQuestion.text = latest.question
-            tvRecentSubject.text = getQaSubjectLabel(latest.subject)
+            tvRecentSubject.text = subjectLabel(latest.subject)
+            val subjectCount = latest.subject?.let { qaDao.countBySubject(userId, it) } ?: 0
+            if (subjectCount >= MIN_PRACTICE_QA) {
+                btnPracticeRecent.visibility = View.VISIBLE
+                btnPracticeRecent.text = getString(R.string.quiz_practice_on, subjectLabel(latest.subject))
+            } else {
+                btnPracticeRecent.visibility = View.GONE
+            }
         } else {
             latestQaId = -1L
+            latestSubject = null
             sectionRecent.visibility = View.GONE
+            btnPracticeRecent.visibility = View.GONE
         }
 
-        // Phase 6: Subject Counts
+        val topSubject = qaDao.getTopSubjectByUserId(userId)
+        if (topSubject != null && qaDao.countBySubject(userId, topSubject) >= MIN_PRACTICE_QA) {
+            reviewSubject = topSubject
+            tvReviewSubtitle.text = getString(R.string.home_review_subtitle, subjectLabel(topSubject))
+            cardReviewSuggest.visibility = View.VISIBLE
+        } else {
+            reviewSubject = null
+            cardReviewSuggest.visibility = View.GONE
+        }
+
         tvCountMath.text = getString(R.string.home_subject_count, qaDao.countBySubject(userId, "math"))
         tvCountScience.text = getString(R.string.home_subject_count, qaDao.countBySubject(userId, "science"))
         tvCountCode.text = getString(R.string.home_subject_count, qaDao.countBySubject(userId, "code"))
         tvCountHistory.text = getString(R.string.home_subject_count, qaDao.countBySubject(userId, "history"))
+        tvCountLanguage.text = getString(R.string.home_subject_count, qaDao.countBySubject(userId, "language"))
+    }
+
+    private fun openPractice(subject: String) {
+        val dao = qaDao
+        if (context == null || dao == null || currentUserId == -1L) {
+            return
+        }
+        val count = dao.countBySubject(currentUserId, subject)
+        if (count < MIN_PRACTICE_QA) {
+            Toast.makeText(requireContext(), R.string.quiz_need_more, Toast.LENGTH_LONG).show()
+            return
+        }
+        val intent = Intent(requireContext(), QuizActivity::class.java)
+        intent.putExtra(QuizActivity.EXTRA_SUBJECT, subject)
+        startActivity(intent)
     }
 
     private fun selectTab(menuItemId: Int) {
@@ -181,7 +220,7 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun getQaSubjectLabel(subject: String?): String {
+    private fun subjectLabel(subject: String?): String {
         return when (subject) {
             "math" -> getString(R.string.subject_math)
             "science" -> getString(R.string.subject_science)
@@ -190,57 +229,5 @@ class HomeFragment : Fragment() {
             "language" -> getString(R.string.subject_language)
             else -> getString(R.string.subject_other)
         }
-    }
-
-    private fun bindProfile(profile: Profile?) {
-        val root = view ?: return
-        val homeProfile = root.findViewById<View>(R.id.home_profile) ?: return
-        val homeProfileContext = root.findViewById<TextView>(R.id.home_profile_context) ?: return
-        val homeInterests = root.findViewById<TextView>(R.id.home_interests) ?: return
-
-        val levelStr = when (profile?.level) {
-            ProfileDefaults.LEVEL_JUNIOR -> R.string.onboarding_level_junior
-            ProfileDefaults.LEVEL_HIGH -> R.string.onboarding_level_high
-            ProfileDefaults.LEVEL_UNI -> R.string.onboarding_level_uni
-            else -> null
-        }?.let(::getString)
-
-        val styleStr = when (profile?.style) {
-            ProfileDefaults.STYLE_SHORT -> R.string.onboarding_style_short
-            ProfileDefaults.STYLE_STEPWISE -> R.string.onboarding_style_stepwise
-            ProfileDefaults.STYLE_DETAILED -> R.string.onboarding_style_detailed
-            else -> null
-        }?.let(::getString)
-
-        val contextStr = if (levelStr != null && styleStr != null) {
-            getString(R.string.home_profile_context, levelStr, styleStr)
-        } else {
-            levelStr ?: styleStr.orEmpty()
-        }
-
-        homeProfileContext.text = contextStr
-        homeProfileContext.visibility = if (contextStr.isEmpty()) View.GONE else View.VISIBLE
-
-        val subjects = profile?.subjects.orEmpty().split(',')
-            .map(String::trim)
-            .filter(String::isNotEmpty)
-            .distinct()
-            .mapNotNull { profileSubjectLabel(it) }
-            .map(::getString)
-
-        homeInterests.text = getString(R.string.home_interests, subjects.joinToString(getString(R.string.home_subject_separator)))
-        homeInterests.visibility = if (subjects.isEmpty()) View.GONE else View.VISIBLE
-
-        homeProfile.visibility = if (contextStr.isEmpty() && subjects.isEmpty()) View.GONE else View.VISIBLE
-    }
-
-    private fun profileSubjectLabel(subject: String?): Int? = when (subject) {
-        ProfileDefaults.SUBJECT_MATH -> R.string.onboarding_subject_math
-        ProfileDefaults.SUBJECT_SCIENCE -> R.string.onboarding_subject_science
-        ProfileDefaults.SUBJECT_CODE -> R.string.onboarding_subject_code
-        ProfileDefaults.SUBJECT_HISTORY -> R.string.onboarding_subject_history
-        ProfileDefaults.SUBJECT_LANGUAGE -> R.string.onboarding_subject_language
-        ProfileDefaults.SUBJECT_OTHER -> R.string.onboarding_subject_other
-        else -> null
     }
 }

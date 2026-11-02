@@ -1,13 +1,19 @@
 package com.aistudy.aistudy.answer
 
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.widget.ImageView
+import java.io.File
 import android.view.View
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
@@ -16,15 +22,43 @@ import com.aistudy.aistudy.R
 import com.aistudy.aistudy.ask.GeminiClient
 import com.aistudy.aistudy.auth.LoginActivity
 import com.aistudy.aistudy.database.AppDatabase
+import com.aistudy.aistudy.database.ProfileDao
 import com.aistudy.aistudy.database.ProfileDefaults
 import com.aistudy.aistudy.database.QuestionAnswer
+import com.aistudy.aistudy.database.QuestionAnswerDao
+import com.aistudy.aistudy.quiz.QuizActivity
+import com.aistudy.aistudy.xp.XpRules
 import com.google.android.material.button.MaterialButton
+import java.util.Calendar
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import org.json.JSONArray
+import org.json.JSONObject
 
 class AnswerActivity : AppCompatActivity() {
     private lateinit var model: AnswerViewModel
     private var userId = 0L
     private var renderedQaId = 0L
     private var renderedSteps = emptyList<AnswerStep>()
+
+    private var qaDao: QuestionAnswerDao? = null
+    private lateinit var profileDao: ProfileDao
+    private var currentQa: QuestionAnswer? = null
+    private var extrasExecutor: ExecutorService? = null
+
+    private lateinit var tvDifficulty: TextView
+    private lateinit var btnSimplify: TextView
+    private lateinit var btnAlternative: TextView
+    private lateinit var btnConcepts: TextView
+    private lateinit var btnMistakes: TextView
+    private lateinit var btnFollowups: TextView
+    private lateinit var tvExtras: TextView
+    private lateinit var progressExtras: ProgressBar
+    private lateinit var btnMarkReviewed: MaterialButton
+
+    private var activeExtraKey: String? = null
+    private var extrasLoading = false
+    private var reviewSessionStartMs: Long = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setTheme(R.style.Theme_AIStudy_Answer)
@@ -66,9 +100,33 @@ class AnswerActivity : AppCompatActivity() {
         }
         ViewCompat.requestApplyInsets(content)
         findViewById<View>(R.id.btn_back).setOnClickListener { finish() }
+
+        // Phase 9 views
+        tvDifficulty = findViewById(R.id.tv_difficulty)
+        btnSimplify = findViewById(R.id.btn_simplify)
+        btnAlternative = findViewById(R.id.btn_alternative)
+        btnConcepts = findViewById(R.id.btn_concepts)
+        btnMistakes = findViewById(R.id.btn_mistakes)
+        btnFollowups = findViewById(R.id.btn_followups)
+        tvExtras = findViewById(R.id.tv_extras)
+        progressExtras = findViewById(R.id.progress_extras)
+        btnMarkReviewed = findViewById(R.id.btn_mark_reviewed)
+
+        btnSimplify.setOnClickListener { onExtraAction(KEY_SIMPLIFY) }
+        btnAlternative.setOnClickListener { onExtraAction(KEY_ALTERNATIVE) }
+        btnConcepts.setOnClickListener { onExtraAction(KEY_CONCEPTS) }
+        btnMistakes.setOnClickListener { onExtraAction(KEY_MISTAKES) }
+        btnFollowups.setOnClickListener { onExtraAction(KEY_FOLLOWUPS) }
+        btnMarkReviewed.setOnClickListener { markReviewed() }
+
+        extrasExecutor = Executors.newSingleThreadExecutor()
+
         model = ViewModelProvider(this)[AnswerViewModel::class.java]
         findViewById<View>(R.id.btn_more_topics).setOnClickListener { model.showMore() }
         val database = AppDatabase.getInstance(applicationContext)
+        qaDao = database.questionAnswerDao()
+        profileDao = database.profileDao()
+
         val preferences = getSharedPreferences(LoginActivity.PREFS_AUTH, MODE_PRIVATE)
         val apiKey = BuildConfig.GEMINI_API_KEY
         val repository = AnswerRepository(database.questionAnswerDao(), qaId, userId,
@@ -84,17 +142,30 @@ class AnswerActivity : AppCompatActivity() {
             if (state.loadFailed || preferences.getLong(LoginActivity.KEY_USER_ID, 0L) != userId) {
                 showLoadError()
             } else state.snapshot?.let { snapshot ->
+                currentQa = snapshot.item
                 showAnswer(snapshot.item, snapshot.content)
                 showMoreState(state, snapshot.content)
+                refreshReviewButton()
+                maybeAutoReview()
             }
         }
         model.start(repository)
+        reviewSessionStartMs = System.currentTimeMillis()
     }
 
     override fun onResume() {
         super.onResume()
         if (getSharedPreferences(LoginActivity.PREFS_AUTH, MODE_PRIVATE)
-                .getLong(LoginActivity.KEY_USER_ID, 0L) != userId) showLoadError()
+                .getLong(LoginActivity.KEY_USER_ID, 0L) != userId) {
+            showLoadError()
+            return
+        }
+        reviewSessionStartMs = System.currentTimeMillis()
+    }
+
+    override fun onPause() {
+        flushReviewSeconds()
+        super.onPause()
     }
 
     private fun showAnswer(item: QuestionAnswer, content: AnswerContent) {
@@ -107,7 +178,35 @@ class AnswerActivity : AppCompatActivity() {
             else -> R.string.onboarding_subject_other
         }
         findViewById<TextView>(R.id.tv_subject).setText(subject)
+        tvDifficulty.text = difficultyLabel(item.difficulty)
+        val btnPractice = findViewById<MaterialButton>(R.id.btn_practice)
+        btnPractice.text = getString(R.string.quiz_practice_on, subjectLabel(item.subject))
+        btnPractice.setOnClickListener {
+            val intent = Intent(this, QuizActivity::class.java)
+            intent.putExtra(QuizActivity.EXTRA_SUBJECT, item.subject)
+            startActivity(intent)
+        }
         findViewById<TextView>(R.id.tv_question).setTextIfChanged(item.question.orEmpty())
+
+        val layoutAnswerImage = findViewById<LinearLayout>(R.id.layout_answer_image)
+        val imgAnswer = findViewById<ImageView>(R.id.img_answer)
+        val imagePath = item.imagePath
+        if (!imagePath.isNullOrEmpty()) {
+            val imageFile = File(imagePath)
+            if (imageFile.exists()) {
+                val bitmap = decodeSampledBitmap(imageFile.absolutePath, 800, 600)
+                if (bitmap != null) {
+                    imgAnswer.setImageBitmap(bitmap)
+                    layoutAnswerImage.visibility = View.VISIBLE
+                } else {
+                    layoutAnswerImage.visibility = View.GONE
+                }
+            } else {
+                layoutAnswerImage.visibility = View.GONE
+            }
+        } else {
+            layoutAnswerImage.visibility = View.GONE
+        }
         findViewById<TextView>(R.id.tv_answer_step_count).apply {
             text = resources.getQuantityString(R.plurals.answer_step_count, content.steps.size, content.steps.size)
             visibility = if (content.steps.isEmpty()) View.GONE else View.VISIBLE
@@ -191,6 +290,221 @@ class AnswerActivity : AppCompatActivity() {
         }
     }
 
+    // Phase 9: Auto Review & XP Rules
+    private fun maybeAutoReview() {
+        val item = currentQa ?: return
+        val now = System.currentTimeMillis()
+        if (item.reviewedAt != 0L && isSameDay(item.reviewedAt, now)) {
+            return
+        }
+        markReviewed()
+    }
+
+    private fun markReviewed() {
+        val item = currentQa ?: return
+        val now = System.currentTimeMillis()
+        if (item.reviewedAt != 0L && isSameDay(item.reviewedAt, now)) {
+            refreshReviewButton()
+            return
+        }
+
+        val firstReview = item.reviewedAt == 0L || !isSameDay(item.reviewedAt, now)
+        item.reviewedAt = now
+        qaDao?.updateReviewedAt(item.id, now)
+
+        if (firstReview) {
+            val profile = profileDao.getByUserId(item.userId)
+            if (profile != null) {
+                XpRules.addXp(profile, profileDao, XpRules.REVIEW)
+                Toast.makeText(this, R.string.answer_review_xp_toast, Toast.LENGTH_SHORT).show()
+            }
+        }
+        refreshReviewButton()
+    }
+
+    private fun refreshReviewButton() {
+        val item = currentQa ?: return
+        val now = System.currentTimeMillis()
+        val doneToday = item.reviewedAt != 0L && isSameDay(item.reviewedAt, now)
+        btnMarkReviewed.isEnabled = !doneToday
+        btnMarkReviewed.setText(if (doneToday) R.string.answer_reviewed else R.string.answer_mark_reviewed)
+    }
+
+    // Phase 9: Learning Extras Actions & On-demand Gemini caching
+    private fun onExtraAction(key: String) {
+        if (extrasLoading) return
+        activeExtraKey = key
+        styleExtraButtons()
+        val cached = readExtraField(key)
+        if (!cached.isNullOrEmpty()) {
+            tvExtras.text = cached
+            return
+        }
+        loadExtras(key)
+    }
+
+    private fun loadExtras(focusKey: String) {
+        val apiKey = BuildConfig.GEMINI_API_KEY
+        if (apiKey.isBlank() || apiKey.startsWith("YOUR_", ignoreCase = true)) {
+            Toast.makeText(this, R.string.ask_error_key_missing, Toast.LENGTH_LONG).show()
+            return
+        }
+        val item = currentQa ?: return
+
+        extrasLoading = true
+        progressExtras.visibility = View.VISIBLE
+        tvExtras.setText(R.string.answer_extras_loading)
+
+        val prompt = buildExtrasPrompt(item)
+        extrasExecutor?.execute {
+            try {
+                val raw = GeminiClient.ask(apiKey, prompt)
+                val jsonText = extractJson(raw)
+                val extras = JSONObject(jsonText)
+                val payload = extras.toString()
+                item.extrasJson = payload
+                qaDao?.updateExtras(item.id, payload)
+
+                runOnUiThread {
+                    extrasLoading = false
+                    progressExtras.visibility = View.GONE
+                    val text = formatExtra(extras, focusKey)
+                    if (text.isNullOrEmpty()) {
+                        tvExtras.setText(R.string.answer_extras_error)
+                    } else {
+                        tvExtras.text = text
+                    }
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    extrasLoading = false
+                    progressExtras.visibility = View.GONE
+                    tvExtras.setText(R.string.answer_extras_error)
+                    Toast.makeText(this@AnswerActivity, R.string.answer_extras_error, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun readExtraField(key: String): String? {
+        val extrasJson = currentQa?.extrasJson
+        if (extrasJson.isNullOrEmpty()) return null
+        return try {
+            formatExtra(JSONObject(extrasJson), key)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun formatExtra(extras: JSONObject, key: String): String? {
+        return try {
+            val value = extras.opt(key)
+            if (value == null || JSONObject.NULL == value) return null
+            if (value is JSONArray) {
+                val sb = StringBuilder()
+                for (i in 0 until value.length()) {
+                    if (i > 0) sb.append("\n\n")
+                    sb.append("• ").append(value.getString(i))
+                }
+                return sb.toString()
+            }
+            value.toString()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun buildExtrasPrompt(item: QuestionAnswer): String {
+        return "You are AI Study Mentor. Given this solved question, return ONLY valid JSON " +
+            "(no markdown) with learning support fields:\n" +
+            "{\n" +
+            "  \"simplify\": \"simpler explanation in English\",\n" +
+            "  \"alternative\": \"another way to solve in English\",\n" +
+            "  \"concepts\": [\"key concept 1\", \"key concept 2\"],\n" +
+            "  \"mistakes\": [\"common mistake 1\", \"common mistake 2\"],\n" +
+            "  \"followUps\": [\"follow-up question 1\", \"follow-up question 2\"]\n" +
+            "}\n\n" +
+            "Subject: ${item.subject}\n" +
+            "Difficulty: ${item.difficulty ?: "medium"}\n" +
+            "Question: ${item.question}\n" +
+            "Final answer: ${item.finalAnswer}\n" +
+            "Steps JSON: ${item.steps}"
+    }
+
+    private fun styleExtraButtons() {
+        styleAction(btnSimplify, KEY_SIMPLIFY == activeExtraKey)
+        styleAction(btnAlternative, KEY_ALTERNATIVE == activeExtraKey)
+        styleAction(btnConcepts, KEY_CONCEPTS == activeExtraKey)
+        styleAction(btnMistakes, KEY_MISTAKES == activeExtraKey)
+        styleAction(btnFollowups, KEY_FOLLOWUPS == activeExtraKey)
+    }
+
+    private fun styleAction(btn: TextView, active: Boolean) {
+        if (active) {
+            btn.setBackgroundResource(R.drawable.bg_answer_action_active)
+            btn.setTextColor(ContextCompat.getColor(this, R.color.answer_on_primary))
+        } else {
+            btn.setBackgroundResource(R.drawable.bg_answer_action)
+            btn.setTextColor(ContextCompat.getColor(this, R.color.answer_foreground))
+        }
+    }
+
+    private fun decodeSampledBitmap(path: String, reqWidth: Int, reqHeight: Int): Bitmap? {
+        val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeFile(path, options)
+        if (options.outWidth <= 0 || options.outHeight <= 0) return null
+        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight)
+        options.inJustDecodeBounds = false
+        return try {
+            BitmapFactory.decodeFile(path, options)
+        } catch (_: OutOfMemoryError) {
+            null
+        }
+    }
+
+    private fun calculateInSampleSize(options: BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int {
+        val height = options.outHeight
+        val width = options.outWidth
+        var inSampleSize = 1
+        if (height > reqHeight || width > reqWidth) {
+            val halfHeight = height / 2
+            val halfWidth = width / 2
+            while ((halfHeight / inSampleSize) >= reqHeight && (halfWidth / inSampleSize) >= reqWidth) {
+                inSampleSize *= 2
+            }
+        }
+        return inSampleSize
+    }
+
+    private fun difficultyLabel(difficulty: String?): String {
+        return when (difficulty?.lowercase()) {
+            "easy" -> getString(R.string.answer_difficulty_easy)
+            "hard" -> getString(R.string.answer_difficulty_hard)
+            else -> getString(R.string.answer_difficulty_medium)
+        }
+    }
+
+    private fun subjectLabel(value: String?): String {
+        return when (value) {
+            "math", ProfileDefaults.SUBJECT_MATH -> getString(R.string.subject_math)
+            "science", ProfileDefaults.SUBJECT_SCIENCE -> getString(R.string.subject_science)
+            "code", ProfileDefaults.SUBJECT_CODE -> getString(R.string.subject_code)
+            "history", ProfileDefaults.SUBJECT_HISTORY -> getString(R.string.subject_history)
+            "language", ProfileDefaults.SUBJECT_LANGUAGE -> getString(R.string.subject_language)
+            else -> getString(R.string.subject_other)
+        }
+    }
+
+    private fun extractJson(raw: String): String {
+        val text = raw.trim()
+        val start = text.indexOf('{')
+        val end = text.lastIndexOf('}')
+        if (start >= 0 && end > start) {
+            return text.substring(start, end + 1)
+        }
+        return text
+    }
+
     private fun TextView.setTextIfChanged(value: String) {
         if (text.toString() != value) text = value
     }
@@ -200,7 +514,45 @@ class AnswerActivity : AppCompatActivity() {
         finish()
     }
 
+    private fun flushReviewSeconds() {
+        val item = currentQa
+        val dao = qaDao
+        if (item == null || dao == null || reviewSessionStartMs <= 0) {
+            return
+        }
+        val elapsedMs = System.currentTimeMillis() - reviewSessionStartMs
+        reviewSessionStartMs = 0
+        var delta = (elapsedMs / 1000L).toInt()
+        if (delta <= 0) {
+            return
+        }
+        if (delta > MAX_SESSION_SECONDS) {
+            delta = MAX_SESSION_SECONDS
+        }
+        item.reviewedSeconds += delta
+        dao.addReviewedSeconds(item.id, delta)
+    }
+
+    override fun onDestroy() {
+        flushReviewSeconds()
+        extrasExecutor?.shutdown()
+        super.onDestroy()
+    }
+
     companion object {
         const val EXTRA_QA_ID = "qa_id"
+        private const val MAX_SESSION_SECONDS = 1800
+        private const val KEY_SIMPLIFY = "simplify"
+        private const val KEY_ALTERNATIVE = "alternative"
+        private const val KEY_CONCEPTS = "concepts"
+        private const val KEY_MISTAKES = "mistakes"
+        private const val KEY_FOLLOWUPS = "followUps"
+
+        private fun isSameDay(a: Long, b: Long): Boolean {
+            val ca = Calendar.getInstance().apply { timeInMillis = a }
+            val cb = Calendar.getInstance().apply { timeInMillis = b }
+            return ca.get(Calendar.YEAR) == cb.get(Calendar.YEAR) &&
+                ca.get(Calendar.DAY_OF_YEAR) == cb.get(Calendar.DAY_OF_YEAR)
+        }
     }
 }

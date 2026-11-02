@@ -1,5 +1,8 @@
 package com.aistudy.aistudy.database
 
+import com.aistudy.aistudy.xp.UnlockCatalog
+import com.aistudy.aistudy.xp.XpRules
+
 object ProfileDefaults {
 
     const val LEVEL_JUNIOR = "junior"
@@ -26,13 +29,21 @@ object ProfileDefaults {
         profile.style = STYLE_STEPWISE
         profile.xp = 0
         profile.streak = 0
+        profile.avatarId = UnlockCatalog.AVATAR_FOX
+        profile.themeId = UnlockCatalog.THEME_DEFAULT
+        profile.weeklyXp = 0
+        profile.weekStartMs = XpRules.currentWeekStartMs()
+        profile.lastActiveDay = null
         return profile
     }
 
     fun ensureExists(profileDao: ProfileDao, userId: Long): Profile {
-        require(userId > 0L)
-        profileDao.getByUserId(userId)?.let { return it }
-        profileDao.insert(createDefault(userId))
-        return checkNotNull(profileDao.getByUserId(userId))
+        val existing = profileDao.getByUserId(userId)
+        if (existing != null) {
+            return existing
+        }
+        val created = createDefault(userId)
+        profileDao.insert(created)
+        return profileDao.getByUserId(userId) ?: created
     }
 }

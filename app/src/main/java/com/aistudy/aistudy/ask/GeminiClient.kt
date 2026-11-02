@@ -32,8 +32,23 @@ object GeminiClient {
     ) : IOException("Gemini HTTP $statusCode (${reason.name})")
     class InvalidResponseException : IOException("Gemini did not return a complete answer")
 
+    fun ask(apiKey: String, prompt: String): String =
+        ask(apiKey, prompt, responseSchema = null, imageBase64 = null, mimeType = null)
+
+    fun ask(apiKey: String, prompt: String, responseSchema: JSONObject?): String =
+        ask(apiKey, prompt, responseSchema, imageBase64 = null, mimeType = null)
+
+    fun ask(apiKey: String, prompt: String, imageBase64: String?, mimeType: String?): String =
+        ask(apiKey, prompt, responseSchema = null, imageBase64 = imageBase64, mimeType = mimeType)
+
     // Blocking REST call: callers must use a background executor.
-    fun ask(apiKey: String, prompt: String, responseSchema: JSONObject? = null): String {
+    fun ask(
+        apiKey: String,
+        prompt: String,
+        responseSchema: JSONObject? = null,
+        imageBase64: String? = null,
+        mimeType: String? = null
+    ): String {
         require(apiKey.isNotBlank()) { "Gemini API key is missing" }
         check(Looper.myLooper() != Looper.getMainLooper()) {
             "Gemini requests must run on a background thread"
@@ -42,7 +57,7 @@ object GeminiClient {
         while (true) {
             if (Thread.currentThread().isInterrupted) throw InterruptedException()
             try {
-                return askOnce(apiKey, prompt, retries, responseSchema)
+                return askOnce(apiKey, prompt, retries, responseSchema, imageBase64, mimeType)
             } catch (error: RequestException) {
                 if (error.statusCode !in RETRYABLE_STATUS_CODES || retries >= MAX_RETRIES) {
                     throw error
@@ -63,14 +78,24 @@ object GeminiClient {
         }
     }
 
-    private fun askOnce(apiKey: String, prompt: String, retries: Int, responseSchema: JSONObject?): String {
+    private fun askOnce(
+        apiKey: String,
+        prompt: String,
+        retries: Int,
+        responseSchema: JSONObject?,
+        imageBase64: String?,
+        mimeType: String?
+    ): String {
+        val hasImage = !imageBase64.isNullOrEmpty()
+        Log.d(TAG, "request start model=$MODEL promptLength=${prompt.length} hasImage=$hasImage retry=$retries/$MAX_RETRIES")
+
         val connection = URL(
             "https://generativelanguage.googleapis.com/v1beta/models/$MODEL:generateContent"
         ).openConnection() as HttpURLConnection
         try {
             connection.requestMethod = "POST"
-            connection.connectTimeout = 20_000
-            connection.readTimeout = 60_000
+            connection.connectTimeout = 30_000
+            connection.readTimeout = 90_000
             connection.instanceFollowRedirects = false
             connection.doOutput = true
             connection.setRequestProperty("Content-Type", "application/json; charset=utf-8")
@@ -78,11 +103,33 @@ object GeminiClient {
             connection.setRequestProperty("x-goog-api-key", apiKey)
             val generationConfig = JSONObject().put("responseMimeType", "application/json")
             if (responseSchema != null) generationConfig.put("responseJsonSchema", responseSchema)
+
+            val parts = JSONArray()
+            parts.put(JSONObject().put("text", prompt))
+
+            if (hasImage) {
+                val mime = if (mimeType.isNullOrEmpty()) "image/jpeg" else mimeType
+                parts.put(
+                    JSONObject().put(
+                        "inline_data",
+                        JSONObject()
+                            .put("mime_type", mime)
+                            .put("data", imageBase64)
+                    )
+                )
+            }
+
             val payload = JSONObject()
-                .put("contents", JSONArray().put(JSONObject()
-                    .put("role", "user")
-                    .put("parts", JSONArray().put(JSONObject().put("text", prompt)))))
+                .put(
+                    "contents",
+                    JSONArray().put(
+                        JSONObject()
+                            .put("role", "user")
+                            .put("parts", parts)
+                    )
+                )
                 .put("generationConfig", generationConfig)
+
             val bytes = payload.toString().toByteArray(Charsets.UTF_8)
             connection.setFixedLengthStreamingMode(bytes.size)
             connection.outputStream.use { it.write(bytes) }
@@ -99,11 +146,11 @@ object GeminiClient {
             val candidate = JSONObject(response).optJSONArray("candidates")?.optJSONObject(0)
                 ?: throw InvalidResponseException()
             if (candidate.optString("finishReason") != "STOP") throw InvalidResponseException()
-            val parts = candidate.optJSONObject("content")?.optJSONArray("parts")
+            val candidateParts = candidate.optJSONObject("content")?.optJSONArray("parts")
                 ?: throw InvalidResponseException()
             val answer = buildString {
-                for (index in 0 until parts.length()) {
-                    val part = parts.optJSONObject(index) ?: continue
+                for (index in 0 until candidateParts.length()) {
+                    val part = candidateParts.optJSONObject(index) ?: continue
                     if (!part.optBoolean("thought", false)) append(part.optString("text", ""))
                 }
             }.trim()
