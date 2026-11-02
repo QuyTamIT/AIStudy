@@ -1,19 +1,199 @@
 package com.aistudy.aistudy.progress
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
+import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
+import android.widget.ProgressBar
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.aistudy.aistudy.R
+import com.aistudy.aistudy.auth.LoginActivity
+import com.aistudy.aistudy.database.AppDatabase
+import kotlin.math.roundToInt
 
 class ProgressFragment : Fragment() {
+
+    companion object {
+        private const val XP_MAX = 1200
+    }
+
+    private lateinit var tvUserEmail: TextView
+    private lateinit var btnLogout: TextView
+
+    private lateinit var tvXpTotal: TextView
+    private lateinit var tvLevel: TextView
+    private lateinit var tvXpPercent: TextView
+    private lateinit var progressXp: ProgressBar
+
+    private lateinit var tvStatStreak: TextView
+    private lateinit var tvStatQuestions: TextView
+    private lateinit var tvStatStars: TextView
+
+    private lateinit var tvSubjectsEmpty: TextView
+    private lateinit var rowMath: LinearLayout
+    private lateinit var tvCountMath: TextView
+    private lateinit var barMath: ProgressBar
+
+    private lateinit var rowScience: LinearLayout
+    private lateinit var tvCountScience: TextView
+    private lateinit var barScience: ProgressBar
+
+    private lateinit var rowCode: LinearLayout
+    private lateinit var tvCountCode: TextView
+    private lateinit var barCode: ProgressBar
+
+    private lateinit var rowHistory: LinearLayout
+    private lateinit var tvCountHistory: TextView
+    private lateinit var barHistory: ProgressBar
+
+    private lateinit var badgeStarter: LinearLayout
+    private lateinit var badgeWeek: LinearLayout
+    private lateinit var badgeMath: LinearLayout
+    private lateinit var badgeScholar: LinearLayout
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        return inflater.inflate(R.layout.fragment_progress, container, false)
+        val themedInflater = inflater.cloneInContext(ContextThemeWrapper(requireContext(), R.style.Theme_AIStudy_Study))
+        return themedInflater.inflate(R.layout.fragment_progress, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        tvUserEmail = view.findViewById(R.id.tv_user_email)
+        btnLogout = view.findViewById(R.id.btn_logout)
+
+        tvXpTotal = view.findViewById(R.id.tv_xp_total)
+        tvLevel = view.findViewById(R.id.tv_level)
+        tvXpPercent = view.findViewById(R.id.tv_xp_percent)
+        progressXp = view.findViewById(R.id.progress_xp)
+
+        tvStatStreak = view.findViewById(R.id.tv_stat_streak)
+        tvStatQuestions = view.findViewById(R.id.tv_stat_questions)
+        tvStatStars = view.findViewById(R.id.tv_stat_stars)
+
+        tvSubjectsEmpty = view.findViewById(R.id.tv_subjects_empty)
+        rowMath = view.findViewById(R.id.row_math)
+        tvCountMath = view.findViewById(R.id.tv_count_math)
+        barMath = view.findViewById(R.id.bar_math)
+
+        rowScience = view.findViewById(R.id.row_science)
+        tvCountScience = view.findViewById(R.id.tv_count_science)
+        barScience = view.findViewById(R.id.bar_science)
+
+        rowCode = view.findViewById(R.id.row_code)
+        tvCountCode = view.findViewById(R.id.tv_count_code)
+        barCode = view.findViewById(R.id.bar_code)
+
+        rowHistory = view.findViewById(R.id.row_history)
+        tvCountHistory = view.findViewById(R.id.tv_count_history)
+        barHistory = view.findViewById(R.id.bar_history)
+
+        badgeStarter = view.findViewById(R.id.badge_starter)
+        badgeWeek = view.findViewById(R.id.badge_week)
+        badgeMath = view.findViewById(R.id.badge_math)
+        badgeScholar = view.findViewById(R.id.badge_scholar)
+
+        btnLogout.setOnClickListener { logout() }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loadProgress()
+    }
+
+    private fun logout() {
+        val currentContext = context ?: return
+        currentContext.getSharedPreferences(LoginActivity.PREFS_AUTH, Context.MODE_PRIVATE)
+            .edit()
+            .remove(LoginActivity.KEY_USER_ID)
+            .apply()
+
+        val intent = Intent(currentContext, LoginActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        startActivity(intent)
+        activity?.finish()
+    }
+
+    private fun loadProgress() {
+        val currentContext = context ?: return
+        val userId = currentContext
+            .getSharedPreferences(LoginActivity.PREFS_AUTH, Context.MODE_PRIVATE)
+            .getLong(LoginActivity.KEY_USER_ID, -1L)
+        if (userId <= 0L) {
+            return
+        }
+
+        val db = AppDatabase.getInstance(currentContext)
+        val user = db.userDao().getById(userId)
+        tvUserEmail.text = user?.email.orEmpty()
+
+        val profile = db.profileDao().getByUserId(userId)
+        val qaDao = db.questionAnswerDao()
+
+        val allQuestions = qaDao.getAllByUserId(userId)
+        val totalQuestions = allQuestions.size
+        val totalStars = allQuestions.count { it.starred }
+
+        val xp = profile?.xp ?: 0
+        val streak = profile?.streak ?: 0
+        val level = maxOf(1, xp / 100)
+        val xpPct = minOf(100, ((xp * 100f) / XP_MAX).roundToInt())
+
+        tvXpTotal.text = xp.toString()
+        tvLevel.text = getString(R.string.progress_level_scholar, level)
+        tvXpPercent.text = getString(R.string.progress_xp_percent, xpPct)
+        progressXp.progress = xpPct
+
+        tvStatStreak.text = getString(R.string.progress_streak_value, streak)
+        tvStatQuestions.text = totalQuestions.toString()
+        tvStatStars.text = totalStars.toString()
+
+        val countMath = qaDao.countBySubject(userId, "math")
+        val countScience = qaDao.countBySubject(userId, "science")
+        val countCode = qaDao.countBySubject(userId, "code")
+        val countHistory = qaDao.countBySubject(userId, "history")
+        val subjectTotal = countMath + countScience + countCode + countHistory
+        val barDenom = if (subjectTotal > 0) subjectTotal else 1
+
+        tvSubjectsEmpty.visibility = if (subjectTotal == 0) View.VISIBLE else View.GONE
+        bindSubjectRow(rowMath, tvCountMath, barMath, countMath, barDenom)
+        bindSubjectRow(rowScience, tvCountScience, barScience, countScience, barDenom)
+        bindSubjectRow(rowCode, tvCountCode, barCode, countCode, barDenom)
+        bindSubjectRow(rowHistory, tvCountHistory, barHistory, countHistory, barDenom)
+
+        setBadge(badgeStarter, totalQuestions >= 1)
+        setBadge(badgeWeek, streak >= 7)
+        setBadge(badgeMath, countMath >= 1)
+        setBadge(badgeScholar, xp >= 1000)
+    }
+
+    private fun bindSubjectRow(
+        row: LinearLayout,
+        tvCount: TextView,
+        bar: ProgressBar,
+        count: Int,
+        denom: Int
+    ) {
+        if (count <= 0) {
+            row.visibility = View.GONE
+            return
+        }
+        row.visibility = View.VISIBLE
+        tvCount.text = count.toString()
+        bar.progress = ((count * 100f) / denom).roundToInt()
+    }
+
+    private fun setBadge(badge: LinearLayout, earned: Boolean) {
+        badge.setBackgroundResource(if (earned) R.drawable.bg_badge_earned else R.drawable.bg_badge_locked)
+        badge.alpha = if (earned) 1f else 0.5f
     }
 }

@@ -105,7 +105,7 @@ class RegisterActivity : AppCompatActivity() {
                             userDao.insert(User().apply {
                                 this.fullName = fullName
                                 this.email = email
-                                this.password = password
+                                this.password = PasswordHasher.hash(password)
                             }).also { id ->
                                 ProfileDefaults.ensureExists(database.profileDao(), id)
                             }

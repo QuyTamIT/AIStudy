@@ -93,7 +93,7 @@ class LoginActivity : AppCompatActivity() {
             try {
                 val authenticated = withContext(Dispatchers.IO) {
                     val user = userDao.findByEmail(email)
-                    if (user == null || user.password != password) null
+                    if (user == null || !PasswordHasher.matches(password, user.password)) null
                     else user to ProfileDefaults.ensureExists(database.profileDao(), user.id)
                 }
                 if (authenticated == null) {
