@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.textfield.TextInputLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/input_email" style="@style/Widget.AIStudy.Study.Input"
+    android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="@string/auth_label_email"
+    app:placeholderText="@string/auth_hint_email">
+    <com.google.android.material.textfield.TextInputEditText android:id="@+id/edit_email"
+        style="@style/Widget.AIStudy.Study.EditText"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:autofillHints="emailAddress" android:importantForAutofill="yes"
+        android:inputType="textEmailAddress" android:singleLine="true" android:imeOptions="actionNext|flagNoExtractUi" />
+</com.google.android.material.textfield.TextInputLayout>

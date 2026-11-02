@@ -1,25 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_logout"
-        style="?attr/materialButtonOutlinedStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top|end"
-        android:layout_margin="16dp"
-        android:minWidth="96dp"
-        android:minHeight="48dp"
-        android:text="@string/logout"
-        android:textAllCaps="false" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="Home"
-        android:textSize="24sp" />
-
-</FrameLayout>
+<!-- Home / Operate: Answer's Deep Sage world, a question prompt, open learning
+     ledger and latest saved explanation. Room owns all progress. The centered
+     720dp column contracts naturally; text grows with system font size. -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/home_scroll" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@color/answer_background" android:clipToPadding="false" android:fillViewport="true">
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent" android:layout_height="wrap_content">
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/answer_page_gutter" android:orientation="vertical"
+            android:paddingTop="@dimen/answer_space_4" android:paddingBottom="@dimen/answer_space_8"
+            app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" app:layout_constraintWidth_max="@dimen/home_column_width">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:gravity="center_vertical" android:orientation="horizontal">
+                <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                    android:text="@string/home_brand" android:textAppearance="@style/TextAppearance.AIStudy.Home.Brand" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/btn_logout"
+                    style="@style/Widget.AIStudy.Study.Link" android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" android:text="@string/logout" />
+            </LinearLayout>
+            <TextView android:id="@+id/home_greeting" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/answer_space_6" android:accessibilityHeading="true"
+                android:textAppearance="@style/TextAppearance.AIStudy.Answer.Question" tools:text="Good morning, Linh." />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/answer_space_1" android:text="@string/home_welcome"
+                android:textAppearance="@style/TextAppearance.AIStudy.Study.Support" />
+            <LinearLayout android:id="@+id/home_profile" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/answer_space_4" android:orientation="vertical" android:visibility="gone">
+                <TextView android:id="@+id/home_profile_context" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.AIStudy.Answer.Subject" />
+                <TextView android:id="@+id/home_interests" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/answer_space_1" android:textAppearance="@style/TextAppearance.AIStudy.Answer.Label" />
+            </LinearLayout>
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/answer_space_6" android:background="@drawable/bg_home_hero"
+                android:orientation="vertical" android:padding="@dimen/answer_space_6">
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:accessibilityHeading="true" android:breakStrategy="balanced" android:text="@string/home_hero_title"
+                    android:textAppearance="@style/TextAppearance.AIStudy.Home.Hero" />
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/answer_space_3" android:text="@string/home_hero_body"
+                    android:textAppearance="@style/TextAppearance.AIStudy.Home.HeroBody" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/home_ask"
+                    style="@style/Widget.AIStudy.Home.Ask" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/answer_space_6" android:text="@string/home_ask" />
+            </LinearLayout>
+            <TextView android:id="@+id/home_loading" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/answer_space_8" android:accessibilityLiveRegion="polite"
+                android:text="@string/home_loading" android:textAppearance="@style/TextAppearance.AIStudy.Answer.Label" />
+            <LinearLayout android:id="@+id/home_error" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/answer_space_8" android:orientation="vertical" android:visibility="gone">
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:accessibilityLiveRegion="polite" android:background="@drawable/bg_answer_error"
+                    android:drawableStart="@drawable/ic_study_error" android:drawablePadding="@dimen/answer_space_3"
+                    android:gravity="center_vertical" android:padding="@dimen/answer_space_4" android:text="@string/home_error"
+                    android:textAppearance="@style/TextAppearance.AIStudy.Study.Error" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/home_retry"
+                    style="@style/Widget.AIStudy.Study.Link" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/answer_space_2" android:text="@string/home_retry" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/home_dashboard_data" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:visibility="gone" tools:visibility="visible">
+                <include layout="@layout/include_home_journey" />
+                <include layout="@layout/include_home_continue" />
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

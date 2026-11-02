@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:clipChildren="false">
+
+    <TextView android:id="@+id/tv_answer_step_number"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:minWidth="@dimen/answer_step_marker_size" android:minHeight="@dimen/answer_step_marker_size"
+        android:padding="@dimen/answer_space_1" android:gravity="center"
+        android:background="@drawable/bg_answer_step_number" android:importantForAccessibility="no"
+        android:textAppearance="@style/TextAppearance.AIStudy.Answer.StepNumber"
+        app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"
+        tools:text="01" />
+
+    <View android:id="@+id/answer_step_connector"
+        android:layout_width="@dimen/answer_rule_width" android:layout_height="0dp"
+        android:layout_marginTop="@dimen/answer_space_2" android:layout_marginBottom="@dimen/answer_space_2"
+        android:background="@color/answer_divider" android:importantForAccessibility="no"
+        app:layout_constraintStart_toStartOf="@id/tv_answer_step_number"
+        app:layout_constraintEnd_toEndOf="@id/tv_answer_step_number"
+        app:layout_constraintTop_toBottomOf="@id/tv_answer_step_number"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+    <LinearLayout
+        android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/answer_step_rail_gap"
+        android:paddingBottom="@dimen/answer_space_8" android:orientation="vertical"
+        app:layout_constraintStart_toEndOf="@id/tv_answer_step_number"
+        app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+    <TextView android:id="@+id/tv_answer_step_title"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:minHeight="@dimen/answer_step_marker_size" android:gravity="center_vertical"
+        android:accessibilityHeading="true" android:breakStrategy="high_quality"
+        android:textAppearance="@style/TextAppearance.AIStudy.Answer.StepTitle" tools:text="Factor the equation" />
+
+    <TextView android:id="@+id/tv_answer_step_body"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/answer_space_2" android:breakStrategy="high_quality"
+        android:textAppearance="@style/TextAppearance.AIStudy.Answer.Body" android:textIsSelectable="true" />
+
+    <LinearLayout android:id="@+id/layout_answer_text_blocks"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/answer_space_2"
+        android:orientation="vertical" android:visibility="gone" />
+
+    <HorizontalScrollView android:id="@+id/layout_answer_step_expr"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/answer_space_3" android:background="@drawable/bg_answer_expression"
+        android:fillViewport="true" android:scrollbarStyle="insideOverlay">
+
+        <TextView android:id="@+id/tv_answer_step_expr"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:padding="@dimen/answer_space_4" android:scrollHorizontally="true"
+            android:textAppearance="@style/TextAppearance.AIStudy.Answer.Formula" android:textIsSelectable="true" />
+    </HorizontalScrollView>
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@color/answer_background">
+
+    <LinearLayout android:id="@+id/answer_toolbar"
+        android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/answer_page_gutter"
+        android:paddingVertical="@dimen/answer_space_3" android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_max="@dimen/answer_column_width">
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_back" style="@style/Widget.AIStudy.Answer.Back"
+        android:layout_width="@dimen/answer_touch_target" android:layout_height="@dimen/answer_touch_target"
+        android:padding="@dimen/answer_space_3" android:contentDescription="@string/answer_back"
+        app:icon="@drawable/ic_answer_back" app:iconGravity="textStart"
+        app:iconPadding="0dp" app:iconSize="24dp" />
+
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:layout_marginStart="@dimen/answer_space_4"
+            android:text="@string/answer_screen_title"
+            android:textAppearance="@style/TextAppearance.AIStudy.Answer.Section" />
+    </LinearLayout>
+
+    <View android:id="@+id/answer_toolbar_rule"
+        android:layout_width="0dp" android:layout_height="@dimen/answer_rule_width"
+        android:background="@color/answer_divider"
+        android:importantForAccessibility="no"
+        app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/answer_toolbar" />
+
+    <ScrollView android:id="@+id/answer_scroll"
+        android:layout_width="0dp" android:layout_height="0dp"
+        android:clipToPadding="false" android:descendantFocusability="beforeDescendants"
+        android:fillViewport="true" android:focusableInTouchMode="true"
+        android:paddingHorizontal="@dimen/answer_page_gutter" android:scrollbarStyle="outsideOverlay"
+        app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@id/answer_toolbar_rule">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent" android:layout_height="wrap_content">
+
+            <ProgressBar android:id="@+id/progress_answer_loading"
+                android:layout_width="32dp" android:layout_height="32dp"
+                android:layout_marginTop="@dimen/answer_space_12"
+                android:contentDescription="@string/answer_loading"
+                android:indeterminateTint="@color/answer_primary"
+                app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <LinearLayout android:id="@+id/answer_content"
+                android:layout_width="0dp" android:layout_height="wrap_content"
+                android:orientation="vertical" android:paddingTop="@dimen/answer_space_8"
+                android:paddingBottom="@dimen/answer_space_12" android:visibility="gone"
+                app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintWidth_max="@dimen/answer_column_width" tools:visibility="visible">
+
+                <TextView android:id="@+id/tv_subject"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:background="@drawable/bg_answer_subject"
+                    android:paddingHorizontal="@dimen/answer_space_3" android:paddingVertical="@dimen/answer_space_2"
+                    android:drawableStart="@drawable/ic_answer_book" android:drawablePadding="@dimen/answer_space_2"
+                    android:gravity="center_vertical"
+                    android:textAppearance="@style/TextAppearance.AIStudy.Answer.Subject" tools:text="Math" />
+
+                <TextView android:id="@+id/tv_question"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/answer_space_4" android:accessibilityHeading="true"
+                    android:breakStrategy="high_quality" android:textIsSelectable="true"
+                    android:textAppearance="@style/TextAppearance.AIStudy.Answer.Question"
+                    tools:text="Solve x² − 5x + 6 = 0." />
+
+                <View android:layout_width="match_parent" android:layout_height="@dimen/answer_rule_width"
+                    android:layout_marginTop="@dimen/answer_space_8"
+                    android:background="@color/answer_divider" android:importantForAccessibility="no" />
+
+                <LinearLayout android:id="@+id/layout_explanation_heading"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/answer_space_6"
+                    android:gravity="center_vertical" android:orientation="horizontal">
+                <TextView android:id="@+id/tv_answer_explanation_heading"
+                    android:layout_width="0dp" android:layout_height="wrap_content"
+                    android:layout_weight="1" android:accessibilityHeading="true"
+                    android:text="@string/answer_explanation"
+                    android:textAppearance="@style/TextAppearance.AIStudy.Answer.Section" />
+                    <TextView android:id="@+id/tv_answer_step_count"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/answer_space_3"
+                        android:textAppearance="@style/TextAppearance.AIStudy.Answer.Label" tools:text="3 steps" />
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/layout_steps"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/answer_space_6"
+                    android:orientation="vertical" />
+
+                <LinearLayout android:id="@+id/layout_final_answer"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/answer_space_8"
+                    android:background="@drawable/bg_answer_result"
+                    android:orientation="vertical" android:padding="@dimen/answer_space_6">
+
+                    <TextView android:id="@+id/tv_final_title"
+                        android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:background="@drawable/bg_answer_result_label"
+                        android:paddingHorizontal="@dimen/answer_space_3" android:paddingVertical="@dimen/answer_space_2"
+                        android:drawableStart="@drawable/ic_answer_check" android:drawablePadding="@dimen/answer_space_2"
+                        android:gravity="center_vertical"
+                        android:accessibilityHeading="true" android:text="@string/answer_final_title"
+                        android:textAppearance="@style/TextAppearance.AIStudy.Answer.ResultLabel" />
+
+                    <TextView android:id="@+id/tv_final_answer"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/answer_space_4" android:breakStrategy="high_quality"
+                        android:textAppearance="@style/TextAppearance.AIStudy.Answer.Result"
+                        android:textIsSelectable="true" tools:text="x = 2 or x = 3" />
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/layout_more_topics"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="vertical" android:visibility="gone" tools:visibility="visible">
+
+                    <View android:layout_width="match_parent" android:layout_height="@dimen/answer_rule_width"
+                        android:layout_marginBottom="@dimen/answer_space_6"
+                        android:background="@color/answer_divider" android:importantForAccessibility="no" />
+
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:accessibilityHeading="true" android:text="@string/answer_more_heading"
+                        android:textAppearance="@style/TextAppearance.AIStudy.Answer.Section" />
+
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/answer_space_2"
+                        android:orientation="horizontal" android:gravity="center_vertical">
+                    <ProgressBar android:id="@+id/progress_more_topics"
+                        android:layout_width="20dp" android:layout_height="20dp"
+                        android:layout_marginEnd="@dimen/answer_space_2"
+                        android:importantForAccessibility="no" android:indeterminateTint="@color/answer_primary"
+                        android:visibility="gone" />
+                    <TextView android:id="@+id/tv_more_status"
+                        android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                        android:accessibilityLiveRegion="polite"
+                        android:textAppearance="@style/TextAppearance.AIStudy.Answer.Label" tools:text="More topics: 0 of 5 used" />
+                    </LinearLayout>
+
+                    <TextView android:id="@+id/tv_more_error"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/answer_space_3" android:accessibilityLiveRegion="polite"
+                        android:background="@drawable/bg_answer_error" android:padding="@dimen/answer_space_4"
+                        android:textAppearance="@style/TextAppearance.AIStudy.Answer.Label"
+                        android:textColor="@color/answer_error" android:visibility="gone" />
+
+                    <com.google.android.material.button.MaterialButton android:id="@+id/btn_more_topics"
+                        style="@style/Widget.AIStudy.Answer.More"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/answer_space_4" android:text="@string/answer_more_topics"
+                        app:icon="@drawable/ic_answer_more" app:iconGravity="textEnd"
+                        app:iconPadding="@dimen/answer_space_3" app:iconSize="20dp" />
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>

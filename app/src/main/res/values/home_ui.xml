@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="home_column_width">720dp</dimen>
+    <dimen name="home_metric_size">36sp</dimen>
+    <dimen name="home_metric_line_height">44sp</dimen>
+
+    <!-- Home aliases the established light/night roles; it does not add a palette. -->
+    <color name="home_hero_surface">@color/answer_primary</color>
+    <color name="home_hero_foreground">@color/answer_on_primary</color>
+
+    <style name="TextAppearance.AIStudy.Home.Brand" parent="TextAppearance.AIStudy.Answer.Section">
+        <item name="android:letterSpacing">-0.03</item>
+    </style>
+    <style name="TextAppearance.AIStudy.Home.Hero" parent="TextAppearance.AIStudy.Study.Display">
+        <item name="android:textColor">@color/home_hero_foreground</item>
+    </style>
+    <style name="TextAppearance.AIStudy.Home.HeroBody" parent="TextAppearance.AIStudy.Answer.Body">
+        <item name="android:textColor">@color/home_hero_foreground</item>
+    </style>
+    <style name="TextAppearance.AIStudy.Home.Metric" parent="TextAppearance.AIStudy.Answer.Question">
+        <item name="android:textSize">@dimen/home_metric_size</item>
+        <item name="android:lineHeight">@dimen/home_metric_line_height</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+        <item name="android:textColor">@color/answer_primary</item>
+    </style>
+    <style name="Widget.AIStudy.Home.Ask" parent="Widget.AIStudy.Study.Primary">
+        <item name="backgroundTint">@color/home_hero_foreground</item>
+        <item name="android:textColor">@color/home_hero_surface</item>
+        <item name="iconTint">@color/home_hero_surface</item>
+        <item name="strokeColor">@color/home_hero_foreground</item>
+    </style>
+</resources>

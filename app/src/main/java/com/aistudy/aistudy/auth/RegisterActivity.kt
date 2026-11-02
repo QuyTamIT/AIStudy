@@ -14,10 +14,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
+import com.aistudy.aistudy.MainActivity
 import com.aistudy.aistudy.R
 import com.aistudy.aistudy.database.AppDatabase
+import com.aistudy.aistudy.database.ProfileDefaults
 import com.aistudy.aistudy.database.User
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.textfield.TextInputLayout
 import java.util.Locale
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -31,9 +34,12 @@ class RegisterActivity : AppCompatActivity() {
     private lateinit var editPassword: EditText
     private lateinit var buttonSubmit: MaterialButton
     private lateinit var buttonToggleMode: TextView
-    private val userDao by lazy { AppDatabase.getInstance(applicationContext).userDao() }
+    private lateinit var formUi: AuthFormUi
+    private val database by lazy { AppDatabase.getInstance(applicationContext) }
+    private val userDao by lazy { database.userDao() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        setTheme(R.style.Theme_AIStudy_Study)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.auth_activity_register)
@@ -41,7 +47,7 @@ class RegisterActivity : AppCompatActivity() {
         val content = findViewById<View>(android.R.id.content)
         ViewCompat.setOnApplyWindowInsetsListener(content) { view, insets ->
             val padding = insets.getInsets(
-                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.ime()
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout() or WindowInsetsCompat.Type.ime()
             )
             view.setPadding(padding.left, padding.top, padding.right, padding.bottom)
             insets
@@ -53,6 +59,9 @@ class RegisterActivity : AppCompatActivity() {
         editPassword = findViewById(R.id.edit_password)
         buttonSubmit = findViewById(R.id.btn_submit)
         buttonToggleMode = findViewById(R.id.btn_toggle_mode)
+        formUi = AuthFormUi(this)
+        findViewById<TextInputLayout>(R.id.input_password).helperText = getString(R.string.auth_hint_password)
+        editPassword.setAutofillHints("newPassword")
 
         buttonSubmit.setOnClickListener { register() }
         buttonToggleMode.setOnClickListener {
@@ -89,14 +98,19 @@ class RegisterActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val userId = withContext(Dispatchers.IO) {
-                    if (userDao.findByEmail(email) != null) {
-                        return@withContext null
+                    database.runInTransaction<Long?> {
+                        if (userDao.findByEmail(email) != null) {
+                            null
+                        } else {
+                            userDao.insert(User().apply {
+                                this.fullName = fullName
+                                this.email = email
+                                this.password = password
+                            }).also { id ->
+                                ProfileDefaults.ensureExists(database.profileDao(), id)
+                            }
+                        }
                     }
-                    userDao.insert(User().apply {
-                        this.fullName = fullName
-                        this.email = email
-                        this.password = password
-                    })
                 }
                 if (userId == null) {
                     showToast(R.string.auth_error_email_taken)
@@ -104,8 +118,13 @@ class RegisterActivity : AppCompatActivity() {
                 }
 
                 check(userId > 0)
+                getSharedPreferences(LoginActivity.PREFS_AUTH, MODE_PRIVATE)
+                    .edit()
+                    .putLong(LoginActivity.KEY_USER_ID, userId)
+                    .apply()
+
                 showToast(R.string.auth_success_register)
-                startActivity(Intent(this@RegisterActivity, LoginActivity::class.java).apply {
+                startActivity(Intent(this@RegisterActivity, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 })
                 finish()
@@ -123,6 +142,7 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     private fun setSubmitting(submitting: Boolean) {
+        formUi.setSubmitting(submitting)
         buttonSubmit.isEnabled = !submitting
         buttonToggleMode.isEnabled = !submitting
         editFullName.isEnabled = !submitting
@@ -134,7 +154,11 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     private fun showToast(messageResId: Int) {
-        Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show()
+        if (messageResId == R.string.auth_success_register) {
+            Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show()
+        } else {
+            formUi.showError(messageResId)
+        }
     }
 
     companion object {

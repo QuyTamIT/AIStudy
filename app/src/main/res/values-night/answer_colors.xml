@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="answer_background">@color/answer_forest_950</color>
+    <color name="answer_surface">@color/answer_forest_900</color>
+    <color name="answer_primary">@color/answer_sage_200</color>
+    <color name="answer_on_primary">@color/answer_forest_800</color>
+    <color name="answer_foreground">@color/answer_mist_100</color>
+    <color name="answer_foreground_secondary">@color/answer_mist_400</color>
+    <color name="answer_result_surface">@color/answer_forest_700</color>
+    <color name="answer_outline">@color/answer_outline_400</color>
+    <color name="answer_divider">@color/answer_rule_800</color>
+    <color name="answer_error">@color/answer_red_200</color>
+    <color name="answer_error_surface">@color/answer_red_900</color>
+    <color name="answer_on_error">@color/answer_red_900</color>
+    <color name="answer_ripple">@color/answer_sage_ripple_dark</color>
+    <color name="answer_text_selection">@color/answer_sage_selection_dark</color>
+</resources>

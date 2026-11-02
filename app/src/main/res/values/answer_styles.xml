@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Applied only by AnswerActivity; the app and auth themes stay intact. -->
+    <style name="Theme.AIStudy.Answer" parent="Theme.AIStudy">
+        <item name="colorPrimary">@color/answer_primary</item>
+        <item name="colorOnPrimary">@color/answer_on_primary</item>
+        <item name="colorPrimaryContainer">@color/answer_result_surface</item>
+        <item name="colorOnPrimaryContainer">@color/answer_foreground</item>
+        <item name="colorSecondary">@color/answer_primary</item>
+        <item name="colorOnSecondary">@color/answer_on_primary</item>
+        <item name="colorSurface">@color/answer_background</item>
+        <item name="colorOnSurface">@color/answer_foreground</item>
+        <item name="colorSurfaceVariant">@color/answer_surface</item>
+        <item name="colorOnSurfaceVariant">@color/answer_foreground_secondary</item>
+        <item name="colorOutline">@color/answer_outline</item>
+        <item name="colorError">@color/answer_error</item>
+        <item name="colorOnError">@color/answer_on_error</item>
+        <item name="colorErrorContainer">@color/answer_error_surface</item>
+        <item name="colorOnErrorContainer">@color/answer_error</item>
+        <item name="android:windowBackground">@color/answer_background</item>
+        <item name="android:textColorPrimary">@color/answer_foreground</item>
+        <item name="android:textColorSecondary">@color/answer_foreground_secondary</item>
+        <item name="android:colorAccent">@color/answer_primary</item>
+        <item name="android:textColorHighlight">@color/answer_text_selection</item>
+        <item name="android:windowLightStatusBar">@bool/answer_light_system_bars</item>
+        <item name="android:windowLightNavigationBar">@bool/answer_light_system_bars</item>
+        <item name="android:navigationBarColor">@color/answer_background</item>
+        <item name="android:windowSoftInputMode">adjustResize</item>
+    </style>
+
+    <style name="TextAppearance.AIStudy.Answer.Body" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textFontWeight">400</item>
+        <item name="android:textSize">@dimen/answer_body_size</item>
+        <item name="android:lineHeight">@dimen/answer_body_line_height</item>
+        <item name="android:textColor">@color/answer_foreground</item>
+    </style>
+    <style name="TextAppearance.AIStudy.Answer.Question" parent="TextAppearance.AIStudy.Answer.Body">
+        <item name="android:textFontWeight">600</item>
+        <item name="android:textSize">@dimen/answer_question_size</item>
+        <item name="android:lineHeight">@dimen/answer_question_line_height</item>
+        <item name="android:letterSpacing">-0.02</item>
+    </style>
+    <style name="TextAppearance.AIStudy.Answer.Section" parent="TextAppearance.AIStudy.Answer.Body">
+        <item name="android:textFontWeight">600</item>
+        <item name="android:textSize">@dimen/answer_section_size</item>
+        <item name="android:lineHeight">@dimen/answer_section_line_height</item>
+    </style>
+    <style name="TextAppearance.AIStudy.Answer.StepTitle" parent="TextAppearance.AIStudy.Answer.Body">
+        <item name="android:textFontWeight">600</item>
+        <item name="android:textSize">@dimen/answer_step_title_size</item>
+        <item name="android:lineHeight">@dimen/answer_step_title_line_height</item>
+    </style>
+    <style name="TextAppearance.AIStudy.Answer.Result" parent="TextAppearance.AIStudy.Answer.Body">
+        <item name="android:textFontWeight">500</item>
+        <item name="android:textSize">@dimen/answer_result_size</item>
+        <item name="android:lineHeight">@dimen/answer_result_line_height</item>
+    </style>
+    <style name="TextAppearance.AIStudy.Answer.Formula" parent="TextAppearance.AIStudy.Answer.Body">
+        <item name="android:fontFamily">monospace</item>
+    </style>
+    <style name="TextAppearance.AIStudy.Answer.Code" parent="TextAppearance.AIStudy.Answer.Formula">
+        <item name="android:textSize">@dimen/answer_code_size</item>
+        <item name="android:lineHeight">@dimen/answer_code_line_height</item>
+    </style>
+    <style name="TextAppearance.AIStudy.Answer.Label" parent="TextAppearance.AIStudy.Answer.Body">
+        <item name="android:textSize">@dimen/answer_label_size</item>
+        <item name="android:lineHeight">@dimen/answer_label_line_height</item>
+        <item name="android:textColor">@color/answer_foreground_secondary</item>
+    </style>
+    <style name="TextAppearance.AIStudy.Answer.Subject" parent="TextAppearance.AIStudy.Answer.Label">
+        <item name="android:textFontWeight">600</item>
+        <item name="android:textColor">@color/answer_primary</item>
+    </style>
+    <style name="TextAppearance.AIStudy.Answer.StepNumber" parent="TextAppearance.AIStudy.Answer.Subject">
+        <item name="android:fontFeatureSettings">tnum</item>
+    </style>
+    <style name="TextAppearance.AIStudy.Answer.ResultLabel" parent="TextAppearance.AIStudy.Answer.Subject">
+        <item name="android:textColor">@color/answer_on_primary</item>
+    </style>
+
+    <style name="Widget.AIStudy.Answer.Back" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:textAppearance">@style/TextAppearance.AIStudy.Answer.Label</item>
+        <item name="android:textColor">@color/answer_primary</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:minHeight">@dimen/answer_touch_target</item>
+        <item name="android:minWidth">@dimen/answer_touch_target</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:paddingTop">@dimen/answer_space_3</item>
+        <item name="android:paddingBottom">@dimen/answer_space_3</item>
+        <item name="cornerRadius">@dimen/answer_block_radius</item>
+        <item name="strokeColor">@color/answer_control_outline</item>
+        <item name="backgroundTint">@color/answer_surface</item>
+        <item name="iconTint">@color/answer_primary</item>
+        <item name="rippleColor">@color/answer_ripple</item>
+    </style>
+    <style name="Widget.AIStudy.Answer.More" parent="Widget.Material3.Button">
+        <item name="android:textAppearance">@style/TextAppearance.AIStudy.Answer.Label</item>
+        <item name="android:textFontWeight">600</item>
+        <item name="android:textColor">@color/answer_action_foreground</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:minHeight">@dimen/answer_action_height</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:paddingTop">@dimen/answer_space_4</item>
+        <item name="android:paddingBottom">@dimen/answer_space_4</item>
+        <item name="backgroundTint">@color/answer_action_background</item>
+        <item name="cornerRadius">@dimen/answer_control_radius</item>
+        <item name="iconTint">@color/answer_action_foreground</item>
+        <item name="strokeWidth">@dimen/answer_rule_width</item>
+        <item name="strokeColor">@color/answer_action_outline</item>
+        <item name="rippleColor">@color/answer_ripple</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+</resources>

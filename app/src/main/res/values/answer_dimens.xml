@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="answer_space_1">4dp</dimen>
+    <dimen name="answer_space_2">8dp</dimen>
+    <dimen name="answer_space_3">12dp</dimen>
+    <dimen name="answer_space_4">16dp</dimen>
+    <dimen name="answer_space_6">24dp</dimen>
+    <dimen name="answer_space_8">32dp</dimen>
+    <dimen name="answer_space_12">48dp</dimen>
+    <dimen name="answer_page_gutter">16dp</dimen>
+    <dimen name="answer_column_width">720dp</dimen>
+    <dimen name="answer_block_radius">8dp</dimen>
+    <dimen name="answer_control_radius">12dp</dimen>
+    <dimen name="answer_touch_target">48dp</dimen>
+    <dimen name="answer_action_height">56dp</dimen>
+    <dimen name="answer_rule_width">1dp</dimen>
+    <dimen name="answer_step_marker_size">32dp</dimen>
+    <dimen name="answer_step_rail_gap">12dp</dimen>
+    <dimen name="answer_question_size">28sp</dimen>
+    <dimen name="answer_question_line_height">36sp</dimen>
+    <dimen name="answer_section_size">20sp</dimen>
+    <dimen name="answer_section_line_height">28sp</dimen>
+    <dimen name="answer_step_title_size">18sp</dimen>
+    <dimen name="answer_step_title_line_height">26sp</dimen>
+    <dimen name="answer_body_size">16sp</dimen>
+    <dimen name="answer_body_line_height">26sp</dimen>
+    <dimen name="answer_result_size">22sp</dimen>
+    <dimen name="answer_result_line_height">32sp</dimen>
+    <dimen name="answer_code_size">14sp</dimen>
+    <dimen name="answer_code_line_height">22sp</dimen>
+    <dimen name="answer_label_size">14sp</dimen>
+    <dimen name="answer_label_line_height">20sp</dimen>
+</resources>

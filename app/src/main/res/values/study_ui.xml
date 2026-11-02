@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The adopted screens consume Answer's semantic palette, including night overrides. -->
+    <dimen name="study_form_width">480dp</dimen>
+    <dimen name="study_workspace_width">640dp</dimen>
+    <dimen name="study_brand_size">48dp</dimen>
+    <dimen name="study_display_size">32sp</dimen>
+    <dimen name="study_display_line_height">40sp</dimen>
+    <dimen name="study_composer_height">160dp</dimen>
+    <dimen name="study_suggestion_height">64dp</dimen>
+    <string name="study_ask_loading_detail">Preparing your explanation…</string>
+    <string name="study_login_password_hint">Enter your password</string>
+
+    <style name="Theme.AIStudy.Study" parent="Theme.AIStudy.Answer">
+        <item name="textInputStyle">@style/Widget.AIStudy.Study.Input</item>
+        <item name="editTextStyle">@style/Widget.AIStudy.Study.EditText</item>
+    </style>
+    <style name="TextAppearance.AIStudy.Study.Display" parent="TextAppearance.AIStudy.Answer.Question">
+        <item name="android:textSize">@dimen/study_display_size</item>
+        <item name="android:lineHeight">@dimen/study_display_line_height</item>
+    </style>
+    <style name="TextAppearance.AIStudy.Study.Support" parent="TextAppearance.AIStudy.Answer.Body">
+        <item name="android:textColor">@color/answer_foreground_secondary</item>
+    </style>
+    <style name="TextAppearance.AIStudy.Study.Error" parent="TextAppearance.AIStudy.Answer.Label">
+        <item name="android:textColor">@color/answer_error</item>
+    </style>
+
+    <style name="Widget.AIStudy.Study.Input" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxBackgroundColor">@color/answer_surface</item>
+        <item name="boxStrokeColor">@color/study_input_stroke</item>
+        <item name="boxStrokeErrorColor">@color/answer_error</item>
+        <item name="boxStrokeWidth">@dimen/answer_rule_width</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
+        <item name="boxCornerRadiusTopStart">@dimen/answer_control_radius</item>
+        <item name="boxCornerRadiusTopEnd">@dimen/answer_control_radius</item>
+        <item name="boxCornerRadiusBottomStart">@dimen/answer_control_radius</item>
+        <item name="boxCornerRadiusBottomEnd">@dimen/answer_control_radius</item>
+        <item name="hintTextAppearance">@style/TextAppearance.AIStudy.Answer.Label</item>
+        <item name="hintTextColor">@color/answer_primary</item>
+        <item name="android:textColorHint">@color/answer_foreground_secondary</item>
+        <item name="errorTextAppearance">@style/TextAppearance.AIStudy.Study.Error</item>
+        <item name="helperTextTextAppearance">@style/TextAppearance.AIStudy.Answer.Label</item>
+        <item name="errorIconDrawable">@null</item>
+        <item name="endIconTint">@color/answer_primary</item>
+    </style>
+    <style name="Widget.AIStudy.Study.EditText" parent="Widget.Material3.TextInputEditText.OutlinedBox">
+        <item name="android:textAppearance">@style/TextAppearance.AIStudy.Answer.Body</item>
+        <item name="android:textColor">@color/answer_foreground</item>
+        <item name="android:textColorHint">@color/answer_foreground_secondary</item>
+        <item name="android:minHeight">@dimen/answer_action_height</item>
+        <item name="android:paddingStart">@dimen/answer_space_4</item>
+        <item name="android:paddingEnd">@dimen/answer_space_4</item>
+        <item name="android:paddingTop">@dimen/answer_space_4</item>
+        <item name="android:paddingBottom">@dimen/answer_space_4</item>
+    </style>
+    <style name="Widget.AIStudy.Study.Primary" parent="Widget.AIStudy.Answer.More">
+        <item name="android:textAppearance">@style/TextAppearance.AIStudy.Answer.Body</item>
+        <item name="android:textFontWeight">600</item>
+        <item name="android:paddingStart">@dimen/answer_space_6</item>
+        <item name="android:paddingEnd">@dimen/answer_space_6</item>
+        <item name="icon">@drawable/ic_study_arrow</item>
+        <item name="iconGravity">textEnd</item>
+        <item name="iconSize">20dp</item>
+        <item name="iconPadding">@dimen/answer_space_3</item>
+    </style>
+    <style name="Widget.AIStudy.Study.Link" parent="Widget.Material3.Button.TextButton">
+        <item name="android:textAppearance">@style/TextAppearance.AIStudy.Answer.Label</item>
+        <item name="android:textFontWeight">600</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textColor">@color/study_control_foreground</item>
+        <item name="android:minHeight">@dimen/answer_touch_target</item>
+        <item name="android:paddingTop">@dimen/answer_space_3</item>
+        <item name="android:paddingBottom">@dimen/answer_space_3</item>
+        <item name="backgroundTint">@color/study_row_background</item>
+        <item name="cornerRadius">@dimen/answer_block_radius</item>
+        <item name="rippleColor">@color/answer_ripple</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+    <style name="Widget.AIStudy.Study.Suggestion" parent="Widget.AIStudy.Study.Link">
+        <item name="android:textAppearance">@style/TextAppearance.AIStudy.Answer.Body</item>
+        <item name="android:textFontWeight">500</item>
+        <item name="android:textColor">@color/study_suggestion_foreground</item>
+        <item name="android:gravity">start|center_vertical</item>
+        <item name="android:minHeight">@dimen/study_suggestion_height</item>
+        <item name="android:paddingStart">@dimen/answer_space_3</item>
+        <item name="android:paddingEnd">@dimen/answer_space_12</item>
+        <item name="android:paddingTop">@dimen/answer_space_4</item>
+        <item name="android:paddingBottom">@dimen/answer_space_4</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="iconTint">@color/study_control_foreground</item>
+        <item name="iconSize">20dp</item>
+        <item name="iconPadding">@dimen/answer_space_4</item>
+        <item name="iconGravity">start</item>
+    </style>
+    <style name="Widget.AIStudy.Study.RowArrow" parent="">
+        <item name="android:layout_width">20dp</item>
+        <item name="android:layout_height">20dp</item>
+        <item name="android:layout_gravity">end|center_vertical</item>
+        <item name="android:layout_marginEnd">@dimen/answer_space_3</item>
+        <item name="android:src">@drawable/ic_study_arrow</item>
+        <item name="android:tint">@color/answer_primary</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+    <style name="Widget.AIStudy.Study.Rule" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/answer_rule_width</item>
+        <item name="android:background">@color/answer_divider</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+</resources>

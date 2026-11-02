@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:layout_marginTop="@dimen/answer_space_8" android:orientation="vertical">
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:accessibilityHeading="true" android:text="@string/home_journey"
+        android:textAppearance="@style/TextAppearance.AIStudy.Answer.Section" />
+    <TextView android:id="@+id/home_journey_body" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/answer_space_1" android:textAppearance="@style/TextAppearance.AIStudy.Answer.Label" />
+    <LinearLayout android:id="@+id/home_metrics" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/answer_space_6" android:baselineAligned="false" android:orientation="horizontal">
+        <LinearLayout android:id="@+id/home_questions_metric" android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:orientation="vertical" android:screenReaderFocusable="true">
+            <TextView android:id="@+id/home_question_count" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.AIStudy.Home.Metric" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/answer_space_1" android:text="@string/home_questions"
+                android:textAppearance="@style/TextAppearance.AIStudy.Answer.Label" />
+        </LinearLayout>
+        <View android:id="@+id/home_metric_divider" android:layout_width="@dimen/answer_rule_width" android:layout_height="match_parent"
+            android:layout_marginHorizontal="@dimen/answer_space_6" android:background="@color/answer_divider"
+            android:importantForAccessibility="no" />
+        <LinearLayout android:id="@+id/home_xp_metric" android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:orientation="vertical" android:screenReaderFocusable="true">
+            <TextView android:id="@+id/home_xp_count" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.AIStudy.Home.Metric" />
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/answer_space_1" android:text="@string/home_xp"
+                android:textAppearance="@style/TextAppearance.AIStudy.Answer.Label" />
+        </LinearLayout>
+    </LinearLayout>
+    <View style="@style/Widget.AIStudy.Study.Rule" android:layout_marginTop="@dimen/answer_space_6" />
+</LinearLayout>

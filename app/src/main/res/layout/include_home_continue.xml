@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:layout_marginTop="@dimen/answer_space_8" android:orientation="vertical">
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:accessibilityHeading="true" android:text="@string/home_continue"
+        android:textAppearance="@style/TextAppearance.AIStudy.Answer.Section" />
+    <TextView android:id="@+id/home_continue_body" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/answer_space_1" android:text="@string/home_continue_body"
+        android:textAppearance="@style/TextAppearance.AIStudy.Answer.Label" />
+    <LinearLayout android:id="@+id/home_latest" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/answer_space_4" android:background="@drawable/bg_home_continue"
+        android:clickable="true" android:focusable="true" android:minHeight="@dimen/answer_touch_target"
+        android:orientation="vertical" android:padding="@dimen/answer_space_6" android:visibility="gone">
+        <TextView android:id="@+id/home_latest_subject" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:drawableStart="@drawable/ic_answer_book" android:drawablePadding="@dimen/answer_space_2"
+            android:gravity="center_vertical" android:textAppearance="@style/TextAppearance.AIStudy.Answer.Subject" />
+        <TextView android:id="@+id/home_latest_question" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/answer_space_3" android:textAppearance="@style/TextAppearance.AIStudy.Answer.StepTitle" />
+        <TextView android:id="@+id/home_latest_date" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/answer_space_2" android:textAppearance="@style/TextAppearance.AIStudy.Answer.Label" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/answer_space_6" android:drawableEnd="@drawable/ic_study_arrow"
+            android:drawablePadding="@dimen/answer_space_3" android:gravity="center_vertical"
+            android:text="@string/home_revisit" android:textAppearance="@style/TextAppearance.AIStudy.Answer.Subject" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/home_empty" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/answer_space_6" android:orientation="vertical" android:visibility="gone">
+        <ImageView android:layout_width="@dimen/answer_step_marker_size" android:layout_height="@dimen/answer_step_marker_size"
+            android:importantForAccessibility="no" android:src="@drawable/ic_answer_book" android:tint="@color/answer_primary" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/answer_space_3" android:text="@string/home_empty_title"
+            android:textAppearance="@style/TextAppearance.AIStudy.Answer.StepTitle" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/answer_space_2" android:text="@string/home_empty_body"
+            android:textAppearance="@style/TextAppearance.AIStudy.Study.Support" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/home_empty_ask"
+            style="@style/Widget.AIStudy.Study.Link" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/answer_space_3" android:gravity="start|center_vertical"
+            android:text="@string/home_empty_action" />
+    </LinearLayout>
+</LinearLayout>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="answer_screen_title">Answer</string>
+    <string name="answer_more_heading">Explore further</string>
+    <string name="answer_step_index">%1$02d</string>
+    <plurals name="answer_step_count">
+        <item quantity="one">%1$d step</item>
+        <item quantity="other">%1$d steps</item>
+    </plurals>
+</resources>

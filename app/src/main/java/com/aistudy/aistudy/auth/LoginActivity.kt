@@ -7,7 +7,6 @@ import android.util.Patterns
 import android.view.View
 import android.widget.EditText
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -16,6 +15,8 @@ import androidx.lifecycle.lifecycleScope
 import com.aistudy.aistudy.MainActivity
 import com.aistudy.aistudy.R
 import com.aistudy.aistudy.database.AppDatabase
+import com.aistudy.aistudy.database.ProfileDefaults
+import com.aistudy.aistudy.onboarding.OnboardingActivity
 import com.google.android.material.button.MaterialButton
 import java.util.Locale
 import kotlinx.coroutines.CancellationException
@@ -29,17 +30,29 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var editPassword: EditText
     private lateinit var buttonSubmit: MaterialButton
     private lateinit var buttonToggleMode: TextView
-    private val userDao by lazy { AppDatabase.getInstance(applicationContext).userDao() }
+    private lateinit var formUi: AuthFormUi
+    private val database by lazy { AppDatabase.getInstance(applicationContext) }
+    private val userDao by lazy { database.userDao() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        setTheme(R.style.Theme_AIStudy_Study)
         super.onCreate(savedInstanceState)
+        val userId = getSharedPreferences(PREFS_AUTH, MODE_PRIVATE)
+            .getLong(KEY_USER_ID, 0L)
+        if (userId > 0L) {
+            startActivity(Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            })
+            finish()
+            return
+        }
         enableEdgeToEdge()
         setContentView(R.layout.auth_activity_login)
 
         val content = findViewById<View>(android.R.id.content)
         ViewCompat.setOnApplyWindowInsetsListener(content) { view, insets ->
             val padding = insets.getInsets(
-                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.ime()
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout() or WindowInsetsCompat.Type.ime()
             )
             view.setPadding(padding.left, padding.top, padding.right, padding.bottom)
             insets
@@ -50,6 +63,7 @@ class LoginActivity : AppCompatActivity() {
         editPassword = findViewById(R.id.edit_password)
         buttonSubmit = findViewById(R.id.btn_submit)
         buttonToggleMode = findViewById(R.id.btn_toggle_mode)
+        formUi = AuthFormUi(this)
 
         buttonSubmit.setOnClickListener { login() }
         buttonToggleMode.setOnClickListener {
@@ -77,19 +91,26 @@ class LoginActivity : AppCompatActivity() {
         setSubmitting(true)
         lifecycleScope.launch {
             try {
-                val user = withContext(Dispatchers.IO) { userDao.findByEmail(email) }
-                if (user == null || user.password != password) {
+                val authenticated = withContext(Dispatchers.IO) {
+                    val user = userDao.findByEmail(email)
+                    if (user == null || user.password != password) null
+                    else user to ProfileDefaults.ensureExists(database.profileDao(), user.id)
+                }
+                if (authenticated == null) {
                     showToast(R.string.auth_error_invalid_credentials)
                     return@launch
                 }
 
+                val (user, profile) = authenticated
                 check(user.id > 0)
                 getSharedPreferences(PREFS_AUTH, MODE_PRIVATE)
                     .edit()
                     .putLong(KEY_USER_ID, user.id)
                     .apply()
 
-                startActivity(Intent(this@LoginActivity, MainActivity::class.java).apply {
+                val destination = if (profile.onboarded) MainActivity::class.java
+                    else OnboardingActivity::class.java
+                startActivity(Intent(this@LoginActivity, destination).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 })
                 finish()
@@ -105,6 +126,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun setSubmitting(submitting: Boolean) {
+        formUi.setSubmitting(submitting)
         buttonSubmit.isEnabled = !submitting
         buttonToggleMode.isEnabled = !submitting
         editEmail.isEnabled = !submitting
@@ -115,7 +137,7 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun showToast(messageResId: Int) {
-        Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show()
+        formUi.showError(messageResId)
     }
 
     companion object {
