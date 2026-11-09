@@ -44,10 +44,29 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_logout"
-                    style="@style/Widget.AIStudy.Study.Link"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/logout" />
+                    android:layout_height="38dp"
+                    android:minHeight="38dp"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="0dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:text="@string/logout"
+                    android:textColor="@color/logout_pill_fg"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.02"
+                    app:backgroundTint="@color/logout_pill_bg"
+                    app:strokeColor="@color/logout_pill_border"
+                    app:strokeWidth="1dp"
+                    app:cornerRadius="999dp"
+                    app:elevation="0dp"
+                    app:icon="@drawable/ic_logout"
+                    app:iconTint="@color/logout_pill_fg"
+                    app:iconSize="15dp"
+                    app:iconPadding="6dp"
+                    app:iconGravity="textStart"
+                    app:rippleColor="@color/logout_pill_ripple" />
             </LinearLayout>
 
             <!-- Greeting & Subtitle -->

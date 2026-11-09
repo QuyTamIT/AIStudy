@@ -1,8 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+    <!-- Base application theme: Deep Sage + Premium Modern EdTech -->
     <style name="Base.Theme.AIStudy" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="colorPrimary">@color/answer_primary</item>
+        <item name="colorOnPrimary">@color/answer_on_primary</item>
+        <item name="colorPrimaryContainer">@color/answer_result_surface</item>
+        <item name="colorOnPrimaryContainer">@color/answer_foreground</item>
+        <item name="colorSecondary">@color/answer_primary</item>
+        <item name="colorOnSecondary">@color/answer_on_primary</item>
+        <item name="colorSurface">@color/answer_surface</item>
+        <item name="colorOnSurface">@color/answer_foreground</item>
+        <item name="colorSurfaceVariant">@color/answer_surface</item>
+        <item name="colorOnSurfaceVariant">@color/answer_foreground_secondary</item>
+        <item name="colorOutline">@color/answer_outline</item>
+        <item name="colorError">@color/answer_error</item>
+        <item name="colorOnError">@color/answer_on_error</item>
+        <item name="colorErrorContainer">@color/answer_error_surface</item>
+        <item name="colorOnErrorContainer">@color/answer_error</item>
+        <item name="android:windowBackground">@color/answer_background</item>
+        <item name="android:textColorPrimary">@color/answer_foreground</item>
+        <item name="android:textColorSecondary">@color/answer_foreground_secondary</item>
+        <item name="android:colorAccent">@color/answer_primary</item>
+        <item name="android:textColorHighlight">@color/answer_text_selection</item>
+        <item name="android:windowLightStatusBar">@bool/answer_light_system_bars</item>
+        <item name="android:windowLightNavigationBar">@bool/answer_light_system_bars</item>
+        <item name="android:navigationBarColor">@color/answer_background</item>
+        <item name="android:statusBarColor">@color/answer_background</item>
     </style>
 
     <style name="Theme.AIStudy" parent="Base.Theme.AIStudy" />

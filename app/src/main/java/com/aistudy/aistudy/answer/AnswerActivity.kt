@@ -207,13 +207,60 @@ class AnswerActivity : AppCompatActivity() {
         } else {
             layoutAnswerImage.visibility = View.GONE
         }
-        findViewById<TextView>(R.id.tv_answer_step_count).apply {
-            text = resources.getQuantityString(R.plurals.answer_step_count, content.steps.size, content.steps.size)
-            visibility = if (content.steps.isEmpty()) View.GONE else View.VISIBLE
+        val isStepByStep = content.responseMode == ResponseMode.STEP_BY_STEP
+        val headingRes = when (content.responseMode) {
+            ResponseMode.STEP_BY_STEP -> R.string.answer_heading_solution
+            ResponseMode.DIRECT -> R.string.answer_heading_direct
+            ResponseMode.CREATIVE -> R.string.answer_heading_creative
+            ResponseMode.CLARIFICATION -> R.string.answer_heading_clarification
+            ResponseMode.LIMITATION -> R.string.answer_heading_limitation
         }
+        findViewById<TextView>(R.id.tv_answer_explanation_heading).setText(headingRes)
+
+        findViewById<TextView>(R.id.tv_answer_step_count).apply {
+            if (isStepByStep && content.steps.size > 1) {
+                text = resources.getQuantityString(R.plurals.answer_step_count, content.steps.size, content.steps.size)
+                visibility = View.VISIBLE
+            } else {
+                visibility = View.GONE
+            }
+        }
+
+        // Adaptive Notice Card for Creative, Clarification, Limitation
+        val cardNotice = findViewById<View>(R.id.card_answer_notice)
+        val tvNoticeTitle = findViewById<TextView>(R.id.tv_answer_notice_title)
+        val tvNoticeBody = findViewById<TextView>(R.id.tv_answer_notice_body)
+        when (content.responseMode) {
+            ResponseMode.CREATIVE -> {
+                tvNoticeTitle.setText(R.string.answer_badge_creative)
+                tvNoticeBody.setText(R.string.answer_disclaimer_creative)
+                cardNotice?.visibility = View.VISIBLE
+            }
+            ResponseMode.CLARIFICATION -> {
+                tvNoticeTitle.setText(R.string.answer_notice_clarification_title)
+                tvNoticeBody.setText(R.string.answer_notice_clarification_msg)
+                cardNotice?.visibility = View.VISIBLE
+            }
+            ResponseMode.LIMITATION -> {
+                tvNoticeTitle.setText(R.string.answer_notice_limitation_title)
+                tvNoticeBody.setText(R.string.answer_notice_limitation_msg)
+                cardNotice?.visibility = View.VISIBLE
+            }
+            else -> {
+                cardNotice?.visibility = View.GONE
+            }
+        }
+
+        val finalLabelRes = when (content.responseMode) {
+            ResponseMode.STEP_BY_STEP -> R.string.answer_final_title
+            ResponseMode.CLARIFICATION -> R.string.answer_final_label_next_step
+            else -> R.string.answer_final_label_takeaway
+        }
+        findViewById<TextView>(R.id.tv_final_title).setText(finalLabelRes)
         findViewById<TextView>(R.id.tv_final_answer).setTextIfChanged(item.finalAnswer.orEmpty())
-        val finalVisibility = if (content.showFinalAnswer(item.subject)) View.VISIBLE else View.GONE
+        val finalVisibility = if (content.showFinalAnswer(item.subject) && !item.finalAnswer.isNullOrBlank()) View.VISIBLE else View.GONE
         findViewById<View>(R.id.layout_final_answer).visibility = finalVisibility
+
         val container = findViewById<LinearLayout>(R.id.layout_steps)
         val previousItemsPreserved = renderedQaId == item.id &&
             content.steps.size >= renderedSteps.size && renderedSteps.indices.all { index ->
@@ -230,13 +277,34 @@ class AnswerActivity : AppCompatActivity() {
                 val step = content.steps[index]
                 val stepView = layoutInflater.inflate(R.layout.item_answer_step, container, false)
                 val title = step.title.trim()
-                stepView.findViewById<TextView>(R.id.tv_answer_step_number).text =
-                    getString(R.string.answer_step_index, index + 1)
-                stepView.findViewById<TextView>(R.id.tv_answer_step_title).apply {
-                    text = title.ifBlank { getString(R.string.answer_step_number, index + 1) }
-                    contentDescription = if (title.isBlank()) text
-                        else getString(R.string.answer_step_title, index + 1, title)
+
+                val stepNumberView = stepView.findViewById<TextView>(R.id.tv_answer_step_number)
+                val connectorView = stepView.findViewById<View>(R.id.answer_step_connector)
+                val stepTitleView = stepView.findViewById<TextView>(R.id.tv_answer_step_title)
+
+                if (isStepByStep) {
+                    stepNumberView.visibility = View.VISIBLE
+                    stepNumberView.text = getString(R.string.answer_step_index, index + 1)
+                    stepTitleView.visibility = View.VISIBLE
+                    stepTitleView.apply {
+                        text = title.ifBlank { getString(R.string.answer_step_number, index + 1) }
+                        contentDescription = if (title.isBlank()) text
+                            else getString(R.string.answer_step_title, index + 1, title)
+                    }
+                } else {
+                    stepNumberView.visibility = View.GONE
+                    connectorView.visibility = View.GONE
+                    val isGenericTitle = title.isBlank() ||
+                        Regex("^(step|bước|phần)\\s*\\d*$", RegexOption.IGNORE_CASE).matches(title)
+                    if (isGenericTitle) {
+                        stepTitleView.visibility = View.GONE
+                    } else {
+                        stepTitleView.visibility = View.VISIBLE
+                        stepTitleView.text = title
+                        stepTitleView.contentDescription = title
+                    }
                 }
+
                 AnswerBodyRenderer.bind(stepView, step.body)
                 stepView.findViewById<TextView>(R.id.tv_answer_step_expr).text = step.expr
                 stepView.findViewById<View>(R.id.layout_answer_step_expr).visibility =
@@ -246,16 +314,17 @@ class AnswerActivity : AppCompatActivity() {
         }
         if (content.steps.isEmpty() && container.childCount == 0) {
             val message = layoutInflater.inflate(R.layout.item_answer_step, container, false)
-            message.findViewById<View>(R.id.tv_answer_step_number).visibility = View.INVISIBLE
+            message.findViewById<View>(R.id.tv_answer_step_number).visibility = View.GONE
+            message.findViewById<View>(R.id.answer_step_connector).visibility = View.GONE
             message.findViewById<TextView>(R.id.tv_answer_step_title).setText(R.string.answer_steps_unavailable)
             message.findViewById<View>(R.id.tv_answer_step_body).visibility = View.GONE
             message.findViewById<View>(R.id.layout_answer_step_expr).visibility = View.GONE
             container.addView(message)
         }
-        // Reconnect the previous last step when more topics are appended, without rebuilding it.
+        // Reconnect connectors only when step-by-step
         for (index in 0 until container.childCount) {
             container.getChildAt(index).findViewById<View>(R.id.answer_step_connector).visibility =
-                if (index < container.childCount - 1) View.VISIBLE else View.INVISIBLE
+                if (isStepByStep && index < container.childCount - 1) View.VISIBLE else View.GONE
         }
         renderedQaId = item.id
         renderedSteps = content.steps
@@ -310,16 +379,22 @@ class AnswerActivity : AppCompatActivity() {
 
         val firstReview = item.reviewedAt == 0L || !isSameDay(item.reviewedAt, now)
         item.reviewedAt = now
-        qaDao?.updateReviewedAt(item.id, now)
+        refreshReviewButton()
 
-        if (firstReview) {
-            val profile = profileDao.getByUserId(item.userId)
-            if (profile != null) {
-                XpRules.addXp(profile, profileDao, XpRules.REVIEW)
-                Toast.makeText(this, R.string.answer_review_xp_toast, Toast.LENGTH_SHORT).show()
+        extrasExecutor?.execute {
+            qaDao?.updateReviewedAt(item.id, now)
+            if (firstReview) {
+                val profile = profileDao.getByUserId(item.userId)
+                if (profile != null) {
+                    XpRules.addXp(profile, profileDao, XpRules.REVIEW)
+                    runOnUiThread {
+                        if (!isFinishing && !isDestroyed) {
+                            Toast.makeText(this@AnswerActivity, R.string.answer_review_xp_toast, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
             }
         }
-        refreshReviewButton()
     }
 
     private fun refreshReviewButton() {
@@ -530,7 +605,10 @@ class AnswerActivity : AppCompatActivity() {
             delta = MAX_SESSION_SECONDS
         }
         item.reviewedSeconds += delta
-        dao.addReviewedSeconds(item.id, delta)
+        val id = item.id
+        extrasExecutor?.execute {
+            dao.addReviewedSeconds(id, delta)
+        }
     }
 
     override fun onDestroy() {

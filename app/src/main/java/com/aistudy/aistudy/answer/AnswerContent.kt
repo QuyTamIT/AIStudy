@@ -10,7 +10,21 @@ enum class AnswerType(val value: String) {
 
     companion object {
         fun parse(value: String): AnswerType =
-            requireNotNull(entries.find { it.value == value }) { "Unknown answer type" }
+            requireNotNull(entries.find { it.value == value }) { "Unknown answer type: $value" }
+    }
+}
+
+enum class ResponseMode(val value: String) {
+    STEP_BY_STEP("step_by_step"),
+    DIRECT("direct"),
+    CREATIVE("creative"),
+    CLARIFICATION("clarification"),
+    LIMITATION("limitation");
+
+    companion object {
+        fun parse(value: String?): ResponseMode? =
+            if (value.isNullOrBlank()) null
+            else entries.find { it.value.equals(value.trim(), ignoreCase = true) }
     }
 }
 
@@ -20,7 +34,8 @@ data class AnswerContent(
     val steps: List<AnswerStep>,
     val type: AnswerType?,
     val finalAnswerRedundant: Boolean,
-    val moreCount: Int
+    val moreCount: Int,
+    val responseMode: ResponseMode = ResponseMode.STEP_BY_STEP
 ) {
     init { require(moreCount in 0..MAX_MORE) }
 
@@ -52,7 +67,11 @@ data class AnswerContent(
         require(redundant is Boolean)
         val ids = json.getJSONArray("topicIds")
         require(ids.length() == steps.size)
+        val modeStr = json.optString("responseType").takeIf { it.isNotBlank() }
+            ?: json.optString("responseMode").takeIf { it.isNotBlank() }
+        val newMode = ResponseMode.parse(modeStr) ?: responseMode
         return copy(type = classifiedType, finalAnswerRedundant = redundant,
+            responseMode = newMode,
             steps = steps.mapIndexed { index, step ->
                 val id = ids.getString(index)
                 if (classifiedType == AnswerType.TOPIC_LIST) require(id.isNotBlank())
@@ -69,6 +88,7 @@ data class AnswerContent(
         // Metadata lives inside the existing JSON array; the Room schema and old readers stay compatible.
         if (length() > 0 && type != null) getJSONObject(0).put("_answer", JSONObject()
             .put("version", 1).put("answerType", type.value)
+            .put("responseType", responseMode.value)
             .put("finalAnswerRedundant", finalAnswerRedundant).put("moreCount", moreCount))
     }.toString()
 
@@ -79,23 +99,42 @@ data class AnswerContent(
             val array = JSONArray(stored ?: "[]")
             val items = parseSteps(array)
             val metadata = array.optJSONObject(0)?.optJSONObject("_answer")
-            if (metadata == null) return AnswerContent(items,
-                if (items.isEmpty()) AnswerType.EXPLANATION else null, false, 0)
+            if (metadata == null) {
+                val inferredMode = if (items.size > 1) ResponseMode.STEP_BY_STEP else ResponseMode.DIRECT
+                return AnswerContent(items,
+                    if (items.isEmpty()) AnswerType.EXPLANATION else null, false, 0, inferredMode)
+            }
             require(metadata.getInt("version") == 1)
             val redundant = metadata.opt("finalAnswerRedundant")
             require(redundant is Boolean)
-            return AnswerContent(items, AnswerType.parse(metadata.getString("answerType")),
-                redundant, metadata.getInt("moreCount"))
+            val answerType = AnswerType.parse(metadata.getString("answerType"))
+            val modeStr = metadata.optString("responseType").takeIf { it.isNotBlank() }
+                ?: metadata.optString("responseMode").takeIf { it.isNotBlank() }
+            val mode = ResponseMode.parse(modeStr) ?: when (answerType) {
+                AnswerType.SOLUTION -> ResponseMode.STEP_BY_STEP
+                AnswerType.TOPIC_LIST -> ResponseMode.STEP_BY_STEP
+                AnswerType.EXPLANATION -> if (items.size > 1) ResponseMode.STEP_BY_STEP else ResponseMode.DIRECT
+            }
+            return AnswerContent(items, answerType, redundant, metadata.getInt("moreCount"), mode)
         }
 
         fun generated(json: JSONObject): AnswerContent {
-            val type = AnswerType.parse(json.getString("answerType"))
-            val redundant = json.opt("finalAnswerRedundant")
-            require(redundant is Boolean)
+            val modeStr = json.optString("responseType").takeIf { it.isNotBlank() }
+                ?: json.optString("responseMode").takeIf { it.isNotBlank() }
+            val mode = ResponseMode.parse(modeStr) ?: ResponseMode.STEP_BY_STEP
+            val type = if (json.has("answerType")) {
+                AnswerType.parse(json.getString("answerType"))
+            } else {
+                when (mode) {
+                    ResponseMode.STEP_BY_STEP -> AnswerType.SOLUTION
+                    else -> AnswerType.EXPLANATION
+                }
+            }
+            val redundant = json.opt("finalAnswerRedundant") as? Boolean ?: false
             val items = parseSteps(json.getJSONArray("steps"))
             require(items.isNotEmpty() && items.all { it.body.isNotBlank() })
             if (type == AnswerType.TOPIC_LIST) require(items.all { !it.topicId.isNullOrBlank() })
-            return AnswerContent(items, type, redundant, 0)
+            return AnswerContent(items, type, redundant, 0, mode)
         }
 
         fun parseSteps(array: JSONArray): List<AnswerStep> = (0 until array.length()).map { index ->

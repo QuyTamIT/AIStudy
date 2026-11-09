@@ -10,6 +10,7 @@ object AnswerPrompts {
         .put("properties", properties).put("required", JSONArray(properties.keys().asSequence().toList()))
         .put("additionalProperties", false)
     private fun typeSchema() = string().put("enum", JSONArray(AnswerType.entries.map { it.value }))
+    private fun responseModeSchema() = string().put("enum", JSONArray(ResponseMode.entries.map { it.value }))
     private fun stepSchema() = objectSchema(JSONObject().put("topicId", string())
         .put("title", string()).put("body", string()).put("expr", string()))
     private fun stepsSchema() = JSONObject().put("type", "array").put("items", stepSchema())
@@ -17,6 +18,7 @@ object AnswerPrompts {
     fun answerSchema(): JSONObject = objectSchema(JSONObject()
         .put("subject", string().put("enum", JSONArray(listOf("math", "science", "code", "history", "language", "other"))))
         .put("difficulty", string().put("enum", JSONArray(listOf("easy", "medium", "hard"))))
+        .put("responseType", responseModeSchema())
         .put("answerType", typeSchema()).put("finalAnswerRedundant", JSONObject().put("type", "boolean"))
         .put("steps", stepsSchema().put("minItems", 1)).put("finalAnswer", string()))
 

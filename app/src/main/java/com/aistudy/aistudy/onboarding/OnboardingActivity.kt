@@ -48,6 +48,7 @@ class OnboardingActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        setTheme(R.style.Theme_AIStudy_Study)
         super.onCreate(savedInstanceState)
         userId = getSharedPreferences(LoginActivity.PREFS_AUTH, MODE_PRIVATE)
             .getLong(LoginActivity.KEY_USER_ID, 0L)
@@ -147,6 +148,7 @@ class OnboardingActivity : AppCompatActivity() {
             val view = findViewById<View>(id)
             ViewCompat.setScreenReaderFocusable(view, true)
             ViewCompat.setAccessibilityDelegate(view, object : AccessibilityDelegateCompat() {
+                @Suppress("DEPRECATION")
                 override fun onInitializeAccessibilityNodeInfo(host: View, info: AccessibilityNodeInfoCompat) {
                     super.onInitializeAccessibilityNodeInfo(host, info)
                     info.className = if (multiple) "android.widget.CheckBox" else "android.widget.RadioButton"

@@ -37,6 +37,7 @@
     <string name="progress_avatar_title">Avatar</string>
     <string name="progress_theme_title">Theme</string>
     <string name="progress_leaderboard_title">Weekly leaderboard (Local demo)</string>
+    <string name="progress_leaderboard_desc">Offline practice leaderboard with simulated study peers</string>
     <string name="progress_leaderboard_you">You</string>
     <string name="progress_leaderboard_xp">%d XP</string>
     <string name="progress_unlock_locked">Lv %d</string>

@@ -14,6 +14,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.aistudy.aistudy.R
@@ -24,6 +25,9 @@ import com.aistudy.aistudy.database.QuestionAnswer
 import com.aistudy.aistudy.database.QuestionAnswerDao
 import com.aistudy.aistudy.quiz.QuizActivity
 import com.google.android.material.button.MaterialButton
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class HistoryFragment : Fragment() {
 
@@ -79,18 +83,25 @@ class HistoryFragment : Fragment() {
             if (subjectFilter == "all" || starredOnly) {
                 return@setOnClickListener
             }
-            val dao = qaDao
-            if (dao == null || userId == -1L) {
+            val currentContext = context ?: return@setOnClickListener
+            if (userId <= 0L) {
                 return@setOnClickListener
             }
-            val count = dao.countBySubject(userId, subjectFilter)
-            if (count < MIN_PRACTICE_QA) {
-                Toast.makeText(requireContext(), R.string.quiz_need_more, Toast.LENGTH_LONG).show()
-                return@setOnClickListener
+            viewLifecycleOwner.lifecycleScope.launch {
+                val count = withContext(Dispatchers.IO) {
+                    AppDatabase.getInstance(currentContext.applicationContext)
+                        .questionAnswerDao()
+                        .countBySubject(userId, subjectFilter)
+                }
+                if (!isAdded) return@launch
+                if (count < MIN_PRACTICE_QA) {
+                    Toast.makeText(requireContext(), R.string.quiz_need_more, Toast.LENGTH_LONG).show()
+                    return@launch
+                }
+                val intent = Intent(requireContext(), QuizActivity::class.java)
+                intent.putExtra(QuizActivity.EXTRA_SUBJECT, subjectFilter)
+                startActivity(intent)
             }
-            val intent = Intent(requireContext(), QuizActivity::class.java)
-            intent.putExtra(QuizActivity.EXTRA_SUBJECT, subjectFilter)
-            startActivity(intent)
         }
 
         adapter = HistoryAdapter(
@@ -103,9 +114,16 @@ class HistoryFragment : Fragment() {
                 }
 
                 override fun onStarClick(qa: QuestionAnswer) {
-                    val dao = qaDao ?: return
-                    dao.toggleStar(qa.id)
-                    loadHistory()
+                    val currentContext = context ?: return
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        withContext(Dispatchers.IO) {
+                            AppDatabase.getInstance(currentContext.applicationContext)
+                                .questionAnswerDao()
+                                .toggleStar(qa.id)
+                        }
+                        if (!isAdded) return@launch
+                        loadHistory()
+                    }
                 }
             },
             ::subjectLabel,
@@ -176,19 +194,25 @@ class HistoryFragment : Fragment() {
 
     private fun loadHistory() {
         val currentContext = context ?: return
-        val userId = currentContext
+        val currentUserId = currentContext
             .getSharedPreferences(LoginActivity.PREFS_AUTH, Context.MODE_PRIVATE)
             .getLong(LoginActivity.KEY_USER_ID, -1L)
-        if (userId <= 0L) {
+        if (currentUserId <= 0L) {
             return
         }
-        this.userId = userId
+        userId = currentUserId
 
-        val dao = AppDatabase.getInstance(currentContext).questionAnswerDao()
-        qaDao = dao
-        allItems.clear()
-        allItems.addAll(dao.getAllByUserId(userId))
-        applyFilter()
+        viewLifecycleOwner.lifecycleScope.launch {
+            val items = withContext(Dispatchers.IO) {
+                val dao = AppDatabase.getInstance(currentContext.applicationContext).questionAnswerDao()
+                qaDao = dao
+                dao.getAllByUserId(currentUserId)
+            }
+            if (!isAdded || view == null) return@launch
+            allItems.clear()
+            allItems.addAll(items)
+            applyFilter()
+        }
     }
 
     private fun applyFilter() {

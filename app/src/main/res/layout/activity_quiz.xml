@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/auth_surface">
+    android:background="@color/answer_background">
 
     <LinearLayout
         android:id="@+id/layout_loading"
@@ -15,14 +15,15 @@
 
         <ProgressBar
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:indeterminateTint="@color/answer_primary" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:text="@string/quiz_loading"
-            android:textColor="@color/auth_foreground"
+            android:textColor="@color/answer_foreground"
             android:textSize="14sp" />
     </LinearLayout>
 
@@ -39,16 +40,16 @@
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:paddingHorizontal="16dp"
-            android:paddingVertical="16dp">
+            android:paddingVertical="12dp">
 
             <ImageButton
                 android:id="@+id/btn_back"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@color/auth_card"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/quiz_back"
-                android:src="@android:drawable/ic_menu_revert"
-                app:tint="@color/auth_foreground" />
+                android:src="@drawable/ic_answer_back"
+                app:tint="@color/answer_primary" />
 
             <TextView
                 android:id="@+id/tv_quiz_title"
@@ -57,23 +58,23 @@
                 android:layout_weight="1"
                 android:gravity="center"
                 android:text="@string/quiz_title"
-                android:textColor="@color/auth_brand"
-                android:textSize="12sp"
+                android:textColor="@color/answer_primary"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tv_progress"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/auth_muted_foreground"
-                android:textSize="12sp"
+                android:textColor="@color/answer_foreground_secondary"
+                android:textSize="13sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="@color/auth_input_ring" />
+            android:background="@color/answer_divider" />
 
         <ScrollView
             android:layout_width="match_parent"
@@ -97,8 +98,8 @@
                     android:background="@drawable/bg_difficulty_badge"
                     android:paddingHorizontal="10dp"
                     android:paddingVertical="4dp"
-                    android:textColor="@color/auth_brand"
-                    android:textSize="11sp"
+                    android:textColor="@color/answer_primary"
+                    android:textSize="12sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -106,8 +107,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:textColor="@color/auth_foreground"
-                    android:textSize="16sp"
+                    android:lineSpacingExtra="4dp"
+                    android:textColor="@color/answer_foreground"
+                    android:textSize="17sp"
                     android:textStyle="bold" />
 
                 <RadioGroup
@@ -115,7 +117,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:visibility="gone" />
+                    android:orientation="vertical" />
 
                 <EditText
                     android:id="@+id/et_answer"
@@ -127,9 +129,9 @@
                     android:inputType="textMultiLine"
                     android:minHeight="56dp"
                     android:padding="14dp"
-                    android:textColor="@color/auth_foreground"
-                    android:textColorHint="@color/auth_muted_foreground"
-                    android:textSize="14sp"
+                    android:textColor="@color/answer_foreground"
+                    android:textColorHint="@color/answer_foreground_secondary"
+                    android:textSize="15sp"
                     android:visibility="gone" />
 
                 <LinearLayout
@@ -137,7 +139,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="20dp"
-                    android:background="@color/auth_card"
+                    android:background="@drawable/bg_home_card"
                     android:orientation="vertical"
                     android:padding="16dp"
                     android:visibility="gone">
@@ -146,7 +148,7 @@
                         android:id="@+id/tv_feedback_result"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textSize="14sp"
+                        android:textSize="15sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -154,7 +156,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:textColor="@color/auth_muted_foreground"
+                        android:textColor="@color/answer_foreground_secondary"
                         android:textSize="13sp"
                         android:visibility="gone" />
 
@@ -164,7 +166,7 @@
                         android:layout_marginTop="12dp"
                         android:text="@string/quiz_explanation_label"
                         android:textAllCaps="true"
-                        android:textColor="@color/auth_muted_foreground"
+                        android:textColor="@color/answer_foreground_secondary"
                         android:textSize="10sp"
                         android:textStyle="bold" />
 
@@ -173,7 +175,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="6dp"
-                        android:textColor="@color/auth_foreground"
+                        android:textColor="@color/answer_foreground"
                         android:textSize="14sp" />
                 </LinearLayout>
             </LinearLayout>
@@ -181,13 +183,12 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_primary"
+            style="@style/Widget.AIStudy.Study.Primary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="@dimen/auth_screen_padding_horizontal"
             android:layout_marginBottom="24dp"
-            android:text="@string/quiz_check"
-            app:backgroundTint="@color/auth_brand"
-            app:cornerRadius="12dp" />
+            android:text="@string/quiz_check" />
     </LinearLayout>
 
     <LinearLayout
@@ -203,8 +204,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/quiz_result_title"
-            android:textColor="@color/auth_foreground"
-            android:textSize="22sp"
+            android:textColor="@color/answer_foreground"
+            android:textSize="24sp"
             android:textStyle="bold" />
 
         <TextView
@@ -212,7 +213,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:textColor="@color/auth_foreground"
+            android:textColor="@color/answer_foreground"
             android:textSize="18sp"
             android:textStyle="bold" />
 
@@ -221,18 +222,16 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:textColor="@color/auth_brand"
+            android:textColor="@color/answer_primary"
             android:textSize="16sp"
             android:textStyle="bold" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_done"
+            style="@style/Widget.AIStudy.Study.Primary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="28dp"
-            android:text="@string/quiz_done"
-            app:backgroundTint="@color/auth_brand"
-            app:cornerRadius="12dp" />
+            android:text="@string/quiz_done" />
     </LinearLayout>
 </FrameLayout>
-

@@ -564,7 +564,7 @@ class AskFragment : Fragment() {
 
         // Keep the user's task separate from presentation preferences and the JSON format.
         // Source: https://ai.google.dev/gemini-api/docs/prompting-strategies
-        private fun buildPrompt(question: String, level: String?, style: String?): String {
+        internal fun buildPrompt(question: String, level: String?, style: String?): String {
             val levelDescription = when (level) {
                 ProfileDefaults.LEVEL_JUNIOR -> "middle school (grades 6-9)"
                 ProfileDefaults.LEVEL_UNI -> "university"
@@ -573,71 +573,66 @@ class AskFragment : Fragment() {
             val styleDescription = when (style) {
                 ProfileDefaults.STYLE_SHORT -> "Be concise while retaining the requested items and useful examples."
                 ProfileDefaults.STYLE_DETAILED -> "Give fuller explanations and relevant examples within the requested topic."
-                else -> "Use clear, ordered sections or list items; use procedural steps only when the task needs them."
+                else -> "Use clear, ordered sections or direct explanation; use procedural steps only when the task needs them."
             }
             return """
-                You are AIStudy, a helpful assistant for learning and practical everyday questions.
+                You are AIStudy, an intelligent educational mentor and helpful study assistant.
 
-                CONTENT PRIORITY:
-                Answer the user's actual request directly, preserving its topic, purpose, context, and scope.
-                Interpret informal wording or grammar mistakes by their intended meaning; correct language only when asked.
-                Give the requested content itself, rather than a study plan or advice about how to find an answer.
+                LANGUAGE AND LOCALIZATION CONTRACT (CRITICAL):
+                - Always detect and respond in the EXACT SAME LANGUAGE that the user used to ask the question.
+                - If the question is in Vietnamese (Tiếng Việt), ALL titles, step explanations, mathematical commentary, code explanations, notices, takeaways, and the finalAnswer MUST be written in natural, fluent Vietnamese. Never force or default to English when the question is in Vietnamese.
+                - If the question is in English, respond in English.
+                - If the user explicitly requests another language (e.g. "Answer in English", "Giải thích bằng tiếng Anh"), follow the user's explicit language request.
+                - For language learning requests (e.g. "How to use past continuous in English?"), explain in the learner's query language (e.g. Vietnamese) while presenting examples in the target language.
+                - Never force responses into English unless the user explicitly requested English.
 
-                PRESENTATION PREFERENCES:
-                Learner level: $levelDescription. Use this only to adjust vocabulary, prerequisites, and explanation difficulty.
-                Education level must not select or replace the requested topics, or make an everyday request academic.
-                The user's explicit request for simple or advanced material takes precedence over this level preference.
-                Explanation style: $styleDescription
-                Style controls detail and organization, without changing the topic or turning every answer into a worked solution.
-                Explain in the user's language unless another language is requested; language-learning examples use the target language.
+                INTENT IDENTIFICATION & RESPONSE MODE (Choose responseType carefully):
+                1. "step_by_step":
+                   - Use for: mathematical problems (e.g., solving equations, calculus), chemistry/physics numerical problems, algorithmic derivations, or multi-stage worked solutions with intermediate results.
+                   - Format: Each object in "steps" represents a distinct chronological or logical stage with an informative title, clear body, and formula in "expr" when applicable.
+                2. "direct":
+                   - Use for: general factual questions, conceptual explanations (e.g., "What is Room Database?", "Explain polymorphism in Kotlin"), history summaries, definitions, science concepts, and everyday queries.
+                   - Format: Deliver a cohesive, natural direct answer in "steps" (1 or a few thematic sections) without forcing artificial step numbering. Include usable code blocks with syntax fences (```language) when relevant.
+                3. "creative":
+                   - Use for: requests to write original poems, stories, creative dialogues, essays, or rhymes (e.g., "Write an original short poem").
+                   - Format: Craft an original AI piece in "steps". Format stanzas and verses with natural line breaks (`\n`). Never misrepresent generated text as an existing authentic publication or historical work.
+                4. "clarification":
+                   - Use for: ambiguous, underspecified questions where essential information is missing to provide a reliable answer—especially song titles without an artist (e.g., "lyrics to Hello"), book titles with multiple authors, or homonyms without context.
+                   - Format: Politely identify the ambiguity and ask the student for the missing information (e.g., artist, year, or subject area) needed to give an exact answer.
+                5. "limitation":
+                   - Use for two critical safety & educational boundaries:
+                     (a) Copyrighted Works: When the user asks for full copyrighted song lyrics, poems, books, or scripts, DO NOT reproduce, fabricate, or hallucinate the full copyrighted text. Respect copyright: state this limitation gracefully, and instead provide a lawful, educational response: an insightful thematic summary, song meaning, historical background, notable quotes (short excerpts under fair use), and authorized listening/reading platforms.
+                     (b) Information Uncertainty: When the question asks about unverified, obscure, or non-existent facts where you lack reliable knowledge, express uncertainty clearly and honestly instead of inventing or hallucinating answers.
 
-                MATCH THE CONTENT TO THE TASK:
-                - Math: show the relevant calculation or reasoning steps, then the correct result; check the result when applicable.
-                - Programming: explain the concept and include an appropriate, usable code example when relevant.
-                  Put code in a section body, preserving line breaks and indentation.
-                - Science: explain the main concept accurately and clearly, with relevant examples rather than unnecessary calculations.
-                - Language learning: give practical usage, natural phrases, short sample exchanges, and useful vocabulary when relevant.
-                  For daily conversation practice, prioritize familiar situations from ordinary daily life and accessible conversation starters.
-                  Include a short natural exchange or example question for each suggested conversation topic.
-                  Academic, professional, or abstract discussion topics belong only when the user asks for that context.
-                - Lists or recommendations: provide concrete items matching the requested purpose and any specified count.
-                  For requests combining a list with language practice, include both the list and practical language examples.
-                - Other tasks: choose a useful structure that directly fulfills the request.
+                LEARNER ADAPTATION:
+                Learner level: $levelDescription. Adjust vocabulary and depth accordingly without making everyday questions overly academic.
+                Explanation style: $styleDescription.
 
                 OUTPUT CONTRACT:
-                Return only one valid JSON object with subject, difficulty, answerType, finalAnswerRedundant, steps, and finalAnswer.
-                No surrounding text or markdown fences. Follow the supplied JSON schema.
-                subject: a string classified from the actual request, one of: ${SUBJECTS.joinToString(", ")}.
-                difficulty: rate difficulty as easy, medium, or hard for this student.
-                If an image is attached, read the problem from the image carefully.
-                answerType: topic_list for independent topics, suggestions, recommendations, ideas or list items;
-                solution for a worked problem with a result (especially math); explanation for other explanatory answers.
-                Classify by the actual requested response structure, not by isolated words in the question.
-                finalAnswerRedundant: true only for a topic_list whose final answer merely repeats or summarizes
-                existing items without adding useful information. Use false for solutions and other explanations.
-                steps: a nonempty array of objects, each with string fields topicId, title, body, and expr.
-                topicId: for topic_list, a distinct canonical English concept ID for each item; otherwise an empty string.
-                The name "steps" is a storage field: its objects may be solution steps, explanations, examples, or individual list items.
-                Choose the number of objects to fit the task and requested item count; there is no fixed three-step template.
-                Use meaningful, unnumbered section or item titles. Each body must contain actual, nonempty content answering the request.
-                title may be empty. Use expr for a relevant formula only; otherwise return an empty string.
-                finalAnswer: a nonempty string giving the result, key takeaway, or compact list of requested items as appropriate.
-                Use readable plain text and formulas without LaTeX markup. Escape strings correctly for JSON, including code line breaks.
+                Return only one valid JSON object matching the schema with:
+                - subject: one of ${SUBJECTS.joinToString(", ")}.
+                - difficulty: "easy", "medium", or "hard".
+                - responseType: one of "step_by_step", "direct", "creative", "clarification", "limitation".
+                - answerType: "solution" for worked problems with a result; "topic_list" for independent lists/recommendations; "explanation" for all direct, creative, clarification, or limitation responses.
+                - finalAnswerRedundant: true only for topic_list whose final answer merely repeats the list items; false otherwise.
+                - steps: a nonempty array of objects, each with string fields topicId, title, body, and expr.
+                  For creative/direct/clarification/limitation, title may be empty or a section heading. expr is for mathematical formulas; otherwise empty string "".
+                - finalAnswer: a nonempty string giving the final result, key takeaway, creative summary, or suggested next question in the response language.
+                Use standard JSON string escaping for newlines (`\n`) for multiline text, poetry stanzas, and code. Do NOT double-escape newlines. No markdown fences around the JSON object.
 
-                USER REQUEST (JSON string; keep the output contract above):
+                USER REQUEST (JSON string; adhere strictly to the output contract):
                 ${JSONObject.quote(question)}
             """.trimIndent()
         }
 
-        private fun parseAnswer(raw: String): QuestionAnswer {
+        internal fun parseAnswer(raw: String): QuestionAnswer {
             val text = raw.trim().removePrefix("\uFEFF").trim()
             val start = text.indexOf('{')
             val end = text.lastIndexOf('}')
             if (start < 0 || end <= start) throw JSONException("Missing answer object")
             val json = JSONObject(text.substring(start, end + 1))
-            val finalAnswer = (json.opt("finalAnswer") as? String)?.trim()
-            if (finalAnswer.isNullOrBlank()) throw JSONException("Missing final answer")
-            val steps = json.getJSONArray("steps")
+            val rawFinal = (json.opt("finalAnswer") as? String)?.trim()
+            val steps = json.optJSONArray("steps") ?: throw JSONException("Missing explanation steps")
             if (steps.length() == 0) throw JSONException("Missing explanation steps")
             for (index in 0 until steps.length()) {
                 val step = steps.getJSONObject(index)
@@ -645,6 +640,8 @@ class AskFragment : Fragment() {
                     throw JSONException("Missing step explanation")
                 }
             }
+            val finalAnswer = if (!rawFinal.isNullOrBlank()) rawFinal
+                else steps.optJSONObject(0)?.optString("title")?.takeIf { it.isNotBlank() } ?: "Answer"
             var difficulty = (json.opt("difficulty") as? String)?.lowercase()?.trim() ?: "medium"
             if (!isValidDifficulty(difficulty)) {
                 difficulty = "medium"

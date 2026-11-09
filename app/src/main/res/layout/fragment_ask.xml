@@ -36,7 +36,7 @@
                     android:minHeight="@dimen/study_composer_height" android:minLines="4"
                     android:gravity="top|start" android:hint="@string/ask_hint"
                     android:inputType="textMultiLine|textCapSentences" android:imeOptions="flagNoExtractUi"
-                    android:importantForAutofill="no" android:breakStrategy="high_quality" />
+                    android:importantForAutofill="no" android:breakStrategy="simple" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Image Preview (Phase 10) -->

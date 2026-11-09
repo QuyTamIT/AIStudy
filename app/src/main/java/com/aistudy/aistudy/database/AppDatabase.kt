@@ -163,7 +163,7 @@ abstract class AppDatabase : RoomDatabase() {
                         MIGRATION_6_7,
                         MIGRATION_7_8
                     )
-                    .fallbackToDestructiveMigration(true)
+                    .fallbackToDestructiveMigration(false)
                     .build()
                     .also { instance = it }
             }

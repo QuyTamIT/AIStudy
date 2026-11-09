@@ -3,25 +3,32 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <color name="auth_background">#F9FAFC</color>
-    <color name="auth_surface">#F9FAFC</color>
-    <color name="auth_shell_outer">#F4F4F5</color>
-    <color name="auth_foreground">#1C1F28</color>
-    <color name="auth_card">#F2F4F7</color>
-    <color name="auth_muted_foreground">#6E7583</color>
-    <color name="auth_brand">#3B9E74</color>
-    <color name="auth_brand_soft">#1A3B9E74</color>
-    <color name="auth_brand_ring">#4D3B9E74</color>
-    <color name="auth_primary_foreground">#F8FDFA</color>
-    <color name="auth_input_ring">#0D000000</color>
-    <color name="auth_input_ring_focus">#663B9E74</color>
-    <color name="auth_shell_ring">#0D000000</color>
+    <!-- Harmonized with Deep Sage + Editorial EdTech Design System -->
+    <color name="auth_background">@color/answer_background</color>
+    <color name="auth_surface">@color/answer_surface</color>
+    <color name="auth_shell_outer">@color/answer_background</color>
+    <color name="auth_foreground">@color/answer_foreground</color>
+    <color name="auth_card">@color/answer_surface</color>
+    <color name="auth_muted_foreground">@color/answer_foreground_secondary</color>
+    <color name="auth_brand">@color/answer_primary</color>
+    <color name="auth_brand_soft">@color/answer_result_surface</color>
+    <color name="auth_brand_ring">@color/answer_outline</color>
+    <color name="auth_primary_foreground">@color/answer_on_primary</color>
+    <color name="auth_input_ring">@color/answer_divider</color>
+    <color name="auth_input_ring_focus">@color/answer_primary</color>
+    <color name="auth_shell_ring">@color/answer_divider</color>
 
     <color name="streak">#E67E22</color>
     <color name="streak_soft">#FDF0E4</color>
     <color name="xp_track">#E8EAED</color>
 
-    <color name="theme_default_bg">#F9FAFC</color>
-    <color name="theme_night_bg">#1C1F28</color>
-    <color name="theme_pastel_bg">#F3E8FF</color>
+    <color name="theme_default_bg">@color/answer_background</color>
+    <color name="theme_night_bg">@color/answer_forest_950</color>
+    <color name="theme_pastel_bg">#F5EFEB</color>
+
+    <!-- Refined Logout Pill Colors (Light) -->
+    <color name="logout_pill_bg">#FFF3F2</color>
+    <color name="logout_pill_border">#FED7D4</color>
+    <color name="logout_pill_fg">#D93829</color>
+    <color name="logout_pill_ripple">#26D93829</color>
 </resources>

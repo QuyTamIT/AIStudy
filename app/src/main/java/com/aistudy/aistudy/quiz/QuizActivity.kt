@@ -32,6 +32,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import kotlin.math.roundToInt
 
 class QuizActivity : AppCompatActivity() {
 
@@ -74,6 +75,7 @@ class QuizActivity : AppCompatActivity() {
     private lateinit var tvResultXp: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        setTheme(R.style.Theme_AIStudy_Study)
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_quiz)
@@ -84,6 +86,7 @@ class QuizActivity : AppCompatActivity() {
         }
 
         val subjectExtra = intent.getStringExtra(EXTRA_SUBJECT)
+            ?: savedInstanceState?.getString("subject")
         if (subjectExtra.isNullOrEmpty()) {
             Toast.makeText(this, R.string.quiz_error, Toast.LENGTH_SHORT).show()
             finish()
@@ -129,33 +132,80 @@ class QuizActivity : AppCompatActivity() {
         btnDone.setOnClickListener { finish() }
         btnPrimary.setOnClickListener { onPrimaryClick() }
 
-        startGenerate()
+        val savedSessionId = savedInstanceState?.getLong("sessionId", -1L) ?: -1L
+        if (savedSessionId > 0L) {
+            currentIndex = savedInstanceState?.getInt("currentIndex", 0) ?: 0
+            answered = savedInstanceState?.getBoolean("answered", false) ?: false
+            restoreSession(savedSessionId)
+        } else {
+            startGenerate()
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        if (::session.isInitialized) {
+            outState.putLong("sessionId", session.id)
+            outState.putInt("currentIndex", currentIndex)
+            outState.putBoolean("answered", answered)
+            outState.putString("subject", subject)
+        }
+    }
+
+    private fun restoreSession(sessionId: Long) {
+        showLoading()
+        executor.execute {
+            try {
+                val existingSession = sessionDao.getById(sessionId)
+                val sessionItems = itemDao.getBySessionId(sessionId)
+                if (existingSession == null || sessionItems.isEmpty()) {
+                    startGenerate()
+                    return@execute
+                }
+                runOnUiThread {
+                    session = existingSession
+                    items.clear()
+                    items.addAll(sessionItems)
+                    if (existingSession.completed) {
+                        showResult(existingSession.score, existingSession.total)
+                    } else {
+                        showQuiz()
+                        bindCurrentItem()
+                    }
+                }
+            } catch (_: Exception) {
+                startGenerate()
+            }
+        }
     }
 
     private fun startGenerate() {
-        val sources = qaDao.getRecentByUserIdAndSubject(userId, subject, RECENT_LIMIT)
-        if (sources.size < MIN_SOURCE_QA) {
-            Toast.makeText(this, R.string.quiz_need_more, Toast.LENGTH_LONG).show()
-            finish()
-            return
-        }
-
-        if (BuildConfig.GEMINI_API_KEY.isEmpty() || BuildConfig.GEMINI_API_KEY == "YOUR_KEY_HERE") {
+        val apiKey = BuildConfig.GEMINI_API_KEY
+        if (apiKey.isBlank() || apiKey.startsWith("YOUR_", ignoreCase = true)) {
             Toast.makeText(this, R.string.quiz_no_api_key, Toast.LENGTH_LONG).show()
             finish()
             return
         }
 
         showLoading()
-        val prompt = buildQuizPrompt(sources)
-        val sourceIds = JSONArray()
-        for (qa in sources) {
-            sourceIds.put(qa.id)
-        }
-
         executor.execute {
             try {
-                val raw = GeminiClient.ask(BuildConfig.GEMINI_API_KEY, prompt)
+                val sources = qaDao.getRecentByUserIdAndSubject(userId, subject, RECENT_LIMIT)
+                if (sources.size < MIN_SOURCE_QA) {
+                    runOnUiThread {
+                        Toast.makeText(this@QuizActivity, R.string.quiz_need_more, Toast.LENGTH_LONG).show()
+                        finish()
+                    }
+                    return@execute
+                }
+
+                val prompt = buildQuizPrompt(sources)
+                val sourceIds = JSONArray()
+                for (qa in sources) {
+                    sourceIds.put(qa.id)
+                }
+
+                val raw = GeminiClient.ask(apiKey, prompt)
                 val jsonText = extractJson(raw)
                 val root = JSONObject(jsonText)
                 val arr = root.getJSONArray("items")
@@ -163,14 +213,15 @@ class QuizActivity : AppCompatActivity() {
                     throw Exception("empty items")
                 }
 
-                val newSession = QuizSession()
-                newSession.userId = userId
-                newSession.subject = subject
-                newSession.sourceQaIds = sourceIds.toString()
-                newSession.createdAt = System.currentTimeMillis()
-                newSession.score = 0
-                newSession.total = 0
-                newSession.completed = false
+                val newSession = QuizSession().apply {
+                    this.userId = this@QuizActivity.userId
+                    this.subject = this@QuizActivity.subject
+                    this.sourceQaIds = sourceIds.toString()
+                    this.createdAt = System.currentTimeMillis()
+                    this.score = 0
+                    this.total = 0
+                    this.completed = false
+                }
                 val sessionId = sessionDao.insert(newSession)
                 newSession.id = sessionId
 
@@ -178,16 +229,17 @@ class QuizActivity : AppCompatActivity() {
                 val limit = minOf(arr.length(), TARGET_ITEMS)
                 for (i in 0 until limit) {
                     val obj = arr.getJSONObject(i)
-                    val item = QuizItem()
-                    item.sessionId = sessionId
-                    item.type = normalizeType(obj.optString("type", "mcq"))
-                    item.prompt = obj.optString("prompt", "").trim()
-                    item.correctAnswer = obj.optString("correctAnswer", "").trim()
-                    item.explanation = obj.optString("explanation", "").trim()
-                    val options = obj.optJSONArray("options")
-                    item.optionsJson = options?.toString() ?: "[]"
-                    item.userAnswer = null
-                    item.correct = null
+                    val item = QuizItem().apply {
+                        this.sessionId = sessionId
+                        this.type = normalizeType(obj.optString("type", "mcq"))
+                        this.prompt = obj.optString("prompt", "").trim()
+                        this.correctAnswer = obj.optString("correctAnswer", "").trim()
+                        this.explanation = obj.optString("explanation", "").trim()
+                        val options = obj.optJSONArray("options")
+                        this.optionsJson = options?.toString() ?: "[]"
+                        this.userAnswer = null
+                        this.correct = null
+                    }
                     if (item.prompt.isNullOrEmpty() || item.correctAnswer.isNullOrEmpty()) {
                         continue
                     }
@@ -213,7 +265,7 @@ class QuizActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 runOnUiThread {
-                    Toast.makeText(this, R.string.quiz_error, Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@QuizActivity, R.string.quiz_error, Toast.LENGTH_LONG).show()
                     finish()
                 }
             }
@@ -257,13 +309,15 @@ class QuizActivity : AppCompatActivity() {
         val correct = normalizeAnswer(userAnswer) == normalizeAnswer(item.correctAnswer)
         item.userAnswer = userAnswer
         item.correct = correct
-        itemDao.update(item)
+        executor.execute {
+            itemDao.update(item)
+        }
 
         answered = true
         layoutFeedback.visibility = View.VISIBLE
         if (correct) {
             tvFeedbackResult.setText(R.string.quiz_correct)
-            tvFeedbackResult.setTextColor(ContextCompat.getColor(this, R.color.auth_brand))
+            tvFeedbackResult.setTextColor(ContextCompat.getColor(this, R.color.answer_primary))
             tvFeedbackCorrect.visibility = View.GONE
         } else {
             tvFeedbackResult.setText(R.string.quiz_incorrect)
@@ -282,26 +336,40 @@ class QuizActivity : AppCompatActivity() {
     }
 
     private fun finishQuiz() {
+        btnPrimary.isEnabled = false
         if (::session.isInitialized && session.completed) {
             return
         }
         val score = items.count { it.correct == true }
         val xpGain = score * XpRules.QUIZ_CORRECT + XpRules.QUIZ_COMPLETE_BONUS
-        session.score = score
-        session.total = items.size
-        session.completed = true
-        sessionDao.update(session)
 
-        val profile = profileDao.getByUserId(userId)
-        if (profile != null) {
-            XpRules.recordDailyActivity(profile, profileDao)
-            XpRules.addXp(profile, profileDao, xpGain)
+        executor.execute {
+            val db = AppDatabase.getInstance(applicationContext)
+            db.runInTransaction {
+                if (session.completed) return@runInTransaction
+                session.score = score
+                session.total = items.size
+                session.completed = true
+                sessionDao.update(session)
+
+                val profile = profileDao.getByUserId(userId)
+                if (profile != null) {
+                    XpRules.recordDailyActivity(profile, profileDao)
+                    XpRules.addXp(profile, profileDao, xpGain)
+                }
+            }
+
+            runOnUiThread {
+                showResult(score, items.size, xpGain)
+            }
         }
+    }
 
+    private fun showResult(score: Int, total: Int, xpGain: Int = score * XpRules.QUIZ_CORRECT + XpRules.QUIZ_COMPLETE_BONUS) {
         layoutQuiz.visibility = View.GONE
         layoutLoading.visibility = View.GONE
         layoutResult.visibility = View.VISIBLE
-        tvResultScore.text = getString(R.string.quiz_result_score, score, items.size)
+        tvResultScore.text = getString(R.string.quiz_result_score, score, total)
         tvResultXp.text = getString(R.string.quiz_result_xp, xpGain)
     }
 
@@ -311,6 +379,7 @@ class QuizActivity : AppCompatActivity() {
         tvItemType.text = typeLabel(item.type)
         tvPrompt.text = item.prompt
         layoutFeedback.visibility = View.GONE
+        btnPrimary.isEnabled = true
         btnPrimary.setText(R.string.quiz_check)
         setInputsEnabled(true)
 
@@ -323,16 +392,19 @@ class QuizActivity : AppCompatActivity() {
             etAnswer.visibility = View.GONE
             try {
                 val options = JSONArray(item.optionsJson ?: "[]")
+                val padH = dp(14)
+                val padV = dp(12)
                 for (i in 0 until options.length()) {
                     val option = options.getString(i)
                     val rb = RadioButton(this)
                     rb.id = View.generateViewId()
                     rb.text = option
-                    rb.setTextColor(ContextCompat.getColor(this, R.color.auth_foreground))
-                    rb.setPadding(8, 16, 8, 16)
+                    rb.setTextColor(ContextCompat.getColor(this, R.color.answer_foreground))
+                    rb.setPadding(padH, padV, padH, padV)
+                    rb.minHeight = dp(48)
                     groupOptions.addView(rb)
                 }
-            } catch (ignored: Exception) {
+            } catch (_: Exception) {
             }
         } else {
             groupOptions.visibility = View.GONE
@@ -440,19 +512,16 @@ class QuizActivity : AppCompatActivity() {
 
     private fun extractJson(raw: String): String {
         val text = raw.trim()
-        if (text.startsWith("```")) {
-            val start = text.indexOf('{')
-            val end = text.lastIndexOf('}')
-            if (start >= 0 && end > start) {
-                return text.substring(start, end + 1)
-            }
-        }
         val start = text.indexOf('{')
         val end = text.lastIndexOf('}')
         if (start >= 0 && end > start) {
             return text.substring(start, end + 1)
         }
         return text
+    }
+
+    private fun dp(value: Int): Int {
+        return (value * resources.displayMetrics.density).roundToInt()
     }
 
     override fun onDestroy() {
@@ -462,4 +531,3 @@ class QuizActivity : AppCompatActivity() {
         }
     }
 }
-

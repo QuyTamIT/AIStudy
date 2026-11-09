@@ -7,4 +7,25 @@
         <item quantity="one">%1$d step</item>
         <item quantity="other">%1$d steps</item>
     </plurals>
+
+    <!-- Adaptive AI Response Headings -->
+    <string name="answer_heading_solution">Step-by-step Solution</string>
+    <string name="answer_heading_direct">Explanation</string>
+    <string name="answer_heading_creative">Creative Work</string>
+    <string name="answer_heading_clarification">Clarification Needed</string>
+    <string name="answer_heading_limitation">Notice &amp; Guidance</string>
+
+    <!-- Adaptive AI Notice & Disclaimers -->
+    <string name="answer_badge_creative">Original AI Creation</string>
+    <string name="answer_disclaimer_creative">This content was crafted as an original creative piece by AIStudy. It is not an excerpt from an existing publication.</string>
+    <string name="answer_notice_clarification_title">More Details Needed</string>
+    <string name="answer_notice_clarification_msg">This request is ambiguous. Please provide more context (such as the artist, author, or specific subject) so we can give you an accurate answer.</string>
+    <string name="answer_notice_limitation_title">Educational Notice</string>
+    <string name="answer_notice_limitation_msg">AIStudy respects intellectual property and reliable knowledge limits. Below is an educational summary, analysis, and authorized guidance.</string>
+    <string name="answer_notice_uncertainty_title">Information Uncertainty</string>
+    <string name="answer_notice_uncertainty_msg">AIStudy lacks verified information for this specific topic. Rather than inventing facts, here is what is verified or how to find reliable sources.</string>
+
+    <!-- Adaptive Final Answer Labels -->
+    <string name="answer_final_label_takeaway">Key Takeaway</string>
+    <string name="answer_final_label_next_step">Suggested Next Step</string>
 </resources>

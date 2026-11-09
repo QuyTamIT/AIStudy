@@ -41,6 +41,15 @@ class RegisterActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         setTheme(R.style.Theme_AIStudy_Study)
         super.onCreate(savedInstanceState)
+        val userId = getSharedPreferences(LoginActivity.PREFS_AUTH, MODE_PRIVATE)
+            .getLong(LoginActivity.KEY_USER_ID, 0L)
+        if (userId > 0L) {
+            startActivity(Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            })
+            finish()
+            return
+        }
         enableEdgeToEdge()
         setContentView(R.layout.auth_activity_register)
 

@@ -23,10 +23,12 @@
         app:layout_constraintBottom_toBottomOf="parent" />
 
     <LinearLayout
+        android:id="@+id/layout_step_content"
         android:layout_width="0dp" android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/answer_step_rail_gap"
         android:paddingBottom="@dimen/answer_space_8" android:orientation="vertical"
         app:layout_constraintStart_toEndOf="@id/tv_answer_step_number"
+        app:layout_goneMarginStart="0dp"
         app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent">
 

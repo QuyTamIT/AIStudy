@@ -40,7 +40,7 @@ class DailyLearningWorker(context: Context, params: WorkerParameters) : Worker(c
     }
 
     private fun maybeBookmark(context: Context, qaDao: QuestionAnswerDao, userId: Long) {
-        if (alreadySentToday(context, "bookmark")) {
+        if (alreadySentToday(context, userId, "bookmark")) {
             return
         }
         val beforeMs = System.currentTimeMillis() - HOURS_48_MS
@@ -53,11 +53,11 @@ class DailyLearningWorker(context: Context, params: WorkerParameters) : Worker(c
             MainActivity.TAB_HISTORY,
             qa.id
         )
-        markSentToday(context, "bookmark")
+        markSentToday(context, userId, "bookmark")
     }
 
     private fun maybeMistakes(context: Context, quizItemDao: QuizItemDao, userId: Long) {
-        if (alreadySentToday(context, "mistakes")) {
+        if (alreadySentToday(context, userId, "mistakes")) {
             return
         }
         val fromMs = System.currentTimeMillis() - DAYS_7_MS
@@ -73,11 +73,11 @@ class DailyLearningWorker(context: Context, params: WorkerParameters) : Worker(c
             MainActivity.TAB_PROGRESS,
             -1
         )
-        markSentToday(context, "mistakes")
+        markSentToday(context, userId, "mistakes")
     }
 
     private fun maybeMotivational(context: Context, profile: Profile, userId: Long) {
-        if (alreadySentToday(context, "motivational")) {
+        if (alreadySentToday(context, userId, "motivational")) {
             return
         }
         XpRules.ensureWeek(profile)
@@ -103,7 +103,7 @@ class DailyLearningWorker(context: Context, params: WorkerParameters) : Worker(c
             MainActivity.TAB_HOME,
             -1
         )
-        markSentToday(context, "motivational")
+        markSentToday(context, userId, "motivational")
     }
 
     private fun maybeSummary(
@@ -116,7 +116,7 @@ class DailyLearningWorker(context: Context, params: WorkerParameters) : Worker(c
         val cal = Calendar.getInstance()
         val sunday = cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY
         val kind = if (sunday) "weekly" else "daily"
-        if (alreadySentToday(context, "summary_$kind")) {
+        if (alreadySentToday(context, userId, "summary_$kind")) {
             return
         }
 
@@ -157,19 +157,19 @@ class DailyLearningWorker(context: Context, params: WorkerParameters) : Worker(c
             MainActivity.TAB_PROGRESS,
             -1
         )
-        markSentToday(context, "summary_$kind")
+        markSentToday(context, userId, "summary_$kind")
     }
 
-    private fun alreadySentToday(context: Context, type: String): Boolean {
+    private fun alreadySentToday(context: Context, userId: Long, type: String): Boolean {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val today = XpRules.todayKey()
-        return today == prefs.getString(KEY_DAY + type, "")
+        return today == prefs.getString("${KEY_DAY}${userId}_$type", "")
     }
 
-    private fun markSentToday(context: Context, type: String) {
+    private fun markSentToday(context: Context, userId: Long, type: String) {
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .edit()
-            .putString(KEY_DAY + type, XpRules.todayKey())
+            .putString("${KEY_DAY}${userId}_$type", XpRules.todayKey())
             .apply()
     }
 
