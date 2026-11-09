@@ -255,3 +255,17 @@ $env:JAVA_HOME = 'C:\Program Files\Java\jdk-25'
 Emulator inspection covered a saved math result, a three-step topic answer and its available More topics action, light/dark appearances, a 320dp viewport with 200% system font size, and a tablet-width programming answer. The large-font inspection found an orphaned heading letter; the section count now moves below the heading at accessibility font sizes. Emulator appearance, font scale, resolution, and density were restored after review. Preview helpers and screenshots live only in the ignored `build/answer-ui-before` directory; no preview Activity or test fixture was added to app sources.
 
 Loading, retry, error, limit, and append rules were checked against their existing bindings and unit tests; no live More topics request was made for visual QA. TalkBack speech, text-selection gestures, long-formula horizontal scrolling, landscape, and IME behavior were not exercised in that earlier Answer review. This history records Answer's prior verification; it does not claim those checks were rerun for the Ask/auth adoption. Answer remains unchanged by the current adoption.
+
+
+### Icon refresh (2026-11-09)
+
+The dev_vinh icon refresh covers Home subject tiles, shared authentication fields, practice buttons, and the Ask image removal action. Use 24dp native outline vectors with 1.8dp rounded strokes and semantic Sage colors. Home tiles use 36dp tonal containers with 6dp padding. Replace subject emoji with vectors for consistent rendering. Decorative icons accompany existing labels and are excluded from accessibility announcements; no new icon-only actions or business logic are introduced. Existing navigation icons remain the reference for the visual language.
+
+
+### Learning game (2026-11-09)
+
+Home links to a dedicated native GameActivity using the shared Study theme. The setup offers five subjects and a timed or untimed round. Each round shuffles ten bundled introductory questions and their choices, so it works offline without Gemini requests. Timed rounds last at most 60 seconds; finishing all ten questions also ends the round. The monotonic deadline continues in the background and survives activity recreation.
+
+Correct answers score 100 points plus a streak bonus of 25 points per successive answer, capped at 100 bonus points. A wrong answer resets the current combo. Feedback uses explicit text alongside semantic correct/error colors, with an optional 120ms fade respecting system animation settings. A learner controls when the next question appears. All questions, choices, and explanations wrap in a centered, vertically scrolling 640dp column; choices have at least 56dp height.
+
+The result shows score, accuracy, best combo, personal best for the selected subject and mode, and a full review of answered questions. Room schema 9 adds game_results through the additive 8-to-9 migration. A round UUID and a single transaction make result saving and profile XP updates idempotent on recreation or retry. Each correct answer earns the existing 10-XP quiz reward; game scores remain separate from quiz accuracy and perfect-quiz badges. Profile XP, weekly XP, and activity streak reuse the existing rules. Previous icon changes and all existing quiz/Gemini flows remain intact.

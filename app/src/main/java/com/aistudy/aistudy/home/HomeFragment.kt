@@ -20,6 +20,7 @@ import com.aistudy.aistudy.database.AppDatabase
 import com.aistudy.aistudy.database.ProfileDefaults
 import com.aistudy.aistudy.database.QuestionAnswer
 import com.aistudy.aistudy.quiz.QuizActivity
+import com.aistudy.aistudy.game.GameActivity
 import com.aistudy.aistudy.xp.UnlockCatalog
 import com.aistudy.aistudy.xp.XpRules
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -127,6 +128,9 @@ class HomeFragment : Fragment() {
         view.findViewById<View>(R.id.btn_logout)?.setOnClickListener { showLogoutConfirmation() }
 
         btnAsk.setOnClickListener { selectTab(R.id.nav_ask) }
+        view.findViewById<View>(R.id.btn_game).setOnClickListener {
+            startActivity(Intent(requireContext(), GameActivity::class.java))
+        }
         btnPracticeRecent.setOnClickListener {
             latestSubject?.let { openPractice(it) }
         }
