@@ -94,7 +94,18 @@ class LoginActivity : AppCompatActivity() {
                 val authenticated = withContext(Dispatchers.IO) {
                     val user = userDao.findByEmail(email)
                     if (user == null || !PasswordHasher.matches(password, user.password)) null
-                    else user to ProfileDefaults.ensureExists(database.profileDao(), user.id)
+                    else {
+                        val stored = requireNotNull(user.password)
+                        if (PasswordHasher.needsUpgrade(stored)) {
+                            val replaced = userDao.replacePasswordIfUnchanged(
+                                user.id, stored, PasswordHasher.hash(password)
+                            )
+                            if (replaced == 0 && !PasswordHasher.matches(password, userDao.getById(user.id)?.password)) {
+                                return@withContext null
+                            }
+                        }
+                        user to ProfileDefaults.ensureExists(database.profileDao(), user.id)
+                    }
                 }
                 if (authenticated == null) {
                     showToast(R.string.auth_error_invalid_credentials)

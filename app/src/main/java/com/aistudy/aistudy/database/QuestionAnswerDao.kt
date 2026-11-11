@@ -3,16 +3,12 @@ package com.aistudy.aistudy.database
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
-import androidx.room.Update
 
 @Dao
 interface QuestionAnswerDao {
 
     @Insert
     fun insert(qa: QuestionAnswer): Long
-
-    @Update
-    fun update(qa: QuestionAnswer)
 
     @Query("SELECT * FROM question_answers WHERE userId = :userId ORDER BY createdAt DESC, id DESC")
     fun getAllByUserId(userId: Long): List<QuestionAnswer>
@@ -23,23 +19,24 @@ interface QuestionAnswerDao {
     @Query("SELECT COUNT(*) FROM question_answers WHERE userId = :userId")
     fun countByUserId(userId: Long): Int
 
-    @Query("SELECT * FROM question_answers WHERE id = :id LIMIT 1")
-    fun getById(id: Long): QuestionAnswer?
+    @Query("SELECT * FROM question_answers WHERE id = :id AND userId = :userId LIMIT 1")
+    fun getById(id: Long, userId: Long): QuestionAnswer?
 
     @Query("UPDATE question_answers SET steps = :steps WHERE id = :id AND userId = :userId AND steps IS :previousSteps")
     fun updateSteps(id: Long, userId: Long, previousSteps: String?, steps: String): Int
 
-    @Query("UPDATE question_answers SET starred = NOT starred WHERE id = :id")
-    fun toggleStar(id: Long)
+    @Query("UPDATE question_answers SET starred = NOT starred WHERE id = :id AND userId = :userId")
+    fun toggleStar(id: Long, userId: Long): Int
 
-    @Query("UPDATE question_answers SET extrasJson = :extrasJson WHERE id = :id")
-    fun updateExtras(id: Long, extrasJson: String?)
+    @Query("UPDATE question_answers SET extrasJson = :extrasJson WHERE id = :id AND userId = :userId")
+    fun updateExtras(id: Long, userId: Long, extrasJson: String?): Int
 
-    @Query("UPDATE question_answers SET reviewedAt = :reviewedAt WHERE id = :id")
-    fun updateReviewedAt(id: Long, reviewedAt: Long)
+    @Query("UPDATE question_answers SET reviewedAt = :reviewedAt WHERE id = :id AND userId = :userId AND reviewedAt = :previousReviewedAt")
+    fun updateReviewedAt(id: Long, userId: Long, previousReviewedAt: Long, reviewedAt: Long): Int
 
-    @Query("UPDATE question_answers SET reviewedSeconds = reviewedSeconds + :delta WHERE id = :id")
-    fun addReviewedSeconds(id: Long, delta: Int)
+    @Query("UPDATE question_answers SET reviewedSeconds = reviewedSeconds + :delta WHERE id = :id AND userId = :userId AND :delta > 0")
+    fun addReviewedSeconds(id: Long, userId: Long, delta: Int): Int
+
 
     @Query("SELECT COALESCE(SUM(reviewedSeconds), 0) FROM question_answers WHERE userId = :userId")
     fun sumReviewedSecondsByUserId(userId: Long): Int

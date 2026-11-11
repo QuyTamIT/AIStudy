@@ -22,7 +22,7 @@ class AnswerRepository(
 
     fun load(): AnswerSnapshot {
         checkSession()
-        val item = dao.getById(qaId) ?: throw AccessException()
+        val item = dao.getById(qaId, userId) ?: throw AccessException()
         if (item.userId != userId) throw AccessException()
         var content = AnswerContent.read(item.steps)
         // Legacy math already has a structured subject; its explanation/result need no network classification.

@@ -371,27 +371,30 @@ class AnswerActivity : AppCompatActivity() {
 
     private fun markReviewed() {
         val item = currentQa ?: return
+        if (!isCurrentSession() || item.userId != userId) return
         val now = System.currentTimeMillis()
         if (item.reviewedAt != 0L && isSameDay(item.reviewedAt, now)) {
             refreshReviewButton()
             return
         }
-
-        val firstReview = item.reviewedAt == 0L || !isSameDay(item.reviewedAt, now)
+        val previousReviewedAt = item.reviewedAt
         item.reviewedAt = now
         refreshReviewButton()
-
         extrasExecutor?.execute {
-            qaDao?.updateReviewedAt(item.id, now)
-            if (firstReview) {
-                val profile = profileDao.getByUserId(item.userId)
+            val db = AppDatabase.getInstance(applicationContext)
+            var awarded = false
+            db.runInTransaction {
+                if (!isCurrentSession()) return@runInTransaction
+                if (qaDao?.updateReviewedAt(item.id, userId, previousReviewedAt, now) != 1) return@runInTransaction
+                val profile = profileDao.getByUserId(userId)
                 if (profile != null) {
                     XpRules.addXp(profile, profileDao, XpRules.REVIEW)
-                    runOnUiThread {
-                        if (!isFinishing && !isDestroyed) {
-                            Toast.makeText(this@AnswerActivity, R.string.answer_review_xp_toast, Toast.LENGTH_SHORT).show()
-                        }
-                    }
+                    awarded = true
+                }
+            }
+            runOnUiThread {
+                if (awarded && isCurrentSession() && !isFinishing && !isDestroyed) {
+                    Toast.makeText(this@AnswerActivity, R.string.answer_review_xp_toast, Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -407,7 +410,7 @@ class AnswerActivity : AppCompatActivity() {
 
     // Phase 9: Learning Extras Actions & On-demand Gemini caching
     private fun onExtraAction(key: String) {
-        if (extrasLoading) return
+        if (extrasLoading || !isCurrentSession()) return
         activeExtraKey = key
         styleExtraButtons()
         val cached = readExtraField(key)
@@ -432,15 +435,17 @@ class AnswerActivity : AppCompatActivity() {
 
         val prompt = buildExtrasPrompt(item)
         extrasExecutor?.execute {
+            if (!isCurrentSession()) return@execute
             try {
                 val raw = GeminiClient.ask(apiKey, prompt)
                 val jsonText = extractJson(raw)
                 val extras = JSONObject(jsonText)
                 val payload = extras.toString()
-                item.extrasJson = payload
-                qaDao?.updateExtras(item.id, payload)
+                if (!isCurrentSession() || qaDao?.updateExtras(item.id, userId, payload) != 1) return@execute
 
                 runOnUiThread {
+                    if (!isCurrentSession() || isFinishing || isDestroyed) return@runOnUiThread
+                    item.extrasJson = payload
                     extrasLoading = false
                     progressExtras.visibility = View.GONE
                     val text = formatExtra(extras, focusKey)
@@ -452,6 +457,7 @@ class AnswerActivity : AppCompatActivity() {
                 }
             } catch (e: Exception) {
                 runOnUiThread {
+                    if (!isCurrentSession() || isFinishing || isDestroyed) return@runOnUiThread
                     extrasLoading = false
                     progressExtras.visibility = View.GONE
                     tvExtras.setText(R.string.answer_extras_error)
@@ -524,32 +530,8 @@ class AnswerActivity : AppCompatActivity() {
         }
     }
 
-    private fun decodeSampledBitmap(path: String, reqWidth: Int, reqHeight: Int): Bitmap? {
-        val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        BitmapFactory.decodeFile(path, options)
-        if (options.outWidth <= 0 || options.outHeight <= 0) return null
-        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight)
-        options.inJustDecodeBounds = false
-        return try {
-            BitmapFactory.decodeFile(path, options)
-        } catch (_: OutOfMemoryError) {
-            null
-        }
-    }
-
-    private fun calculateInSampleSize(options: BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int {
-        val height = options.outHeight
-        val width = options.outWidth
-        var inSampleSize = 1
-        if (height > reqHeight || width > reqWidth) {
-            val halfHeight = height / 2
-            val halfWidth = width / 2
-            while ((halfHeight / inSampleSize) >= reqHeight && (halfWidth / inSampleSize) >= reqWidth) {
-                inSampleSize *= 2
-            }
-        }
-        return inSampleSize
-    }
+    private fun decodeSampledBitmap(path: String, reqWidth: Int, reqHeight: Int): Bitmap? =
+        com.aistudy.aistudy.ask.ImagePreparation.decodeSampledBitmap(path, reqWidth, reqHeight)
 
     private fun difficultyLabel(difficulty: String?): String {
         return when (difficulty?.lowercase()) {
@@ -592,7 +574,7 @@ class AnswerActivity : AppCompatActivity() {
     private fun flushReviewSeconds() {
         val item = currentQa
         val dao = qaDao
-        if (item == null || dao == null || reviewSessionStartMs <= 0) {
+        if (item == null || dao == null || reviewSessionStartMs <= 0 || !isCurrentSession() || item.userId != userId) {
             return
         }
         val elapsedMs = System.currentTimeMillis() - reviewSessionStartMs
@@ -607,9 +589,13 @@ class AnswerActivity : AppCompatActivity() {
         item.reviewedSeconds += delta
         val id = item.id
         extrasExecutor?.execute {
-            dao.addReviewedSeconds(id, delta)
+            if (isCurrentSession()) dao.addReviewedSeconds(id, userId, delta)
         }
     }
+
+    private fun isCurrentSession(): Boolean = userId > 0L &&
+        getSharedPreferences(LoginActivity.PREFS_AUTH, MODE_PRIVATE)
+            .getLong(LoginActivity.KEY_USER_ID, 0L) == userId
 
     override fun onDestroy() {
         flushReviewSeconds()

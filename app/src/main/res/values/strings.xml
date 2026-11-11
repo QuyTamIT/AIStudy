@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">AIStudy</string>
+    <string name="startup_database_error_title">Study data unavailable</string>
+    <string name="startup_database_error_message">AIStudy could not open your saved data. Your data is still on this device. Try updating the app and opening it again.</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="logout">Logout</string>
     <string name="logout_dialog_title">Log out of AIStudy?</string>

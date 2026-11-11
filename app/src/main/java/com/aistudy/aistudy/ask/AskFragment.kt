@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.util.Base64
@@ -41,10 +40,7 @@ import com.aistudy.aistudy.database.QuestionAnswer
 import com.aistudy.aistudy.xp.XpRules
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputLayout
-import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.io.IOException
 import java.net.SocketTimeoutException
 import java.util.concurrent.ExecutorService
@@ -71,7 +67,6 @@ class AskFragment : Fragment() {
 
     // Phase 10: Selected image state and ActivityResult launchers
     private var selectedImageFile: File? = null
-    private var selectedMimeType: String? = null
     private var cameraFile: File? = null
 
     private lateinit var requestCameraPermission: ActivityResultLauncher<String>
@@ -107,10 +102,12 @@ class AskFragment : Fragment() {
         ) { success ->
             val file = cameraFile
             if (success && file != null && file.exists()) {
-                setSelectedImage(file, "image/jpeg")
+                setSelectedImage(file)
             } else {
+                deleteDraft(file)
                 Toast.makeText(requireContext(), R.string.ask_image_error, Toast.LENGTH_SHORT).show()
             }
+            cameraFile = null
         }
 
         pickImage = registerForActivityResult(
@@ -118,8 +115,7 @@ class AskFragment : Fragment() {
         ) { uri ->
             if (uri == null) return@registerForActivityResult
             try {
-                val (copied, mime) = copyUriToQaImages(uri)
-                setSelectedImage(copied, mime)
+                setSelectedImage(copyUriToQaImages(uri))
             } catch (e: Exception) {
                 Log.e(TAG, "gallery copy failed", e)
                 Toast.makeText(requireContext(), R.string.ask_image_error, Toast.LENGTH_SHORT).show()
@@ -187,6 +183,13 @@ class AskFragment : Fragment() {
         executor = Executors.newSingleThreadExecutor()
         buttonSend.setOnClickListener { submit() }
         setLoading(false)
+        savedInstanceState?.getString("selectedImagePath")?.let { path ->
+            val file = File(path)
+            if (isDraft(file) && file.exists()) setSelectedImage(file)
+        }
+        savedInstanceState?.getString("cameraImagePath")?.let { path ->
+            File(path).takeIf { isDraft(it) }?.let { cameraFile = it }
+        }
     }
 
     override fun onResume() {
@@ -197,6 +200,8 @@ class AskFragment : Fragment() {
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putLong("pendingQaId", pendingAnswerId)
         outState.putLong("pendingUserId", pendingUserId)
+        outState.putString("selectedImagePath", selectedImageFile?.path)
+        outState.putString("cameraImagePath", cameraFile?.path)
         super.onSaveInstanceState(outState)
     }
 
@@ -206,6 +211,14 @@ class AskFragment : Fragment() {
         suggestionButtons = emptyList()
         btnRemoveImage = null
         super.onDestroyView()
+    }
+
+    override fun onDestroy() {
+        if (activity?.isChangingConfigurations != true) {
+            deleteDraft(selectedImageFile)
+            deleteDraft(cameraFile)
+        }
+        super.onDestroy()
     }
 
     // Phase 10: Camera & Gallery helpers
@@ -249,60 +262,41 @@ class AskFragment : Fragment() {
         }
     }
 
-    private fun copyUriToQaImages(uri: Uri): Pair<File, String> {
-        val dir = File(requireContext().filesDir, "qa_images")
-        if (!dir.exists() && !dir.mkdirs()) {
-            throw Exception("cannot create qa_images")
+    private fun copyUriToQaImages(uri: Uri): File {
+        val dir = File(requireContext().cacheDir, "qa_image_drafts").apply { mkdirs() }
+        val out = File.createTempFile("qa_", ".image", dir)
+        try {
+            val input = requireContext().contentResolver.openInputStream(uri) ?: throw IOException("No image stream")
+            input.use { ImagePreparation.copyBounded(it, out) }
+            ImagePreparation.mimeType(out)
+            return out
+        } catch (error: Exception) {
+            out.delete()
+            throw error
         }
-        var mime = requireContext().contentResolver.getType(uri)
-        if (mime == null || !mime.startsWith("image/")) {
-            mime = "image/jpeg"
-        }
-        val ext = when (mime) {
-            "image/png" -> ".png"
-            "image/webp" -> ".webp"
-            "image/gif" -> ".gif"
-            else -> ".jpg"
-        }
-        val out = File(dir, "qa_${System.currentTimeMillis()}$ext")
-        val input = requireContext().contentResolver.openInputStream(uri)
-        input.use { ins ->
-            FileOutputStream(out).use { fos ->
-                if (ins == null) throw Exception("null input stream")
-                val buf = ByteArray(8192)
-                var n = ins.read(buf)
-                while (n >= 0) {
-                    fos.write(buf, 0, n)
-                    n = ins.read(buf)
-                }
-            }
-        }
-        return Pair(out, mime)
     }
 
-    private fun persistCameraToQaImages(source: File): File {
-        val dir = File(requireContext().filesDir, "qa_images")
-        if (!dir.exists() && !dir.mkdirs()) {
-            throw Exception("cannot create qa_images")
-        }
-        val out = File(dir, "qa_${System.currentTimeMillis()}.jpg")
-        FileInputStream(source).use { input ->
-            FileOutputStream(out).use { fos ->
-                val buf = ByteArray(8192)
-                var n = input.read(buf)
-                while (n >= 0) {
-                    fos.write(buf, 0, n)
-                    n = input.read(buf)
-                }
-            }
-        }
-        return out
+    private fun isDraft(file: File): Boolean = try {
+        val cache = requireContext().cacheDir
+        val parent = file.canonicalFile.parentFile
+        parent == File(cache, "qa_image_drafts").canonicalFile || parent == File(cache, "camera").canonicalFile
+    } catch (_: IOException) { false }
+
+    private fun deleteDraft(file: File?) {
+        val cache = context?.cacheDir ?: return
+        ImagePreparation.deleteDraft(file, File(cache, "qa_image_drafts"))
+        ImagePreparation.deleteDraft(file, File(cache, "camera"))
     }
 
-    private fun setSelectedImage(file: File, mimeType: String) {
+    private fun setSelectedImage(file: File) {
+        try { ImagePreparation.mimeType(file) } catch (_: IOException) {
+            deleteDraft(file)
+            Toast.makeText(requireContext(), R.string.ask_image_error, Toast.LENGTH_SHORT).show()
+            return
+        }
+        val previous = selectedImageFile
         selectedImageFile = file
-        selectedMimeType = mimeType
-        // Decode downsampled bitmap for preview to avoid main-thread OOM
+        if (previous != file) deleteDraft(previous)
         val previewBitmap = decodeSampledBitmap(file.absolutePath, 600, 600)
         if (previewBitmap != null) {
             imgPreview.setImageBitmap(previewBitmap)
@@ -314,8 +308,8 @@ class AskFragment : Fragment() {
     }
 
     private fun clearSelectedImage() {
+        deleteDraft(selectedImageFile)
         selectedImageFile = null
-        selectedMimeType = null
         imgPreview.setImageDrawable(null)
         layoutImagePreview.visibility = View.GONE
     }
@@ -359,29 +353,21 @@ class AskFragment : Fragment() {
 
         val questionFinal = question
         val imageFile = selectedImageFile
-        val mimeType = selectedMimeType
         val useImage = hasImage
 
         Log.d(TAG, "submit start questionLength=${questionFinal.length} hasImage=$useImage")
         worker.execute {
+            var persistedImage: File? = null
+            var imageSaved = false
             try {
                 var imageBase64: String? = null
                 var imagePath: String? = null
-                var mime = mimeType
+                var mime: String? = null
 
                 if (useImage && imageFile != null && imageFile.exists()) {
-                    val parent = imageFile.parentFile
-                    val persisted = if (parent != null && "qa_images" == parent.name) {
-                        imageFile
-                    } else {
-                        persistCameraToQaImages(imageFile)
-                    }
-                    imagePath = persisted.absolutePath
-                    imageBase64 = encodeFileBase64(persisted)
-                    if (mime.isNullOrEmpty()) {
-                        mime = "image/jpeg"
-                    }
-                    Log.d(TAG, "image ready path=$imagePath base64Length=${imageBase64.length}")
+                    val payload = ImagePreparation.prepare(imageFile)
+                    imageBase64 = Base64.encodeToString(payload.bytes, Base64.NO_WRAP)
+                    mime = payload.mimeType
                 }
 
                 val profile = ProfileDefaults.ensureExists(database.profileDao(), userId)
@@ -389,6 +375,13 @@ class AskFragment : Fragment() {
                 val rawResponse = GeminiClient.ask(apiKey, prompt, AnswerPrompts.answerSchema(), imageBase64, mime)
                 val item = parseAnswer(rawResponse)
                 if (Thread.currentThread().isInterrupted) throw InterruptedException()
+                if (useImage && imageFile != null) {
+                    val dir = File(host.filesDir, "qa_images").apply { mkdirs() }
+                    val persisted = File.createTempFile("qa_", ".image", dir)
+                    persistedImage = persisted
+                    imageFile.inputStream().use { ImagePreparation.copyBounded(it, persisted) }
+                    imagePath = persisted.path
+                }
 
                 item.userId = userId
                 item.question = questionFinal
@@ -408,6 +401,7 @@ class AskFragment : Fragment() {
                     Log.d(TAG, "xp updated to ${currentProfile.xp}")
                     id
                 }
+                imageSaved = true
                 Log.d(TAG, "saved qaId=$qaId imagePath=$imagePath")
                 postToView(host, requestView) {
                     setLoading(false)
@@ -427,6 +421,9 @@ class AskFragment : Fragment() {
                     // Do NOT clear the user's question or attached image on error so they can retry
                     showError(errorMessage(error))
                 }
+            }
+            finally {
+                if (!imageSaved) persistedImage?.delete()
             }
         }
     }
@@ -508,59 +505,8 @@ class AskFragment : Fragment() {
             return difficulty == "easy" || difficulty == "medium" || difficulty == "hard"
         }
 
-        fun decodeSampledBitmap(path: String, reqWidth: Int, reqHeight: Int): Bitmap? {
-            val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-            BitmapFactory.decodeFile(path, options)
-            if (options.outWidth <= 0 || options.outHeight <= 0) return null
-            options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight)
-            options.inJustDecodeBounds = false
-            return try {
-                BitmapFactory.decodeFile(path, options)
-            } catch (_: OutOfMemoryError) {
-                null
-            }
-        }
-
-        private fun calculateInSampleSize(options: BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int {
-            val height = options.outHeight
-            val width = options.outWidth
-            var inSampleSize = 1
-            if (height > reqHeight || width > reqWidth) {
-                val halfHeight = height / 2
-                val halfWidth = width / 2
-                while ((halfHeight / inSampleSize) >= reqHeight && (halfWidth / inSampleSize) >= reqWidth) {
-                    inSampleSize *= 2
-                }
-            }
-            return inSampleSize
-        }
-
-        private fun encodeFileBase64(file: File): String {
-            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-            BitmapFactory.decodeFile(file.absolutePath, bounds)
-            // Downsample large camera photos (e.g. > 1600px or > 2MB) to prevent OOM and request timeouts
-            if (bounds.outWidth > 1600 || bounds.outHeight > 1600 || file.length() > 2 * 1024 * 1024) {
-                val bitmap = decodeSampledBitmap(file.absolutePath, 1600, 1600)
-                if (bitmap != null) {
-                    val stream = ByteArrayOutputStream()
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 85, stream)
-                    val bytes = stream.toByteArray()
-                    bitmap.recycle()
-                    return Base64.encodeToString(bytes, Base64.NO_WRAP)
-                }
-            }
-            FileInputStream(file).use { input ->
-                ByteArrayOutputStream().use { out ->
-                    val buf = ByteArray(8192)
-                    var n = input.read(buf)
-                    while (n >= 0) {
-                        out.write(buf, 0, n)
-                        n = input.read(buf)
-                    }
-                    return Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP)
-                }
-            }
-        }
+        fun decodeSampledBitmap(path: String, reqWidth: Int, reqHeight: Int): Bitmap? =
+            ImagePreparation.decodeSampledBitmap(path, reqWidth, reqHeight)
 
         // Keep the user's task separate from presentation preferences and the JSON format.
         // Source: https://ai.google.dev/gemini-api/docs/prompting-strategies

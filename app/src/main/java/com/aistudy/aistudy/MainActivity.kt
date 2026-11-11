@@ -5,10 +5,12 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
@@ -27,6 +29,7 @@ import com.aistudy.aistudy.progress.ProgressFragment
 import com.aistudy.aistudy.xp.FriendSeeder
 import com.aistudy.aistudy.xp.UnlockCatalog
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 class MainActivity : AppCompatActivity() {
 
@@ -40,29 +43,45 @@ class MainActivity : AppCompatActivity() {
     }
 
     private lateinit var bottomNav: BottomNavigationView
+    private var startupErrorDialog: AlertDialog? = null
     private val notificationPermissionLauncher: ActivityResultLauncher<String> =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
         val userId = getSharedPreferences(LoginActivity.PREFS_AUTH, MODE_PRIVATE)
             .getLong(LoginActivity.KEY_USER_ID, -1L)
-        if (userId == -1L) {
+        val database = try {
+            if (userId == -1L) null else AppDatabase.getInstance(this).also { it.openHelper.writableDatabase }
+        } catch (error: RuntimeException) {
+            // Restored study fragments can query Room during startup.
+            super.onCreate(null)
+            Log.e("MainActivity", "Could not open the study database", error)
+            startupErrorDialog = MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.startup_database_error_title)
+                .setMessage(R.string.startup_database_error_message)
+                .setPositiveButton(android.R.string.ok) { _, _ -> finish() }
+                .setOnCancelListener { finish() }
+                .show()
+            return
+        }
+
+        super.onCreate(savedInstanceState)
+        if (database == null) {
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
             return
         }
 
-        ProfileDefaults.ensureExists(AppDatabase.getInstance(this).profileDao(), userId)
-        val profile = AppDatabase.getInstance(this).profileDao().getByUserId(userId)
+        val profileDao = database.profileDao()
+        ProfileDefaults.ensureExists(profileDao, userId)
+        val profile = profileDao.getByUserId(userId)
         if (profile != null && !profile.onboarded) {
             startActivity(Intent(this, OnboardingActivity::class.java))
             finish()
             return
         }
 
-        FriendSeeder.ensureSeeded(AppDatabase.getInstance(this).friendDao(), userId)
+        FriendSeeder.ensureSeeded(database.friendDao(), userId)
 
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
@@ -105,7 +124,12 @@ class MainActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        handleOpenIntent(intent)
+        if (::bottomNav.isInitialized) handleOpenIntent(intent)
+    }
+
+    override fun onDestroy() {
+        startupErrorDialog?.dismiss()
+        super.onDestroy()
     }
 
     private fun handleOpenIntent(intent: Intent?) {

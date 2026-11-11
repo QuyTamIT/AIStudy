@@ -16,11 +16,6 @@ class UserIsolationTest {
             return qa.id
         }
 
-        override fun update(qa: QuestionAnswer) {
-            val idx = rows.indexOfFirst { it.id == qa.id }
-            if (idx >= 0) rows[idx] = qa
-        }
-
         override fun getAllByUserId(userId: Long): List<QuestionAnswer> =
             rows.filter { it.userId == userId }.sortedByDescending { it.createdAt }
 
@@ -30,8 +25,8 @@ class UserIsolationTest {
         override fun countByUserId(userId: Long): Int =
             rows.count { it.userId == userId }
 
-        override fun getById(id: Long): QuestionAnswer? =
-            rows.firstOrNull { it.id == id }
+        override fun getById(id: Long, userId: Long): QuestionAnswer? =
+            rows.firstOrNull { it.id == id && it.userId == userId }
 
         override fun updateSteps(id: Long, userId: Long, previousSteps: String?, steps: String): Int {
             val item = rows.firstOrNull { it.id == id && it.userId == userId } ?: return 0
@@ -40,22 +35,28 @@ class UserIsolationTest {
             return 1
         }
 
-        override fun toggleStar(id: Long) {
-            val item = rows.firstOrNull { it.id == id } ?: return
+        override fun toggleStar(id: Long, userId: Long): Int {
+            val item = rows.firstOrNull { it.id == id && it.userId == userId } ?: return 0
             item.starred = !item.starred
+            return 1
         }
 
-        override fun updateExtras(id: Long, extrasJson: String?) {
-            rows.firstOrNull { it.id == id }?.extrasJson = extrasJson
+        override fun updateExtras(id: Long, userId: Long, extrasJson: String?): Int {
+            val item = rows.firstOrNull { it.id == id && it.userId == userId } ?: return 0
+            item.extrasJson = extrasJson
+            return 1
         }
 
-        override fun updateReviewedAt(id: Long, reviewedAt: Long) {
-            rows.firstOrNull { it.id == id }?.reviewedAt = reviewedAt
+        override fun updateReviewedAt(id: Long, userId: Long, previousReviewedAt: Long, reviewedAt: Long): Int {
+            val item = rows.firstOrNull { it.id == id && it.userId == userId && it.reviewedAt == previousReviewedAt } ?: return 0
+            item.reviewedAt = reviewedAt
+            return 1
         }
 
-        override fun addReviewedSeconds(id: Long, delta: Int) {
-            val item = rows.firstOrNull { it.id == id } ?: return
+        override fun addReviewedSeconds(id: Long, userId: Long, delta: Int): Int {
+            val item = rows.firstOrNull { it.id == id && it.userId == userId && delta > 0 } ?: return 0
             item.reviewedSeconds += delta
+            return 1
         }
 
         override fun sumReviewedSecondsByUserId(userId: Long): Int =

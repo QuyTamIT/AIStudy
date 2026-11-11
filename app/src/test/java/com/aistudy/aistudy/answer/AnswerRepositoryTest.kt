@@ -95,7 +95,7 @@ class AnswerRepositoryTest {
     private class FakeDao(var row: QuestionAnswer) : QuestionAnswerDao {
         var updates = 0
         var inserts = 0
-        override fun getById(id: Long) = row.takeIf { it.id == id }
+        override fun getById(id: Long, userId: Long) = row.takeIf { it.id == id && it.userId == userId }
         override fun updateSteps(id: Long, userId: Long, previousSteps: String?, steps: String): Int {
             if (id != row.id || userId != row.userId || previousSteps != row.steps) return 0
             row.steps = steps
@@ -103,32 +103,19 @@ class AnswerRepositoryTest {
             return 1
         }
         override fun insert(qa: QuestionAnswer): Long { inserts++; return 99 }
-        override fun update(qa: QuestionAnswer) { row = qa; updates++ }
-        override fun updateExtras(id: Long, extrasJson: String?) {
-            if (id == row.id) {
-                row.extrasJson = extrasJson
-                updates++
-            }
-        }
-        override fun updateReviewedAt(id: Long, reviewedAt: Long) {
-            if (id == row.id) {
-                row.reviewedAt = reviewedAt
-                updates++
-            }
-        }
+        override fun updateExtras(id: Long, userId: Long, extrasJson: String?): Int =
+            error("Expansion must not change extras")
+        override fun updateReviewedAt(id: Long, userId: Long, previousReviewedAt: Long, reviewedAt: Long): Int =
+            error("Expansion must not change review state")
         override fun getAllByUserId(userId: Long) = listOf(row).filter { it.userId == userId }
         override fun getLatestByUserId(userId: Long) = row.takeIf { it.userId == userId }
-        override fun toggleStar(id: Long) { error("Expansion must not change stars") }
+        override fun toggleStar(id: Long, userId: Long): Int = error("Expansion must not change stars")
         override fun countBySubject(userId: Long, subject: String) = 1
         override fun countByUserId(userId: Long) = 1
         override fun getRecentByUserIdAndSubject(userId: Long, subject: String, limit: Int) =
             listOf(row).filter { it.userId == userId && it.subject == subject }.take(limit)
-        override fun addReviewedSeconds(id: Long, delta: Int) {
-            if (id == row.id) {
-                row.reviewedSeconds += delta
-                updates++
-            }
-        }
+        override fun addReviewedSeconds(id: Long, userId: Long, delta: Int): Int =
+            error("Expansion must not change review seconds")
         override fun sumReviewedSecondsByUserId(userId: Long) = if (row.userId == userId) row.reviewedSeconds else 0
         override fun getTopSubjectByUserId(userId: Long) = row.subject.takeIf { row.userId == userId }
         override fun countStarredByUserId(userId: Long) = if (row.userId == userId && row.starred) 1 else 0
