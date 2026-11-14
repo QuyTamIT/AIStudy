@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent" android:layout_height="wrap_content"
     android:layout_marginTop="@dimen/answer_space_8" android:orientation="vertical">
     <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
@@ -27,7 +28,7 @@
     <LinearLayout android:id="@+id/home_empty" android:layout_width="match_parent" android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/answer_space_6" android:orientation="vertical" android:visibility="gone">
         <ImageView android:layout_width="@dimen/answer_step_marker_size" android:layout_height="@dimen/answer_step_marker_size"
-            android:importantForAccessibility="no" android:src="@drawable/ic_answer_book" android:tint="@color/answer_primary" />
+            android:importantForAccessibility="no" android:src="@drawable/ic_answer_book" app:tint="@color/answer_primary" />
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/answer_space_3" android:text="@string/home_empty_title"
             android:textAppearance="@style/TextAppearance.AIStudy.Answer.StepTitle" />

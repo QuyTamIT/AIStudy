@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.util.Base64
@@ -41,10 +40,7 @@ import com.aistudy.aistudy.database.QuestionAnswer
 import com.aistudy.aistudy.xp.XpRules
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputLayout
-import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.io.IOException
 import java.net.SocketTimeoutException
 import java.util.concurrent.ExecutorService
@@ -71,7 +67,6 @@ class AskFragment : Fragment() {
 
     // Phase 10: Selected image state and ActivityResult launchers
     private var selectedImageFile: File? = null
-    private var selectedMimeType: String? = null
     private var cameraFile: File? = null
 
     private lateinit var requestCameraPermission: ActivityResultLauncher<String>
@@ -107,10 +102,12 @@ class AskFragment : Fragment() {
         ) { success ->
             val file = cameraFile
             if (success && file != null && file.exists()) {
-                setSelectedImage(file, "image/jpeg")
+                setSelectedImage(file)
             } else {
+                deleteDraft(file)
                 Toast.makeText(requireContext(), R.string.ask_image_error, Toast.LENGTH_SHORT).show()
             }
+            cameraFile = null
         }
 
         pickImage = registerForActivityResult(
@@ -118,10 +115,9 @@ class AskFragment : Fragment() {
         ) { uri ->
             if (uri == null) return@registerForActivityResult
             try {
-                val (copied, mime) = copyUriToQaImages(uri)
-                setSelectedImage(copied, mime)
+                setSelectedImage(copyUriToQaImages(uri))
             } catch (e: Exception) {
-                Log.e(TAG, "gallery copy failed", e)
+                Log.w(TAG, "gallery copy failed (${e.javaClass.simpleName})")
                 Toast.makeText(requireContext(), R.string.ask_image_error, Toast.LENGTH_SHORT).show()
             }
         }
@@ -187,6 +183,13 @@ class AskFragment : Fragment() {
         executor = Executors.newSingleThreadExecutor()
         buttonSend.setOnClickListener { submit() }
         setLoading(false)
+        savedInstanceState?.getString("selectedImagePath")?.let { path ->
+            val file = File(path)
+            if (isDraft(file) && file.exists()) setSelectedImage(file)
+        }
+        savedInstanceState?.getString("cameraImagePath")?.let { path ->
+            File(path).takeIf { isDraft(it) }?.let { cameraFile = it }
+        }
     }
 
     override fun onResume() {
@@ -197,6 +200,8 @@ class AskFragment : Fragment() {
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putLong("pendingQaId", pendingAnswerId)
         outState.putLong("pendingUserId", pendingUserId)
+        outState.putString("selectedImagePath", selectedImageFile?.path)
+        outState.putString("cameraImagePath", cameraFile?.path)
         super.onSaveInstanceState(outState)
     }
 
@@ -206,6 +211,14 @@ class AskFragment : Fragment() {
         suggestionButtons = emptyList()
         btnRemoveImage = null
         super.onDestroyView()
+    }
+
+    override fun onDestroy() {
+        if (activity?.isChangingConfigurations != true) {
+            deleteDraft(selectedImageFile)
+            deleteDraft(cameraFile)
+        }
+        super.onDestroy()
     }
 
     // Phase 10: Camera & Gallery helpers
@@ -244,65 +257,46 @@ class AskFragment : Fragment() {
             )
             takePicture.launch(uri)
         } catch (e: Exception) {
-            Log.e(TAG, "launch camera failed", e)
+            Log.w(TAG, "launch camera failed (${e.javaClass.simpleName})")
             Toast.makeText(requireContext(), R.string.ask_image_error, Toast.LENGTH_SHORT).show()
         }
     }
 
-    private fun copyUriToQaImages(uri: Uri): Pair<File, String> {
-        val dir = File(requireContext().filesDir, "qa_images")
-        if (!dir.exists() && !dir.mkdirs()) {
-            throw Exception("cannot create qa_images")
+    private fun copyUriToQaImages(uri: Uri): File {
+        val dir = File(requireContext().cacheDir, "qa_image_drafts").apply { mkdirs() }
+        val out = File.createTempFile("qa_", ".image", dir)
+        try {
+            val input = requireContext().contentResolver.openInputStream(uri) ?: throw IOException("No image stream")
+            input.use { ImagePreparation.copyBounded(it, out) }
+            ImagePreparation.mimeType(out)
+            return out
+        } catch (error: Exception) {
+            out.delete()
+            throw error
         }
-        var mime = requireContext().contentResolver.getType(uri)
-        if (mime == null || !mime.startsWith("image/")) {
-            mime = "image/jpeg"
-        }
-        val ext = when (mime) {
-            "image/png" -> ".png"
-            "image/webp" -> ".webp"
-            "image/gif" -> ".gif"
-            else -> ".jpg"
-        }
-        val out = File(dir, "qa_${System.currentTimeMillis()}$ext")
-        val input = requireContext().contentResolver.openInputStream(uri)
-        input.use { ins ->
-            FileOutputStream(out).use { fos ->
-                if (ins == null) throw Exception("null input stream")
-                val buf = ByteArray(8192)
-                var n = ins.read(buf)
-                while (n >= 0) {
-                    fos.write(buf, 0, n)
-                    n = ins.read(buf)
-                }
-            }
-        }
-        return Pair(out, mime)
     }
 
-    private fun persistCameraToQaImages(source: File): File {
-        val dir = File(requireContext().filesDir, "qa_images")
-        if (!dir.exists() && !dir.mkdirs()) {
-            throw Exception("cannot create qa_images")
-        }
-        val out = File(dir, "qa_${System.currentTimeMillis()}.jpg")
-        FileInputStream(source).use { input ->
-            FileOutputStream(out).use { fos ->
-                val buf = ByteArray(8192)
-                var n = input.read(buf)
-                while (n >= 0) {
-                    fos.write(buf, 0, n)
-                    n = input.read(buf)
-                }
-            }
-        }
-        return out
+    private fun isDraft(file: File): Boolean = try {
+        val cache = requireContext().cacheDir
+        val parent = file.canonicalFile.parentFile
+        parent == File(cache, "qa_image_drafts").canonicalFile || parent == File(cache, "camera").canonicalFile
+    } catch (_: IOException) { false }
+
+    private fun deleteDraft(file: File?) {
+        val cache = context?.cacheDir ?: return
+        ImagePreparation.deleteDraft(file, File(cache, "qa_image_drafts"))
+        ImagePreparation.deleteDraft(file, File(cache, "camera"))
     }
 
-    private fun setSelectedImage(file: File, mimeType: String) {
+    private fun setSelectedImage(file: File) {
+        try { ImagePreparation.mimeType(file) } catch (_: IOException) {
+            deleteDraft(file)
+            Toast.makeText(requireContext(), R.string.ask_image_error, Toast.LENGTH_SHORT).show()
+            return
+        }
+        val previous = selectedImageFile
         selectedImageFile = file
-        selectedMimeType = mimeType
-        // Decode downsampled bitmap for preview to avoid main-thread OOM
+        if (previous != file) deleteDraft(previous)
         val previewBitmap = decodeSampledBitmap(file.absolutePath, 600, 600)
         if (previewBitmap != null) {
             imgPreview.setImageBitmap(previewBitmap)
@@ -314,16 +308,18 @@ class AskFragment : Fragment() {
     }
 
     private fun clearSelectedImage() {
+        deleteDraft(selectedImageFile)
         selectedImageFile = null
-        selectedMimeType = null
         imgPreview.setImageDrawable(null)
         layoutImagePreview.visibility = View.GONE
     }
 
     private fun submit() {
         if (loading) return
-        var question = editQuestion.text.toString().trim()
+        val inputQuestion = editQuestion.text.toString().trim()
+        var question = inputQuestion
         val hasImage = selectedImageFile?.exists() == true
+        val isImageOnly = inputQuestion.isBlank() && hasImage
 
         if (question.isBlank() && !hasImage) {
             view?.findViewById<TextInputLayout>(R.id.input_question)?.error = getString(R.string.ask_empty_both)
@@ -359,36 +355,40 @@ class AskFragment : Fragment() {
 
         val questionFinal = question
         val imageFile = selectedImageFile
-        val mimeType = selectedMimeType
         val useImage = hasImage
 
-        Log.d(TAG, "submit start questionLength=${questionFinal.length} hasImage=$useImage")
+        val fallbackLanguageTag = AnswerPrompts.fallbackLanguageTag(resources)
+        val trace = AiRequestTrace(if (useImage) AiRequestTrace.Feature.ASK_IMAGE else AiRequestTrace.Feature.ASK_TEXT)
         worker.execute {
+            var persistedImage: File? = null
+            var imageSaved = false
+            var outcome = AiRequestTrace.Outcome.REQUEST_FAILED
             try {
                 var imageBase64: String? = null
                 var imagePath: String? = null
-                var mime = mimeType
+                var mime: String? = null
 
                 if (useImage && imageFile != null && imageFile.exists()) {
-                    val parent = imageFile.parentFile
-                    val persisted = if (parent != null && "qa_images" == parent.name) {
-                        imageFile
-                    } else {
-                        persistCameraToQaImages(imageFile)
-                    }
-                    imagePath = persisted.absolutePath
-                    imageBase64 = encodeFileBase64(persisted)
-                    if (mime.isNullOrEmpty()) {
-                        mime = "image/jpeg"
-                    }
-                    Log.d(TAG, "image ready path=$imagePath base64Length=${imageBase64.length}")
+                    val payload = ImagePreparation.prepare(imageFile)
+                    imageBase64 = Base64.encodeToString(payload.bytes, Base64.NO_WRAP)
+                    mime = payload.mimeType
                 }
 
                 val profile = ProfileDefaults.ensureExists(database.profileDao(), userId)
-                val prompt = buildPrompt(questionFinal, profile.level, profile.style)
-                val rawResponse = GeminiClient.ask(apiKey, prompt, AnswerPrompts.answerSchema(), imageBase64, mime)
-                val item = parseAnswer(rawResponse)
+                val prompt = buildPrompt(inputQuestion, profile.level, profile.style, isImageOnly, fallbackLanguageTag)
+                val rawResponse = GeminiClient.ask(apiKey, prompt, AnswerPrompts.answerSchema(),
+                    AnswerPrompts.answerInstruction, trace, imageBase64, mime)
+                outcome = AiRequestTrace.Outcome.INVALID_RESPONSE
+                val item = trace.validate { parseAnswer(rawResponse) }
+                outcome = AiRequestTrace.Outcome.SAVE_FAILED
                 if (Thread.currentThread().isInterrupted) throw InterruptedException()
+                if (useImage && imageFile != null) {
+                    val dir = File(host.filesDir, "qa_images").apply { mkdirs() }
+                    val persisted = File.createTempFile("qa_", ".image", dir)
+                    persistedImage = persisted
+                    imageFile.inputStream().use { ImagePreparation.copyBounded(it, persisted) }
+                    imagePath = persisted.path
+                }
 
                 item.userId = userId
                 item.question = questionFinal
@@ -405,10 +405,10 @@ class AskFragment : Fragment() {
                     val id = database.questionAnswerDao().insert(item)
                     XpRules.recordDailyActivity(currentProfile, database.profileDao())
                     XpRules.addXp(currentProfile, database.profileDao(), XpRules.ASK)
-                    Log.d(TAG, "xp updated to ${currentProfile.xp}")
                     id
                 }
-                Log.d(TAG, "saved qaId=$qaId imagePath=$imagePath")
+                imageSaved = true
+                outcome = AiRequestTrace.Outcome.SUCCESS
                 postToView(host, requestView) {
                     setLoading(false)
                     clearSelectedImage()
@@ -418,8 +418,14 @@ class AskFragment : Fragment() {
                     openPendingAnswer()
                 }
             } catch (error: InterruptedException) {
+                outcome = AiRequestTrace.Outcome.CANCELLED
                 Thread.currentThread().interrupt()
             } catch (error: Exception) {
+                if (error is SessionChangedException) outcome = AiRequestTrace.Outcome.SESSION_CHANGED
+                else if (outcome == AiRequestTrace.Outcome.REQUEST_FAILED &&
+                    (error is GeminiClient.InvalidResponseException || error is JSONException)) {
+                    outcome = AiRequestTrace.Outcome.INVALID_RESPONSE
+                }
                 // Exception text and API response bodies can contain sensitive information.
                 Log.w(TAG, "submit failed (${error.javaClass.simpleName})")
                 postToView(host, requestView) {
@@ -427,6 +433,9 @@ class AskFragment : Fragment() {
                     // Do NOT clear the user's question or attached image on error so they can retry
                     showError(errorMessage(error))
                 }
+            }
+            finally {
+                try { if (!imageSaved) persistedImage?.delete() } finally { trace.finish(outcome) }
             }
         }
     }
@@ -508,63 +517,16 @@ class AskFragment : Fragment() {
             return difficulty == "easy" || difficulty == "medium" || difficulty == "hard"
         }
 
-        fun decodeSampledBitmap(path: String, reqWidth: Int, reqHeight: Int): Bitmap? {
-            val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-            BitmapFactory.decodeFile(path, options)
-            if (options.outWidth <= 0 || options.outHeight <= 0) return null
-            options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight)
-            options.inJustDecodeBounds = false
-            return try {
-                BitmapFactory.decodeFile(path, options)
-            } catch (_: OutOfMemoryError) {
-                null
-            }
-        }
+        fun decodeSampledBitmap(path: String, reqWidth: Int, reqHeight: Int): Bitmap? =
+            ImagePreparation.decodeSampledBitmap(path, reqWidth, reqHeight)
 
-        private fun calculateInSampleSize(options: BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int {
-            val height = options.outHeight
-            val width = options.outWidth
-            var inSampleSize = 1
-            if (height > reqHeight || width > reqWidth) {
-                val halfHeight = height / 2
-                val halfWidth = width / 2
-                while ((halfHeight / inSampleSize) >= reqHeight && (halfWidth / inSampleSize) >= reqWidth) {
-                    inSampleSize *= 2
-                }
-            }
-            return inSampleSize
-        }
-
-        private fun encodeFileBase64(file: File): String {
-            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-            BitmapFactory.decodeFile(file.absolutePath, bounds)
-            // Downsample large camera photos (e.g. > 1600px or > 2MB) to prevent OOM and request timeouts
-            if (bounds.outWidth > 1600 || bounds.outHeight > 1600 || file.length() > 2 * 1024 * 1024) {
-                val bitmap = decodeSampledBitmap(file.absolutePath, 1600, 1600)
-                if (bitmap != null) {
-                    val stream = ByteArrayOutputStream()
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 85, stream)
-                    val bytes = stream.toByteArray()
-                    bitmap.recycle()
-                    return Base64.encodeToString(bytes, Base64.NO_WRAP)
-                }
-            }
-            FileInputStream(file).use { input ->
-                ByteArrayOutputStream().use { out ->
-                    val buf = ByteArray(8192)
-                    var n = input.read(buf)
-                    while (n >= 0) {
-                        out.write(buf, 0, n)
-                        n = input.read(buf)
-                    }
-                    return Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP)
-                }
-            }
-        }
-
-        // Keep the user's task separate from presentation preferences and the JSON format.
-        // Source: https://ai.google.dev/gemini-api/docs/prompting-strategies
-        internal fun buildPrompt(question: String, level: String?, style: String?): String {
+        internal fun buildPrompt(
+            question: String,
+            level: String?,
+            style: String?,
+            isImageOnly: Boolean = false,
+            fallbackLanguageTag: String = "en"
+        ): String {
             val levelDescription = when (level) {
                 ProfileDefaults.LEVEL_JUNIOR -> "middle school (grades 6-9)"
                 ProfileDefaults.LEVEL_UNI -> "university"
@@ -575,54 +537,9 @@ class AskFragment : Fragment() {
                 ProfileDefaults.STYLE_DETAILED -> "Give fuller explanations and relevant examples within the requested topic."
                 else -> "Use clear, ordered sections or direct explanation; use procedural steps only when the task needs them."
             }
-            return """
-                You are AIStudy, an intelligent educational mentor and helpful study assistant.
-
-                LANGUAGE AND LOCALIZATION CONTRACT (CRITICAL):
-                - Always detect and respond in the EXACT SAME LANGUAGE that the user used to ask the question.
-                - If the question is in Vietnamese (Tiếng Việt), ALL titles, step explanations, mathematical commentary, code explanations, notices, takeaways, and the finalAnswer MUST be written in natural, fluent Vietnamese. Never force or default to English when the question is in Vietnamese.
-                - If the question is in English, respond in English.
-                - If the user explicitly requests another language (e.g. "Answer in English", "Giải thích bằng tiếng Anh"), follow the user's explicit language request.
-                - For language learning requests (e.g. "How to use past continuous in English?"), explain in the learner's query language (e.g. Vietnamese) while presenting examples in the target language.
-                - Never force responses into English unless the user explicitly requested English.
-
-                INTENT IDENTIFICATION & RESPONSE MODE (Choose responseType carefully):
-                1. "step_by_step":
-                   - Use for: mathematical problems (e.g., solving equations, calculus), chemistry/physics numerical problems, algorithmic derivations, or multi-stage worked solutions with intermediate results.
-                   - Format: Each object in "steps" represents a distinct chronological or logical stage with an informative title, clear body, and formula in "expr" when applicable.
-                2. "direct":
-                   - Use for: general factual questions, conceptual explanations (e.g., "What is Room Database?", "Explain polymorphism in Kotlin"), history summaries, definitions, science concepts, and everyday queries.
-                   - Format: Deliver a cohesive, natural direct answer in "steps" (1 or a few thematic sections) without forcing artificial step numbering. Include usable code blocks with syntax fences (```language) when relevant.
-                3. "creative":
-                   - Use for: requests to write original poems, stories, creative dialogues, essays, or rhymes (e.g., "Write an original short poem").
-                   - Format: Craft an original AI piece in "steps". Format stanzas and verses with natural line breaks (`\n`). Never misrepresent generated text as an existing authentic publication or historical work.
-                4. "clarification":
-                   - Use for: ambiguous, underspecified questions where essential information is missing to provide a reliable answer—especially song titles without an artist (e.g., "lyrics to Hello"), book titles with multiple authors, or homonyms without context.
-                   - Format: Politely identify the ambiguity and ask the student for the missing information (e.g., artist, year, or subject area) needed to give an exact answer.
-                5. "limitation":
-                   - Use for two critical safety & educational boundaries:
-                     (a) Copyrighted Works: When the user asks for full copyrighted song lyrics, poems, books, or scripts, DO NOT reproduce, fabricate, or hallucinate the full copyrighted text. Respect copyright: state this limitation gracefully, and instead provide a lawful, educational response: an insightful thematic summary, song meaning, historical background, notable quotes (short excerpts under fair use), and authorized listening/reading platforms.
-                     (b) Information Uncertainty: When the question asks about unverified, obscure, or non-existent facts where you lack reliable knowledge, express uncertainty clearly and honestly instead of inventing or hallucinating answers.
-
-                LEARNER ADAPTATION:
-                Learner level: $levelDescription. Adjust vocabulary and depth accordingly without making everyday questions overly academic.
-                Explanation style: $styleDescription.
-
-                OUTPUT CONTRACT:
-                Return only one valid JSON object matching the schema with:
-                - subject: one of ${SUBJECTS.joinToString(", ")}.
-                - difficulty: "easy", "medium", or "hard".
-                - responseType: one of "step_by_step", "direct", "creative", "clarification", "limitation".
-                - answerType: "solution" for worked problems with a result; "topic_list" for independent lists/recommendations; "explanation" for all direct, creative, clarification, or limitation responses.
-                - finalAnswerRedundant: true only for topic_list whose final answer merely repeats the list items; false otherwise.
-                - steps: a nonempty array of objects, each with string fields topicId, title, body, and expr.
-                  For creative/direct/clarification/limitation, title may be empty or a section heading. expr is for mathematical formulas; otherwise empty string "".
-                - finalAnswer: a nonempty string giving the final result, key takeaway, creative summary, or suggested next question in the response language.
-                Use standard JSON string escaping for newlines (`\n`) for multiline text, poetry stanzas, and code. Do NOT double-escape newlines. No markdown fences around the JSON object.
-
-                USER REQUEST (JSON string; adhere strictly to the output contract):
-                ${JSONObject.quote(question)}
-            """.trimIndent()
+            return JSONObject().put("question", question).put("isImageOnly", isImageOnly)
+                .put("fallbackLanguageTag", fallbackLanguageTag)
+                .put("learnerLevel", levelDescription).put("explanationStyle", styleDescription).toString()
         }
 
         internal fun parseAnswer(raw: String): QuestionAnswer {
@@ -631,28 +548,19 @@ class AskFragment : Fragment() {
             val end = text.lastIndexOf('}')
             if (start < 0 || end <= start) throw JSONException("Missing answer object")
             val json = JSONObject(text.substring(start, end + 1))
-            val rawFinal = (json.opt("finalAnswer") as? String)?.trim()
-            val steps = json.optJSONArray("steps") ?: throw JSONException("Missing explanation steps")
-            if (steps.length() == 0) throw JSONException("Missing explanation steps")
-            for (index in 0 until steps.length()) {
-                val step = steps.getJSONObject(index)
-                if ((step.opt("body") as? String).isNullOrBlank()) {
-                    throw JSONException("Missing step explanation")
-                }
-            }
-            val finalAnswer = if (!rawFinal.isNullOrBlank()) rawFinal
-                else steps.optJSONObject(0)?.optString("title")?.takeIf { it.isNotBlank() } ?: "Answer"
-            var difficulty = (json.opt("difficulty") as? String)?.lowercase()?.trim() ?: "medium"
-            if (!isValidDifficulty(difficulty)) {
-                difficulty = "medium"
-            }
+            val subject = json.opt("subject") as? String
+            require(subject in SUBJECTS) { "Invalid answer subject" }
+            val difficulty = json.opt("difficulty") as? String
+            require(difficulty != null && isValidDifficulty(difficulty)) { "Invalid answer difficulty" }
+            val finalAnswer = (json.opt("finalAnswer") as? String)?.trim()
+            require(!finalAnswer.isNullOrBlank()) { "Missing final answer" }
+            val content = AnswerContent.generated(json)
             return QuestionAnswer().apply {
-                subject = (json.opt("subject") as? String)?.takeIf { it in SUBJECTS }
-                    ?: ProfileDefaults.SUBJECT_OTHER
+                this.subject = subject
                 this.difficulty = difficulty
                 this.extrasJson = null
                 this.reviewedAt = 0
-                this.steps = AnswerContent.generated(json).toJson()
+                this.steps = content.toJson()
                 this.finalAnswer = finalAnswer
             }
         }

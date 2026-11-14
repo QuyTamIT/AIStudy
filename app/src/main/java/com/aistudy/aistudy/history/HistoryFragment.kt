@@ -115,13 +115,17 @@ class HistoryFragment : Fragment() {
 
                 override fun onStarClick(qa: QuestionAnswer) {
                     val currentContext = context ?: return
+                    val ownerId = userId
+                    val preferences = currentContext.getSharedPreferences(LoginActivity.PREFS_AUTH, Context.MODE_PRIVATE)
+                    if (ownerId <= 0L || qa.userId != ownerId) return
                     viewLifecycleOwner.lifecycleScope.launch {
                         withContext(Dispatchers.IO) {
-                            AppDatabase.getInstance(currentContext.applicationContext)
-                                .questionAnswerDao()
-                                .toggleStar(qa.id)
+                            if (preferences.getLong(LoginActivity.KEY_USER_ID, 0L) == ownerId) {
+                                AppDatabase.getInstance(currentContext.applicationContext)
+                                    .questionAnswerDao().toggleStar(qa.id, ownerId)
+                            }
                         }
-                        if (!isAdded) return@launch
+                        if (!isAdded || preferences.getLong(LoginActivity.KEY_USER_ID, 0L) != ownerId) return@launch
                         loadHistory()
                     }
                 }
@@ -208,7 +212,8 @@ class HistoryFragment : Fragment() {
                 qaDao = dao
                 dao.getAllByUserId(currentUserId)
             }
-            if (!isAdded || view == null) return@launch
+            if (!isAdded || view == null || currentContext.getSharedPreferences(LoginActivity.PREFS_AUTH, Context.MODE_PRIVATE)
+                    .getLong(LoginActivity.KEY_USER_ID, 0L) != currentUserId) return@launch
             allItems.clear()
             allItems.addAll(items)
             applyFilter()

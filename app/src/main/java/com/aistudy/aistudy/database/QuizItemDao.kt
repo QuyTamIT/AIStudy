@@ -3,7 +3,6 @@ package com.aistudy.aistudy.database
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
-import androidx.room.Update
 
 @Dao
 interface QuizItemDao {
@@ -11,8 +10,8 @@ interface QuizItemDao {
     @Insert
     fun insert(item: QuizItem): Long
 
-    @Update
-    fun update(item: QuizItem)
+    @Query("UPDATE quiz_items SET userAnswer = :answer, isCorrect = :correct WHERE id = :id AND sessionId = :sessionId AND isCorrect IS NULL AND sessionId IN (SELECT id FROM quiz_sessions WHERE userId = :userId AND completed = 0)")
+    fun updateAnswer(id: Long, sessionId: Long, userId: Long, answer: String, correct: Boolean): Int
 
     @Query("SELECT * FROM quiz_items WHERE sessionId = :sessionId ORDER BY id ASC")
     fun getBySessionId(sessionId: Long): List<QuizItem>
