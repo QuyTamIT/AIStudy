@@ -32,8 +32,6 @@ import com.google.android.material.button.MaterialButton
 import java.util.Calendar
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import org.json.JSONArray
-import org.json.JSONObject
 
 class AnswerActivity : AppCompatActivity() {
     private lateinit var model: AnswerViewModel
@@ -42,6 +40,7 @@ class AnswerActivity : AppCompatActivity() {
     private var renderedSteps = emptyList<AnswerStep>()
 
     private var qaDao: QuestionAnswerDao? = null
+    private lateinit var answerRepository: AnswerRepository
     private lateinit var profileDao: ProfileDao
     private var currentQa: QuestionAnswer? = null
     private var extrasExecutor: ExecutorService? = null
@@ -129,12 +128,12 @@ class AnswerActivity : AppCompatActivity() {
 
         val preferences = getSharedPreferences(LoginActivity.PREFS_AUTH, MODE_PRIVATE)
         val apiKey = BuildConfig.GEMINI_API_KEY
-        val repository = AnswerRepository(database.questionAnswerDao(), qaId, userId,
-            { preferences.getLong(LoginActivity.KEY_USER_ID, 0L) }) { prompt, schema ->
+        answerRepository = AnswerRepository(database.questionAnswerDao(), qaId, userId,
+            { preferences.getLong(LoginActivity.KEY_USER_ID, 0L) }) { prompt, schema, instruction, trace ->
             if (apiKey.isBlank() || apiKey.startsWith("YOUR_", ignoreCase = true)) {
                 throw AnswerViewModel.MissingKeyException()
             }
-            GeminiClient.ask(apiKey, prompt, schema)
+            GeminiClient.ask(apiKey, prompt, schema, instruction, trace)
         }
         model.state.observe(this) { state ->
             if (isFinishing || isDestroyed) return@observe
@@ -149,7 +148,7 @@ class AnswerActivity : AppCompatActivity() {
                 maybeAutoReview()
             }
         }
-        model.start(repository)
+        model.start(answerRepository)
         reviewSessionStartMs = System.currentTimeMillis()
     }
 
@@ -428,34 +427,27 @@ class AnswerActivity : AppCompatActivity() {
             return
         }
         val item = currentQa ?: return
-
+        val snapshot = model.state.value?.snapshot ?: return
+        if (snapshot.item.id != item.id || snapshot.item.userId != userId || !isCurrentSession()) return
         extrasLoading = true
         progressExtras.visibility = View.VISIBLE
         tvExtras.setText(R.string.answer_extras_loading)
 
-        val prompt = buildExtrasPrompt(item)
         extrasExecutor?.execute {
             if (!isCurrentSession()) return@execute
             try {
-                val raw = GeminiClient.ask(apiKey, prompt)
-                val jsonText = extractJson(raw)
-                val extras = JSONObject(jsonText)
-                val payload = extras.toString()
-                if (!isCurrentSession() || qaDao?.updateExtras(item.id, userId, payload) != 1) return@execute
-
+                val extras = answerRepository.extras(snapshot)
                 runOnUiThread {
                     if (!isCurrentSession() || isFinishing || isDestroyed) return@runOnUiThread
-                    item.extrasJson = payload
+                    val current = currentQa
+                    if (current == null || current.id != snapshot.item.id || current.userId != userId) return@runOnUiThread
+                    current.extrasJson = extras.toString()
                     extrasLoading = false
                     progressExtras.visibility = View.GONE
-                    val text = formatExtra(extras, focusKey)
-                    if (text.isNullOrEmpty()) {
-                        tvExtras.setText(R.string.answer_extras_error)
-                    } else {
-                        tvExtras.text = text
-                    }
+                    val text = AnswerContent.extraField(extras, focusKey)
+                    if (text.isNullOrEmpty()) tvExtras.setText(R.string.answer_extras_error) else tvExtras.text = text
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 runOnUiThread {
                     if (!isCurrentSession() || isFinishing || isDestroyed) return@runOnUiThread
                     extrasLoading = false
@@ -470,48 +462,8 @@ class AnswerActivity : AppCompatActivity() {
     private fun readExtraField(key: String): String? {
         val extrasJson = currentQa?.extrasJson
         if (extrasJson.isNullOrEmpty()) return null
-        return try {
-            formatExtra(JSONObject(extrasJson), key)
-        } catch (e: Exception) {
-            null
-        }
+        return try { AnswerContent.extraField(org.json.JSONObject(extrasJson), key) } catch (_: Exception) { null }
     }
-
-    private fun formatExtra(extras: JSONObject, key: String): String? {
-        return try {
-            val value = extras.opt(key)
-            if (value == null || JSONObject.NULL == value) return null
-            if (value is JSONArray) {
-                val sb = StringBuilder()
-                for (i in 0 until value.length()) {
-                    if (i > 0) sb.append("\n\n")
-                    sb.append("• ").append(value.getString(i))
-                }
-                return sb.toString()
-            }
-            value.toString()
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    private fun buildExtrasPrompt(item: QuestionAnswer): String {
-        return "You are AI Study Mentor. Given this solved question, return ONLY valid JSON " +
-            "(no markdown) with learning support fields:\n" +
-            "{\n" +
-            "  \"simplify\": \"simpler explanation in English\",\n" +
-            "  \"alternative\": \"another way to solve in English\",\n" +
-            "  \"concepts\": [\"key concept 1\", \"key concept 2\"],\n" +
-            "  \"mistakes\": [\"common mistake 1\", \"common mistake 2\"],\n" +
-            "  \"followUps\": [\"follow-up question 1\", \"follow-up question 2\"]\n" +
-            "}\n\n" +
-            "Subject: ${item.subject}\n" +
-            "Difficulty: ${item.difficulty ?: "medium"}\n" +
-            "Question: ${item.question}\n" +
-            "Final answer: ${item.finalAnswer}\n" +
-            "Steps JSON: ${item.steps}"
-    }
-
     private fun styleExtraButtons() {
         styleAction(btnSimplify, KEY_SIMPLIFY == activeExtraKey)
         styleAction(btnAlternative, KEY_ALTERNATIVE == activeExtraKey)
@@ -552,15 +504,6 @@ class AnswerActivity : AppCompatActivity() {
         }
     }
 
-    private fun extractJson(raw: String): String {
-        val text = raw.trim()
-        val start = text.indexOf('{')
-        val end = text.lastIndexOf('}')
-        if (start >= 0 && end > start) {
-            return text.substring(start, end + 1)
-        }
-        return text
-    }
 
     private fun TextView.setTextIfChanged(value: String) {
         if (text.toString() != value) text = value

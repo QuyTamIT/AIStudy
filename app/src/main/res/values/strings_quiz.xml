@@ -6,6 +6,7 @@
     <string name="quiz_back">Back</string>
     <string name="quiz_loading">Generating practice questions…</string>
     <string name="quiz_need_more">Ask at least 2 questions in this subject before practice.</string>
+    <string name="quiz_insufficient_sources">Practice needs at least 2 usable answers in this subject. Image-only answers also need saved explanations.</string>
     <string name="quiz_no_api_key">GEMINI_API_KEY not set in local.properties</string>
     <string name="quiz_error">Could not generate quiz. Try again.</string>
     <string name="quiz_progress">Question %1$d of %2$d</string>

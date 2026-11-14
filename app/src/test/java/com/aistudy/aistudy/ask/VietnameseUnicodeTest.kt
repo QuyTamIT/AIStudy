@@ -52,21 +52,16 @@ class VietnameseUnicodeTest {
             Tính độ dài mỗi quãng đường AB và BC?
         """.trimIndent()
 
-        val prompt = AskFragment.buildPrompt(multilineQuestion, "uni", "detailed")
-        assertTrue("Prompt contains user question", prompt.contains("Một người đi xe đạp"))
-        assertTrue("Prompt contains diacritics", prompt.contains("quãng đường"))
-        assertTrue("Prompt contains multi-line text", prompt.contains("Tính độ dài mỗi quãng đường"))
+        val data = JSONObject(AskFragment.buildPrompt(multilineQuestion, "uni", "detailed"))
+        assertEquals(multilineQuestion, data.getString("question"))
     }
 
-    // 4. Verify Gemini Prompt has the Vietnamese Language Contract
     @Test
-    fun testPromptContainsVietnameseLanguageContract() {
-        val sampleQuestion = "Đa hình trong Kotlin là gì?"
-        val prompt = AskFragment.buildPrompt(sampleQuestion, "high", "normal")
-
-        assertTrue("Prompt includes Language Contract", prompt.contains("LANGUAGE AND LOCALIZATION CONTRACT"))
-        assertTrue("Prompt mandates responding in Vietnamese", prompt.contains("Vietnamese (Tiếng Việt)"))
-        assertTrue("Prompt prohibits forcing English", prompt.contains("Never force or default to English"))
+    fun imageOnlyDataDoesNotSubstituteEnglishHistoryPlaceholder() {
+        val data = JSONObject(AskFragment.buildPrompt("", "high", "normal", true, "vi-VN"))
+        assertEquals("", data.getString("question"))
+        assertTrue(data.getBoolean("isImageOnly"))
+        assertEquals("vi-VN", data.getString("fallbackLanguageTag"))
     }
 
     // 5. Math Step-by-Step in Vietnamese
@@ -151,7 +146,7 @@ class VietnameseUnicodeTest {
                 "difficulty": "easy",
                 "responseType": "creative",
                 "answerType": "explanation",
-                "finalAnswerRedundant": true,
+                "finalAnswerRedundant": false,
                 "steps": [
                     {
                         "topicId": "",

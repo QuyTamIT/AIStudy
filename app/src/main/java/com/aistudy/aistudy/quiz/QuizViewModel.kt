@@ -9,6 +9,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.aistudy.aistudy.BuildConfig
 import com.aistudy.aistudy.R
+import com.aistudy.aistudy.answer.AnswerPrompts
+import com.aistudy.aistudy.answer.ResponseMode
+import com.aistudy.aistudy.ask.AiRequestTrace
 import com.aistudy.aistudy.ask.GeminiClient
 import com.aistudy.aistudy.auth.LoginActivity
 import com.aistudy.aistudy.database.AppDatabase
@@ -18,12 +21,15 @@ import com.aistudy.aistudy.database.QuizSession
 import com.aistudy.aistudy.xp.XpRules
 import java.util.concurrent.Executors
 import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
 
 internal class QuizViewModel @JvmOverloads constructor(
     application: Application,
     private val apiKey: String = BuildConfig.GEMINI_API_KEY,
-    private val requestQuiz: (String, String) -> String = { key, prompt -> GeminiClient.ask(key, prompt) }
+    private val traceFactory: (AiRequestTrace.Feature) -> AiRequestTrace = { AiRequestTrace(it) },
+    private val requestQuiz: (String, String, JSONObject, String, AiRequestTrace) -> String =
+        { key, prompt, schema, instruction, trace -> GeminiClient.ask(key, prompt, schema, instruction, trace) }
 ) : AndroidViewModel(application) {
     data class Quiz(val session: QuizSession, val items: List<QuizItem>)
 
@@ -130,46 +136,56 @@ internal class QuizViewModel @JvmOverloads constructor(
     }
 
     private fun generateQuiz(ownerId: Long, subject: String): Quiz {
-        if (apiKey.isBlank() || apiKey.startsWith("YOUR_", ignoreCase = true)) {
-            throw QuizLoadException(R.string.quiz_no_api_key)
-        }
-        val sources = database.questionAnswerDao().getRecentByUserIdAndSubject(ownerId, subject, RECENT_LIMIT)
-        if (sources.size < MIN_SOURCE_QA) throw QuizLoadException(R.string.quiz_need_more)
-
-        checkActiveUser(ownerId)
-        val raw = requestQuiz(apiKey, buildQuizPrompt(sources, subject))
-        val array = JSONObject(extractJson(raw)).getJSONArray("items")
-        val items = (0 until minOf(array.length(), TARGET_ITEMS)).mapNotNull { index ->
-            val item = array.getJSONObject(index)
-            val prompt = item.optString("prompt", "").trim()
-            val answer = item.optString("correctAnswer", "").trim()
-            if (prompt.isEmpty() || answer.isEmpty()) return@mapNotNull null
-            QuizItem().apply {
-                type = normalizeType(item.optString("type", "mcq"))
-                this.prompt = prompt
-                correctAnswer = answer
-                explanation = item.optString("explanation", "").trim()
-                optionsJson = item.optJSONArray("options")?.toString() ?: "[]"
+        val trace = traceFactory(AiRequestTrace.Feature.QUIZ)
+        var outcome = AiRequestTrace.Outcome.REQUEST_FAILED
+        try {
+            if (apiKey.isBlank() || apiKey.startsWith("YOUR_", ignoreCase = true)) {
+                outcome = AiRequestTrace.Outcome.KEY_MISSING
+                throw QuizLoadException(R.string.quiz_no_api_key)
             }
-        }
-        check(items.isNotEmpty())
-        val session = QuizSession().apply {
-            userId = ownerId
-            this.subject = subject
-            sourceQaIds = JSONArray(sources.map { it.id }).toString()
-            createdAt = System.currentTimeMillis()
-            total = items.size
-        }
-        database.runInTransaction {
+            val recent = database.questionAnswerDao().getRecentByUserIdAndSubject(ownerId, subject, RECENT_LIMIT)
+            val sources = projectSources(recent, getApplication<Application>().getString(R.string.ask_image_default_question))
+            if (sources.size < MIN_SOURCE_QA) {
+                outcome = AiRequestTrace.Outcome.INSUFFICIENT_SOURCES
+                throw QuizLoadException(R.string.quiz_insufficient_sources)
+            }
             checkActiveUser(ownerId)
-            session.id = database.quizSessionDao().insert(session)
-            val itemDao = database.quizItemDao()
-            for (item in items) {
-                item.sessionId = session.id
-                item.id = itemDao.insert(item)
+            val prompt = buildQuizPrompt(sources, subject,
+                AnswerPrompts.fallbackLanguageTag(getApplication<Application>().resources))
+            val raw = requestQuiz(apiKey, prompt, quizSchema(), quizInstruction, trace)
+            outcome = AiRequestTrace.Outcome.INVALID_RESPONSE
+            val items = trace.validate { parseQuizBatch(raw) }
+            outcome = AiRequestTrace.Outcome.SAVE_FAILED
+            val session = QuizSession().apply {
+                userId = ownerId
+                this.subject = subject
+                sourceQaIds = JSONArray(sources.map { it.sourceId }).toString()
+                createdAt = System.currentTimeMillis()
+                total = items.size
             }
+            database.runInTransaction {
+                checkActiveUser(ownerId)
+                session.id = database.quizSessionDao().insert(session)
+                val itemDao = database.quizItemDao()
+                for (item in items) {
+                    item.sessionId = session.id
+                    item.id = itemDao.insert(item)
+                }
+            }
+            outcome = AiRequestTrace.Outcome.SUCCESS
+            return Quiz(session, items)
+        } catch (error: Exception) {
+            outcome = when {
+                cleared || Thread.currentThread().isInterrupted || error is InterruptedException -> AiRequestTrace.Outcome.CANCELLED
+                preferences.getLong(LoginActivity.KEY_USER_ID, 0L) != ownerId -> AiRequestTrace.Outcome.SESSION_CHANGED
+                error is GeminiClient.InvalidResponseException ||
+                    (error is JSONException && outcome == AiRequestTrace.Outcome.REQUEST_FAILED) -> AiRequestTrace.Outcome.INVALID_RESPONSE
+                else -> outcome
+            }
+            throw error
+        } finally {
+            trace.finish(outcome)
         }
-        return Quiz(session, items)
     }
 
     private fun checkActiveUser(ownerId: Long) {
@@ -177,66 +193,6 @@ internal class QuizViewModel @JvmOverloads constructor(
         check(ownerId > 0L && preferences.getLong(LoginActivity.KEY_USER_ID, 0L) == ownerId)
     }
 
-    private fun buildQuizPrompt(sources: List<QuestionAnswer>, subject: String): String {
-        val sb = StringBuilder()
-        sb.append("You are AI Study Mentor. Create a practice quiz from the student's recent questions.\n")
-            .append("Return ONLY valid JSON (no markdown):\n")
-            .append("{\n")
-            .append("  \"items\": [\n")
-            .append("    {\n")
-            .append("      \"type\": \"mcq\",\n")
-            .append("      \"prompt\": \"question text\",\n")
-            .append("      \"options\": [\"A\", \"B\", \"C\", \"D\"],\n")
-            .append("      \"correctAnswer\": \"exact matching option text\",\n")
-            .append("      \"explanation\": \"why this is correct\"\n")
-            .append("    },\n")
-            .append("    {\n")
-            .append("      \"type\": \"short\",\n")
-            .append("      \"prompt\": \"question text\",\n")
-            .append("      \"options\": [],\n")
-            .append("      \"correctAnswer\": \"expected short answer\",\n")
-            .append("      \"explanation\": \"brief explanation\"\n")
-            .append("    },\n")
-            .append("    {\n")
-            .append("      \"type\": \"blank\",\n")
-            .append("      \"prompt\": \"Fill in the blank: ...\",\n")
-            .append("      \"options\": [],\n")
-            .append("      \"correctAnswer\": \"word or phrase\",\n")
-            .append("      \"explanation\": \"brief explanation\"\n")
-            .append("    }\n")
-            .append("  ]\n")
-            .append("}\n\n")
-            .append("Rules:\n")
-            .append("- Create exactly ").append(TARGET_ITEMS).append(" items\n")
-            .append("- Mix types: include at least one mcq, one short, one blank if possible\n")
-            .append("- For mcq: options must have exactly 4 distinct choices; correctAnswer must equal one option exactly\n")
-            .append("- Subject: ").append(subject).append("\n")
-            .append("- Questions must be based on the source material below (similar concepts, not identical copies)\n")
-            .append("- English only\n\n")
-            .append("Source questions:\n")
-        for ((i, qa) in sources.withIndex()) {
-            sb.append(i + 1).append(". Q: ").append(qa.question)
-                .append("\n   Final: ").append(qa.finalAnswer)
-                .append("\n   Difficulty: ").append(qa.difficulty ?: "medium")
-                .append("\n")
-        }
-        return sb.toString()
-    }
-
-    private fun normalizeType(type: String): String = when (type) {
-        "short", "blank", "mcq" -> type
-        else -> "mcq"
-    }
-
-    private fun normalizeAnswer(value: String?): String =
-        value.orEmpty().trim().replace(Regex("\\s+"), " ").lowercase()
-
-    private fun extractJson(raw: String): String {
-        val text = raw.trim()
-        val start = text.indexOf('{')
-        val end = text.lastIndexOf('}')
-        return if (start >= 0 && end > start) text.substring(start, end + 1) else text
-    }
 
     override fun onCleared() {
         cleared = true
@@ -246,10 +202,134 @@ internal class QuizViewModel @JvmOverloads constructor(
 
     private class QuizLoadException(@get:StringRes val messageRes: Int) : Exception()
 
-    private companion object {
-        const val TAG = "QuizViewModel"
-        const val MIN_SOURCE_QA = 2
-        const val RECENT_LIMIT = 5
-        const val TARGET_ITEMS = 4
+    companion object {
+        private const val TAG = "QuizViewModel"
+        private const val MIN_SOURCE_QA = 2
+        private const val RECENT_LIMIT = 5
+        internal const val TARGET_ITEMS = 4
+        // shortcut: supplementary image-source context is capped in JSON characters, re-evaluate with measured usage/quality.
+        internal const val IMAGE_CONTEXT_CHARS = 2048
+        private val WHITESPACE = Regex("\\s+")
+        private val ITEM_FIELDS = listOf("type", "prompt", "options", "correctAnswer", "explanation")
+
+        internal data class Source(val sourceId: Long, val data: JSONObject)
+
+        internal fun projectSources(recent: List<QuestionAnswer>, imagePlaceholder: String): List<Source> =
+            recent.mapNotNull { qa ->
+                val stored = try { JSONArray(qa.steps ?: "[]") } catch (_: JSONException) { null }
+                val metadata = stored?.optJSONObject(0)?.optJSONObject("_answer")
+                    ?.takeIf { it.opt("version") == 1 }
+                val modeValue = metadata?.let {
+                    when {
+                        it.has("responseType") -> it.opt("responseType")
+                        it.has("responseMode") -> it.opt("responseMode")
+                        else -> null
+                    }
+                } as? String
+                val mode = ResponseMode.parse(modeValue)
+                if (mode == ResponseMode.CLARIFICATION || mode == ResponseMode.LIMITATION) return@mapNotNull null
+                val data = JSONObject().put("question", qa.question ?: JSONObject.NULL)
+                    .put("finalAnswer", qa.finalAnswer ?: JSONObject.NULL)
+                    .put("difficulty", qa.difficulty ?: JSONObject.NULL)
+                if (!qa.imagePath.isNullOrBlank() && qa.question == imagePlaceholder) {
+                    val teaching = JSONArray()
+                    var chars = 2
+                    if (stored != null) for (index in 0 until stored.length()) {
+                        val step = stored.optJSONObject(index) ?: continue
+                        val title = (step.opt("title") as? String).orEmpty()
+                        val body = step.opt("body") as? String ?: continue
+                        val expr = (step.opt("expr") as? String).orEmpty()
+                        if (body.isBlank()) continue
+                        val projected = JSONObject().put("title", title).put("body", body).put("expr", expr)
+                        val added = projected.toString().length + if (teaching.length() == 0) 0 else 1
+                        if (chars + added > IMAGE_CONTEXT_CHARS) break
+                        teaching.put(projected)
+                        chars += added
+                    }
+                    if (teaching.length() == 0) return@mapNotNull null
+                    data.put("teachingSteps", teaching)
+                }
+                Source(qa.id, data)
+            }
+
+        internal fun buildQuizPrompt(sources: List<Source>, subject: String, fallbackLanguageTag: String): String =
+            JSONObject().put("subject", subject).put("fallbackLanguageTag", fallbackLanguageTag)
+                .put("sources", JSONArray(sources.map { it.data })).toString()
+
+        internal val quizInstruction: String = AnswerPrompts.commonInstruction + "\n\n" + """
+            Create exactly $TARGET_ITEMS practice items grounded in the supplied sources, using similar concepts,
+            not identical copies. Do not invent missing source facts.
+            Determine the quiz language only from the actual texts in the newest supplied source.
+            Prefer teachingSteps body prose when present, then finalAnswer containing natural language,
+            then substantive question text. Ignore code, numbers, identifiers, and the automatic image
+            question placeholder (the question of a source with teachingSteps). If language cannot be
+            determined, use fallbackLanguageTag. Keep quiz instructions and explanations in that language;
+            foreign-language learning examples keep the target language.
+            Mix mcq, short and blank when suitable, including one of each if possible.
+            Every prompt, correctAnswer and explanation must contain useful text.
+            MCQ: exactly four nonempty choices distinct after trim, whitespace collapsing and lowercase;
+            correctAnswer must match exactly one choice using the same normalization and should copy its text.
+            Short/blank: options must be []; use one unambiguous canonical short answer suitable for that
+            exact-match normalization. Give a brief useful explanation for every item.
+        """.trimIndent()
+
+        internal fun quizSchema(): JSONObject {
+            val string = JSONObject().put("type", "string")
+            val properties = JSONObject()
+                .put("type", JSONObject().put("type", "string").put("enum", JSONArray(listOf("mcq", "short", "blank"))))
+                .put("prompt", string).put("correctAnswer", string).put("explanation", string)
+                .put("options", JSONObject().put("type", "array").put("items", string).put("maxItems", 4))
+            val item = JSONObject().put("type", "object").put("properties", properties)
+                .put("required", JSONArray(ITEM_FIELDS)).put("additionalProperties", false)
+            return JSONObject().put("type", "object").put("required", JSONArray(listOf("items")))
+                .put("additionalProperties", false).put("properties", JSONObject().put("items",
+                    JSONObject().put("type", "array").put("items", item)
+                        .put("minItems", TARGET_ITEMS).put("maxItems", TARGET_ITEMS)))
+        }
+
+        internal fun parseQuizBatch(raw: String): List<QuizItem> {
+            val root = JSONObject(raw.trim().removePrefix("\uFEFF").trim())
+            require(root.length() == 1 && root.has("items")) { "Invalid quiz object" }
+            val array = root.opt("items") as? JSONArray ?: throw IllegalArgumentException("Invalid quiz items")
+            require(array.length() == TARGET_ITEMS) { "Invalid quiz size" }
+            return (0 until array.length()).map { index ->
+                val item = array.optJSONObject(index) ?: throw IllegalArgumentException("Invalid quiz item")
+                require(item.length() == ITEM_FIELDS.size && ITEM_FIELDS.all { item.has(it) }) { "Invalid quiz fields" }
+                val type = item.opt("type") as? String
+                require(type == "mcq" || type == "short" || type == "blank") { "Invalid quiz type" }
+                val prompt = text(item, "prompt")
+                val answer = text(item, "correctAnswer")
+                val explanation = text(item, "explanation")
+                val options = item.opt("options") as? JSONArray ?: throw IllegalArgumentException("Invalid quiz options")
+                val choices = (0 until options.length()).map { option ->
+                    val choice = options.opt(option) as? String ?: throw IllegalArgumentException("Invalid quiz option")
+                    require(choice.isNotBlank()) { "Empty quiz option" }
+                    choice
+                }
+                if (type == "mcq") {
+                    require(choices.size == 4) { "Invalid choice count" }
+                    val normalized = choices.map(::normalizeAnswer)
+                    require(normalized.toSet().size == 4) { "Duplicate choices" }
+                    val expected = normalizeAnswer(answer)
+                    require(normalized.count { it == expected } == 1) { "Unmatched correct answer" }
+                } else require(choices.isEmpty()) { "Unexpected choices" }
+                QuizItem().apply {
+                    this.type = type
+                    this.prompt = prompt
+                    correctAnswer = answer
+                    this.explanation = explanation
+                    optionsJson = options.toString()
+                }
+            }
+        }
+
+        private fun text(item: JSONObject, field: String): String {
+            val value = item.opt(field) as? String ?: throw IllegalArgumentException("Invalid quiz text")
+            require(value.isNotBlank()) { "Empty quiz text" }
+            return value.trim()
+        }
+
+        internal fun normalizeAnswer(value: String?): String =
+            value.orEmpty().trim().replace(WHITESPACE, " ").lowercase()
     }
 }

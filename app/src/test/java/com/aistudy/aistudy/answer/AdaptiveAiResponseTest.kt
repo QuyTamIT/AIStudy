@@ -125,7 +125,7 @@ class AdaptiveAiResponseTest {
                 "difficulty": "medium",
                 "responseType": "creative",
                 "answerType": "explanation",
-                "finalAnswerRedundant": true,
+                "finalAnswerRedundant": false,
                 "steps": [
                     {
                         "topicId": "",

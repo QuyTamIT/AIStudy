@@ -8,6 +8,8 @@ import android.os.SystemClock
 import android.view.View
 import android.widget.RadioGroup
 import android.widget.TextView
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
@@ -23,11 +25,13 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.runner.lifecycle.ActivityLifecycleCallback
 import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
 import androidx.test.runner.lifecycle.Stage
+import com.aistudy.aistudy.ask.AiRequestTrace
 import com.aistudy.aistudy.auth.LoginActivity
 import com.aistudy.aistudy.database.*
 import com.aistudy.aistudy.quiz.QuizActivity
 import com.aistudy.aistudy.quiz.QuizViewModel
 import org.json.JSONArray
+import org.json.JSONObject
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,6 +40,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.AtomicReference
 
 @RunWith(AndroidJUnit4::class)
 class QuizRestoreInstrumentedTest {
@@ -122,6 +127,7 @@ class QuizRestoreInstrumentedTest {
                 subject = "math"
                 question = "Fixture question $index"
                 finalAnswer = "4"
+                createdAt = System.currentTimeMillis() + index
             })
         }
         val instrumentation = InstrumentationRegistry.getInstrumentation()
@@ -131,11 +137,16 @@ class QuizRestoreInstrumentedTest {
         val requestCount = AtomicInteger()
         val factory = viewModelFactory {
             initializer {
-                QuizViewModel(context.applicationContext as Application, apiKey = "fixture") { _, _ ->
+                QuizViewModel(context.applicationContext as Application, apiKey = "fixture") { _, _, _, _, _ ->
                     requestCount.incrementAndGet()
                     started.countDown()
                     check(respond.await(15, TimeUnit.SECONDS))
-                    """{"items":[{"type":"short","prompt":"2 + 2?","correctAnswer":"4"}]}"""
+                    """{"items":[
+                        {"type":"short","prompt":"2 + 2?","options":[],"correctAnswer":"4","explanation":"Two plus two equals four."},
+                        {"type":"short","prompt":"3 + 1?","options":[],"correctAnswer":"4","explanation":"Three plus one equals four."},
+                        {"type":"blank","prompt":"Two plus two is __.","options":[],"correctAnswer":"4","explanation":"The sum is four."},
+                        {"type":"short","prompt":"What number follows 3?","options":[],"correctAnswer":"4","explanation":"Counting after three reaches four."}
+                    ]}"""
                 }
             }
         }
@@ -156,6 +167,8 @@ class QuizRestoreInstrumentedTest {
                 awaitQuiz(scenario)
                 assertEquals(1, requestCount.get())
                 val generatedSession = db.quizSessionDao().getAllByUserId(owner).single { it.id != fixtureSessionId }
+                assertEquals(4, generatedSession.total)
+                assertEquals(4, db.quizItemDao().getBySessionId(generatedSession.id).size)
                 val state = Bundle()
                 scenario.onActivity { instrumentation.callActivityOnSaveInstanceState(it, state) }
                 assertEquals(generatedSession.id, state.getLong(QuizActivity.EXTRA_SESSION_ID, -1L))
@@ -208,6 +221,112 @@ class QuizRestoreInstrumentedTest {
             }
             assertEquals(androidx.lifecycle.Lifecycle.State.DESTROYED, scenario.state)
             assertTrue(db.quizItemDao().getBySessionId(sessionId).all { it.userAnswer == null })
+        }
+    }
+
+    @Test
+    fun invalidGeneratedBatchDoesNotCreateSessionItemsOrXp() = fixture { owner, sessionId ->
+        addSources(owner)
+        val events = mutableListOf<JSONObject>()
+        val calls = AtomicInteger()
+        val invalid = JSONObject(generatedBatch()).apply {
+            getJSONArray("items").getJSONObject(2).put("type", "mcq")
+        }.toString()
+        val state = generate(owner, events) { calls.incrementAndGet(); invalid }
+        assertNull(state.quiz)
+        assertEquals(R.string.quiz_error, state.error)
+        assertEquals(1, calls.get())
+        assertEquals(listOf(sessionId), db.quizSessionDao().getAllByUserId(owner).map { it.id })
+        assertEquals(2, db.quizItemDao().getBySessionId(sessionId).size)
+        assertEquals(11, db.profileDao().getByUserId(owner)?.xp)
+        assertEquals("invalid", events.single { it.getString("event") == "validation" }.getString("outcome"))
+        assertEquals("invalid_response", events.single { it.getString("event") == "task_end" }.getString("outcome"))
+    }
+
+    @Test
+    fun insufficientEligibleSourcesSkipsGenerationAndPersistence() = fixture { owner, sessionId ->
+        addSources(owner, excludeSecond = true)
+        val calls = AtomicInteger()
+        val state = generate(owner) { calls.incrementAndGet(); generatedBatch() }
+        assertNull(state.quiz)
+        assertEquals(R.string.quiz_insufficient_sources, state.error)
+        assertEquals(0, calls.get())
+        assertEquals(listOf(sessionId), db.quizSessionDao().getAllByUserId(owner).map { it.id })
+        assertEquals(2, db.quizItemDao().getBySessionId(sessionId).size)
+        assertEquals(11, db.profileDao().getByUserId(owner)?.xp)
+    }
+
+    @Test
+    fun generatedSessionRecordsOnlySourcesActuallySent() = fixture { owner, _ ->
+        val expected = addSources(owner)
+        db.questionAnswerDao().insert(QuestionAnswer().apply {
+            userId = owner; subject = "math"; question = "Do not use a limitation."
+            steps = """[{"title":"","body":"Source is uncertain.","expr":"","_answer":{"version":1,"responseType":"limitation"}}]"""
+        })
+        var sentCount = 0
+        val state = generate(owner, inspect = { sentCount = JSONObject(it).getJSONArray("sources").length() }) { generatedBatch() }
+        val quiz = requireNotNull(state.quiz)
+        val ids = JSONArray(quiz.session.sourceQaIds)
+        assertEquals(expected.toSet(), (0 until ids.length()).map { ids.getLong(it) }.toSet())
+        assertEquals(2, sentCount)
+        assertEquals(4, quiz.items.size)
+        assertEquals(11, db.profileDao().getByUserId(owner)?.xp)
+    }
+
+    private fun generatedBatch(): String = JSONObject().put("items", JSONArray().apply {
+        repeat(4) { index ->
+            put(JSONObject().put("type", "short").put("prompt", "Fixture question $index")
+                .put("options", JSONArray()).put("correctAnswer", "4").put("explanation", "Two pairs make four."))
+        }
+    }).toString()
+
+    private fun addSources(owner: Long, excludeSecond: Boolean = false): List<Long> = (0..1).map { index ->
+        db.questionAnswerDao().insert(QuestionAnswer().apply {
+            userId = owner; subject = "math"; question = "Fixture source $index"; finalAnswer = "4"
+            if (index == 1 && excludeSecond) {
+                steps = """[{"title":"","body":"Missing essential data.","expr":"","_answer":{"version":1,"responseType":"clarification"}}]"""
+            }
+        })
+    }
+
+    private fun generate(
+        owner: Long,
+        events: MutableList<JSONObject> = mutableListOf(),
+        inspect: (String) -> Unit = {},
+        response: () -> String
+    ): QuizViewModel.UiState {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val store = ViewModelStore()
+        val result = AtomicReference<QuizViewModel.UiState>()
+        val ready = CountDownLatch(1)
+        val observer = Observer<QuizViewModel.UiState> { state ->
+            if (state.quiz != null || state.error != null) {
+                result.set(state)
+                ready.countDown()
+            }
+        }
+        val factory = viewModelFactory {
+            initializer {
+                QuizViewModel(context.applicationContext as Application, apiKey = "fixture",
+                    traceFactory = { feature -> AiRequestTrace(feature, sink = { events.add(it) }) },
+                    requestQuiz = { _, prompt, _, _, _ -> inspect(prompt); response() })
+            }
+        }
+        var model: QuizViewModel? = null
+        try {
+            instrumentation.runOnMainSync {
+                val created = ViewModelProvider(store, factory)[QuizViewModel::class.java]
+                model = created
+                created.state.observeForever(observer)
+                created.start(owner, "math", -1L, restoring = false)
+            }
+            assertTrue("Fixture generation did not finish", ready.await(8, TimeUnit.SECONDS))
+            return requireNotNull(result.get())
+        } finally {
+            instrumentation.runOnMainSync {
+                model?.state?.removeObserver(observer)
+                store.clear()
+            }
         }
     }
 

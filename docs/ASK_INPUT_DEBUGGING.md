@@ -107,3 +107,34 @@ và thử AVD ở cửa sổ riêng để phân biệt đường chuyển phím 
 - [Android Developers: Emulator command line, snapshot và user data](https://developer.android.com/studio/run/emulator-commandline)
 - Log, window/input/IME dumps và UI hierarchy trong thư mục tạm của phiên kiểm tra:
   `%TEMP%\AIStudy-input-debug-20261021`.
+
+## Metrics AI Đợt 1 — 2026-11-13
+
+- Bản debug ghi JSON bằng tag Logcat `AIStudyAI`; bản release không phát metrics.
+  Lọc bằng `adb -s <thiết-bị-đã-xác-minh> logcat -s AIStudyAI:D "*:S"`.
+  Không cần bật request thật để chạy các test fixture.
+- `taskId` ngẫu nhiên liên kết tác vụ; retry giữ taskId và tăng ordinal/attemptId.
+  `attempt_end` ghi HTTP status, finish/block reason đã lọc, usage và latency.
+  `validation` phân biệt valid/invalid/not_run; `task_end` phân biệt kết quả lưu,
+  session_changed, content_changed, cancellation và request/response lỗi.
+- `attemptLatencyMs` đo một attempt; `generationLatencyMs` gồm retry/backoff;
+  `taskLatencyMs` kết thúc sau validation/persistence, không phải thời gian render UI.
+- Usage `null` là unknown, không phải 0. `state=partial` nghĩa là chỉ quan sát
+  được một phần; số 0 chỉ được ghi khi API trả số 0. Không cộng totalTokenCount
+  vào các thành phần input/output/thinking để tránh đếm trùng.
+- Metrics không lưu prompt, ảnh, đáp án, raw response/error body, exception message,
+  user/QA ID, URI, đường dẫn local hoặc key. Không có database/dashboard metrics.
+- Payload có root systemInstruction và schema cho từng luồng. Quiz mới chỉ lưu
+  batch đủ bốn câu hợp lệ; Extras validate đủ năm nhóm trước ghi cache. Cache
+  legacy từng nhóm và session Quiz cũ vẫn đọc được; Room vẫn version 8.
+- Kiểm chứng offline: 102 unit tests, 0 failures/errors/skipped; lintDebug và
+  assembleDebug thành công (131 lint warnings). Hai lớp DataOwnershipInstrumentedTest
+  và QuizRestoreInstrumentedTest chạy 12 tests, 0 failures trên AVD cách ly
+  AIStudy_Test; các đường generation dùng fake.
+- Gemini thật ngày 2026-11-14, qua ứng dụng debug trên AIStudy_Test với tài khoản
+  demo riêng: ASK_TEXT bị HTTP 403, reason=http_error; 1 attempt, generation 1.393 ms,
+  task 1.436 ms, validation=not_run, outcome=request_failed; toàn bộ usage unknown.
+  Không có subtype đã nhận diện để kết luận riêng lỗi hạn chế key, quyền hay billing.
+  Dừng gọi thật theo điều kiện lỗi quyền; chưa chạy ảnh, Extras/cache hoặc Quiz thật.
+- Chưa đo chi phí, chất lượng ngôn ngữ hoặc mức tiết kiệm. Key trong APK và request
+  trùng do lifecycle chưa được xử lý.

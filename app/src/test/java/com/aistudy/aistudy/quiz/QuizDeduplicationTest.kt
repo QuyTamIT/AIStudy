@@ -1,104 +1,153 @@
 package com.aistudy.aistudy.quiz
 
-import com.aistudy.aistudy.database.QuizItem
-import com.aistudy.aistudy.database.QuizSession
-import com.aistudy.aistudy.xp.XpRules
+import com.aistudy.aistudy.database.QuestionAnswer
 import org.json.JSONArray
 import org.json.JSONObject
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Test
 
 class QuizDeduplicationTest {
+    private val placeholder = "Please solve the problem shown in this image."
 
-    private fun normalizeAnswer(value: String?): String {
-        if (value == null) return ""
-        return value.trim().replace(Regex("\\s+"), " ").lowercase()
+    private fun item(type: String = "mcq"): JSONObject = JSONObject()
+        .put("type", type).put("prompt", "Choose the city.")
+        .put("options", if (type == "mcq") JSONArray(listOf("New York", "Paris", "Tokyo", "Huế")) else JSONArray())
+        .put("correctAnswer", if (type == "mcq") " new   YORK " else "Paris")
+        .put("explanation", "This follows from the source.")
+
+    private fun batch(): JSONObject = JSONObject().put("items", JSONArray()
+        .put(item()).put(item("short")).put(item("blank")).put(item()))
+
+    private fun reject(json: JSONObject) {
+        assertThrows(IllegalArgumentException::class.java) { QuizViewModel.parseQuizBatch(json.toString()) }
     }
 
-    @Test
-    fun testNormalizeAnswerTrimmingAndWhitespace() {
-        assertEquals("paris", normalizeAnswer("  Paris  "))
-        assertEquals("new york city", normalizeAnswer("New   York   City"))
-        assertEquals("x = 5", normalizeAnswer("x  =  5"))
-        assertEquals("", normalizeAnswer(null))
-    }
-
-    @Test
-    fun testScoreCalculationAndCompletion() {
-        val session = QuizSession().apply {
-            id = 1
-            userId = 42
+    private fun source(id: Long, question: String = "Câu hỏi có nội dung", steps: String? = null) =
+        QuestionAnswer().apply {
+            this.id = id
+            userId = 7
             subject = "math"
-            completed = false
-            score = 0
-            total = 3
+            this.question = question
+            finalAnswer = "4"
+            difficulty = "easy"
+            this.steps = steps
         }
 
-        val items = listOf(
-            QuizItem().apply { prompt = "Q1"; correctAnswer = "A"; userAnswer = "A"; correct = true },
-            QuizItem().apply { prompt = "Q2"; correctAnswer = "B"; userAnswer = "C"; correct = false },
-            QuizItem().apply { prompt = "Q3"; correctAnswer = "D"; userAnswer = "d"; correct = true }
-        )
+    private fun step(body: String, title: String = "", expr: String = "") =
+        JSONObject().put("title", title).put("body", body).put("expr", expr)
 
-        val score = items.count { it.correct == true }
-        val xpGain = score * XpRules.QUIZ_CORRECT + XpRules.QUIZ_COMPLETE_BONUS
-
-        assertEquals(2, score)
-        assertEquals(40, xpGain) // 2 * 10 + 20 = 40
-
-        session.score = score
-        session.completed = true
-
-        assertTrue(session.completed)
-        assertEquals(2, session.score)
+    @Test fun productionNormalizerKeepsExistingGradingSemantics() {
+        assertEquals("paris", QuizViewModel.normalizeAnswer("  Paris  "))
+        assertEquals("new york city", QuizViewModel.normalizeAnswer("New   York\nCity"))
+        assertEquals("x = 5", QuizViewModel.normalizeAnswer("x  =  5"))
+        assertEquals("", QuizViewModel.normalizeAnswer(null))
+        assertNotEquals(QuizViewModel.normalizeAnswer("Huế"), QuizViewModel.normalizeAnswer("Hue"))
     }
 
-    @Test
-    fun testMalformedQuizItemFiltering() {
-        val jsonArray = JSONArray().apply {
-            put(JSONObject().put("type", "mcq").put("prompt", "").put("correctAnswer", "A")) // empty prompt -> invalid
-            put(JSONObject().put("type", "mcq").put("prompt", "Valid Q").put("correctAnswer", "")) // empty answer -> invalid
-            put(JSONObject().put("type", "mcq").put("prompt", "Valid Q2").put("correctAnswer", "B")) // valid
-        }
+    @Test fun fullBatchUsesTheSameAnswerNormalizationAsGrading() {
+        val parsed = QuizViewModel.parseQuizBatch(batch().toString())
+        assertEquals(listOf("mcq", "short", "blank", "mcq"), parsed.map { it.type })
+        val choices = JSONArray(parsed.first().optionsJson)
+        assertEquals("New York", choices.getString(0))
+        assertEquals(QuizViewModel.normalizeAnswer(choices.getString(0)),
+            QuizViewModel.normalizeAnswer(parsed.first().correctAnswer))
+        assertEquals("This follows from the source.", parsed.first().explanation)
+    }
 
-        val validItems = mutableListOf<QuizItem>()
-        for (i in 0 until jsonArray.length()) {
-            val obj = jsonArray.getJSONObject(i)
-            val prompt = obj.optString("prompt", "").trim()
-            val correctAnswer = obj.optString("correctAnswer", "").trim()
-            if (prompt.isEmpty() || correctAnswer.isEmpty()) {
-                continue
+    @Test fun wrongBatchSizeOrOneInvalidItemRejectsTheWholeBatch() {
+        reject(batch().apply { getJSONArray("items").remove(3) })
+        reject(batch().apply { getJSONArray("items").put(item()) })
+        reject(batch().apply { getJSONArray("items").getJSONObject(2).put("prompt", " ") })
+        reject(batch().put("unexpected", true))
+        reject(JSONObject().put("items", "not an array"))
+    }
+
+    @Test fun requiredItemFieldsMustHaveRealJsonTypesAndNonblankContent() {
+        for (field in listOf("type", "prompt", "correctAnswer", "explanation")) {
+            for (value in listOf<Any>(false, 42, JSONObject(), JSONArray(), JSONObject.NULL, " ")) {
+                reject(batch().apply { getJSONArray("items").getJSONObject(0).put(field, value) })
             }
-            validItems.add(QuizItem().apply {
-                this.prompt = prompt
-                this.correctAnswer = correctAnswer
-            })
+            reject(batch().apply { getJSONArray("items").getJSONObject(0).remove(field) })
         }
-
-        assertEquals(1, validItems.size)
-        assertEquals("Valid Q2", validItems[0].prompt)
+        reject(batch().apply { getJSONArray("items").getJSONObject(0).put("type", "unknown") })
+        reject(batch().apply { getJSONArray("items").getJSONObject(0).put("options", "A,B,C,D") })
+        reject(batch().apply { getJSONArray("items").getJSONObject(0).put("options", JSONArray(listOf("A", 2, "C", "D"))) })
     }
 
-    @Test
-    fun testPreventDoubleCompletion() {
-        var callCount = 0
-        var totalXpAwarded = 0
-        val session = QuizSession().apply { completed = false }
-
-        fun finishSessionOnce() {
-            if (session.completed) return
-            session.completed = true
-            callCount++
-            totalXpAwarded += 40
+    @Test fun mcqRequiresFourDistinctNonemptyOptionsAndOneMatchingAnswer() {
+        for (options in listOf(
+            emptyList(), listOf("New York", "Paris", "Tokyo"),
+            listOf("New York", "Paris", "Tokyo", "Huế", "Hanoi"),
+            listOf("New York", " NEW\n YORK ", "Tokyo", "Huế"),
+            listOf("New York", "", "Tokyo", "Huế"))) {
+            reject(batch().apply { getJSONArray("items").getJSONObject(0).put("options", JSONArray(options)) })
         }
+        reject(batch().apply { getJSONArray("items").getJSONObject(0).put("correctAnswer", "not an option") })
+        reject(batch().apply { getJSONArray("items").getJSONObject(1).put("options", JSONArray(listOf("Paris"))) })
+        reject(batch().apply { getJSONArray("items").getJSONObject(2).put("options", JSONArray(listOf("Paris"))) })
+    }
 
-        finishSessionOnce()
-        finishSessionOnce() // Second attempt should be ignored
+    @Test fun filteringUsesExplicitMetadataWithoutClassifyingOrRejectingLegacySources() {
+        fun metadata(mode: Any) = JSONArray().put(step("Preserved source.").put("_answer",
+            JSONObject().put("version", 1).put("responseType", mode))).toString()
+        val projected = QuizViewModel.projectSources(listOf(
+            source(9), source(8, steps = metadata("clarification")), source(7, steps = metadata("limitation")),
+            source(6, steps = metadata(42)), source(5, steps = metadata("direct"))
+        ), placeholder)
+        assertEquals(listOf(9L, 6L, 5L), projected.map { it.sourceId })
+        assertEquals(setOf("question", "finalAnswer", "difficulty"), projected.first().data.keys().asSequence().toSet())
+    }
 
-        assertEquals(1, callCount)
-        assertEquals(40, totalXpAwarded)
+    @Test fun imageProjectionPreservesCompleteCodeAndFormulaWithoutPrivateMetadata() {
+        val body = "Giải thích\n```kotlin\nval n = 2\n```\nGiữ dấu tiếng Việt."
+        val original = step(body, "Một bước", "x = 2").put("_answer",
+            JSONObject().put("version", 1).put("answerType", "solution").put("secret", "METADATA_CANARY"))
+        val qa = source(8, placeholder, JSONArray().put(original).toString()).apply { imagePath = "PATH_CANARY" }
+        val projection = QuizViewModel.projectSources(listOf(qa), placeholder).single().data
+        val teaching = projection.getJSONArray("teachingSteps")
+        assertEquals(body, teaching.getJSONObject(0).getString("body"))
+        assertEquals("x = 2", teaching.getJSONObject(0).getString("expr"))
+        assertEquals(setOf("title", "body", "expr"), teaching.getJSONObject(0).keys().asSequence().toSet())
+        assertTrue(teaching.toString().length <= QuizViewModel.IMAGE_CONTEXT_CHARS)
+        assertFalse(projection.toString().contains("METADATA_CANARY"))
+        assertFalse(projection.toString().contains("PATH_CANARY"))
+        val data = JSONObject(QuizViewModel.buildQuizPrompt(
+            QuizViewModel.projectSources(listOf(qa, source(7)), placeholder), "math", "vi-VN"))
+        assertEquals("vi-VN", data.getString("fallbackLanguageTag"))
+        assertEquals(body, data.getJSONArray("sources").getJSONObject(0).getJSONArray("teachingSteps")
+            .getJSONObject(0).getString("body"))
+    }
+
+    @Test fun imageContextIsAWholeUsefulPrefixWithinExactSerializedCharacterLimit() {
+        val overhead = step("").toString().length + 2
+        val atLimit = step("a".repeat(QuizViewModel.IMAGE_CONTEXT_CHARS - overhead))
+        fun projected(vararg steps: JSONObject) = QuizViewModel.projectSources(listOf(
+            source(1, placeholder, JSONArray(steps.toList()).toString()).apply { imagePath = "fixture" }
+        ), placeholder)
+        val exact = projected(atLimit).single().data.getJSONArray("teachingSteps")
+        assertEquals(QuizViewModel.IMAGE_CONTEXT_CHARS, exact.toString().length)
+        assertEquals(atLimit.getString("body"), exact.getJSONObject(0).getString("body"))
+        val oversized = step(atLimit.getString("body") + "a")
+        assertTrue(projected(oversized, step("Later small step")).isEmpty())
+        val prefix = projected(step(" "), step("Complete first step."), oversized, step("Do not skip ahead."))
+            .single().data.getJSONArray("teachingSteps")
+        assertEquals(1, prefix.length())
+        assertEquals("Complete first step.", prefix.getJSONObject(0).getString("body"))
+        assertTrue(projected(step(" ")).isEmpty())
+    }
+
+    @Test fun normalQuestionAndFinalAreNeverTruncatedAndImagesAreNotResent() {
+        val qa = source(1, "q".repeat(4000), JSONArray().put(step("Must not be added.")).toString()).apply {
+            imagePath = "PRIVATE_PATH"
+            finalAnswer = "f".repeat(4000)
+        }
+        val data = QuizViewModel.projectSources(listOf(qa), placeholder).single().data
+        assertEquals(qa.question, data.getString("question"))
+        assertEquals(qa.finalAnswer, data.getString("finalAnswer"))
+        assertFalse(data.has("teachingSteps"))
+        assertFalse(data.has("imagePath"))
+        assertFalse(data.toString().contains("PRIVATE_PATH"))
+        assertEquals(1, QuizViewModel.projectSources(listOf(source(2, placeholder)), placeholder).size)
     }
 }
 
