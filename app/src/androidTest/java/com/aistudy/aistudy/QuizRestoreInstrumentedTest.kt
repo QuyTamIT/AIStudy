@@ -49,6 +49,35 @@ class QuizRestoreInstrumentedTest {
     private val prefs = context.getSharedPreferences(LoginActivity.PREFS_AUTH, Context.MODE_PRIVATE)
 
     @Test
+    fun formattedMathOptionKeepsRawSelectionAcrossRecreationAndGradesCorrectly() {
+        val rawOption = "\$\\frac{1}{2}\$"
+        fixture(correctOption = rawOption, expectedAnswer = rawOption, question = "1 / 2?") { owner, sessionId ->
+            val intent = Intent(context, QuizActivity::class.java)
+                .putExtra(QuizActivity.EXTRA_SUBJECT, "math")
+                .putExtra(QuizActivity.EXTRA_SESSION_ID, sessionId)
+            ActivityScenario.launch<QuizActivity>(intent).use { scenario ->
+                awaitQuiz(scenario)
+                onView(withText("(1)/(2)")).perform(click())
+                scenario.recreate()
+                awaitQuiz(scenario)
+                onView(withText("(1)/(2)")).check(matches(isChecked()))
+                onView(withId(R.id.btn_primary)).perform(click())
+                await(scenario, R.id.layout_feedback)
+                onView(withId(R.id.tv_feedback_result)).check(matches(withText(R.string.quiz_correct)))
+                val saved = db.quizItemDao().getBySessionId(sessionId).first()
+                assertEquals(rawOption, saved.correctAnswer)
+                assertEquals(rawOption, saved.userAnswer)
+                assertEquals(true, saved.correct)
+                scenario.recreate()
+                awaitQuiz(scenario)
+                onView(withText("(1)/(2)")).check(matches(isChecked())).check(matches(isNotEnabled()))
+                onView(withId(R.id.tv_feedback_result)).check(matches(withText(R.string.quiz_correct)))
+                assertEquals(11, db.profileDao().getByUserId(owner)?.xp)
+            }
+        }
+    }
+
+    @Test
     fun rotationKeepsSelectionFeedbackAndAwardsXpOnlyOnce() = fixture(correctOption = " 4 ") { owner, sessionId ->
         val intent = Intent(context, QuizActivity::class.java)
             .putExtra(QuizActivity.EXTRA_SUBJECT, "math").putExtra("sessionId", sessionId)
@@ -330,15 +359,20 @@ class QuizRestoreInstrumentedTest {
         }
     }
 
-    private fun fixture(correctOption: String = "4", block: (Long, Long) -> Unit) {
+    private fun fixture(
+        correctOption: String = "4",
+        expectedAnswer: String = "4",
+        question: String = "2 + 2?",
+        block: (Long, Long) -> Unit
+    ) {
         val oldId = prefs.getLong(LoginActivity.KEY_USER_ID, 0L)
         val owner = db.userDao().insert(User().apply { email = "quiz-${UUID.randomUUID()}@example.com" })
         ProfileDefaults.ensureExists(db.profileDao(), owner).also { it.xp = 11; db.profileDao().update(it) }
         val sessionId = db.quizSessionDao().insert(QuizSession().apply { userId = owner; subject = "math"; total = 2 })
         db.quizItemDao().insert(QuizItem().apply {
-            this.sessionId = sessionId; type = "mcq"; prompt = "2 + 2?"
+            this.sessionId = sessionId; type = "mcq"; prompt = question
             optionsJson = JSONArray(listOf("3", correctOption, "5", "6")).toString()
-            correctAnswer = "4"; explanation = "Two pairs make four."
+            correctAnswer = expectedAnswer; explanation = "Two pairs make four."
         })
         db.quizItemDao().insert(QuizItem().apply {
             this.sessionId = sessionId; type = "short"; prompt = "One plus one (word)?"; correctAnswer = "two"

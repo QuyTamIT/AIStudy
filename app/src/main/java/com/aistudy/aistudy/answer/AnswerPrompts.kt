@@ -60,6 +60,10 @@ object AnswerPrompts {
         Be honest about uncertainty; never invent facts, citations, sources or missing source content.
         Preserve meaningful Unicode, usable code and mathematical formulas. Escape JSON strings once
         for newlines, quotes and backslashes; do not double-escape prose newlines or damage literal code.
+        This app displays plain text, not LaTeX. Outside code, write math with plain-text/Unicode
+        notation such as x = 12/2, (a + b)/(c - d), x^2, ×, ≤ and ⇒; use parentheses to preserve
+        grouping. Do not use dollar math delimiters or LaTeX commands in titles, prose, expr,
+        final answers, learning tips, quiz questions, choices or explanations. Keep code literal.
         Do not reproduce full copyrighted works; provide a lawful educational alternative.
     """.trimIndent()
 

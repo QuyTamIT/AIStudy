@@ -18,6 +18,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.children
 import androidx.lifecycle.ViewModelProvider
 import com.aistudy.aistudy.R
+import com.aistudy.aistudy.answer.StudyMathText
 import com.aistudy.aistudy.auth.LoginActivity
 import com.aistudy.aistudy.database.QuizItem
 import com.aistudy.aistudy.xp.XpRules
@@ -208,9 +209,11 @@ class QuizActivity : AppCompatActivity() {
             tvFeedbackResult.setText(R.string.quiz_incorrect)
             tvFeedbackResult.setTextColor(ContextCompat.getColor(this, R.color.streak))
             tvFeedbackCorrect.visibility = View.VISIBLE
-            tvFeedbackCorrect.text = getString(R.string.quiz_correct_answer_label, item.correctAnswer)
+            tvFeedbackCorrect.text = getString(R.string.quiz_correct_answer_label,
+                StudyMathText.format(item.correctAnswer.orEmpty()))
         }
-        tvExplanation.text = if (item.explanation.isNullOrEmpty()) "—" else item.explanation
+        tvExplanation.text = if (item.explanation.isNullOrEmpty()) "—"
+            else StudyMathText.format(item.explanation.orEmpty())
 
         setInputsEnabled(false)
         if (currentIndex < items.size - 1) {
@@ -233,7 +236,7 @@ class QuizActivity : AppCompatActivity() {
         val item = items[currentIndex]
         tvProgress.text = getString(R.string.quiz_progress, currentIndex + 1, items.size)
         tvItemType.text = typeLabel(item.type)
-        tvPrompt.text = item.prompt
+        tvPrompt.text = StudyMathText.format(item.prompt.orEmpty())
         layoutFeedback.visibility = View.GONE
         btnPrimary.isEnabled = true
         btnPrimary.setText(R.string.quiz_check)
@@ -254,7 +257,8 @@ class QuizActivity : AppCompatActivity() {
                     val option = options.getString(i)
                     val rb = RadioButton(this)
                     rb.id = View.generateViewId()
-                    rb.text = option
+                    rb.text = StudyMathText.format(option)
+                    rb.tag = option
                     rb.setTextColor(ContextCompat.getColor(this, R.color.answer_foreground))
                     rb.setPadding(padH, padV, padH, padV)
                     rb.minHeight = dp(48)
@@ -265,10 +269,10 @@ class QuizActivity : AppCompatActivity() {
 
             val selected = item.userAnswer ?: restoredDraft
             val options = groupOptions.children.filterIsInstance<RadioButton>()
-            val checked = options.firstOrNull { it.text.toString() == selected }
+            val checked = options.firstOrNull { it.tag == selected }
                 ?: item.userAnswer?.let { saved ->
                     // Older versions trimmed the option before saving the answer.
-                    options.firstOrNull { it.text.toString().trim() == saved }
+                    options.firstOrNull { (it.tag as String).trim() == saved }
                 }
             checked?.let { groupOptions.check(it.id) }
         } else {
@@ -282,7 +286,7 @@ class QuizActivity : AppCompatActivity() {
 
     private fun currentInput(): String {
         if (items.getOrNull(currentIndex)?.type != "mcq") return etAnswer.text?.toString().orEmpty()
-        return findViewById<RadioButton>(groupOptions.checkedRadioButtonId)?.text?.toString().orEmpty()
+        return (findViewById<RadioButton>(groupOptions.checkedRadioButtonId)?.tag as? String).orEmpty()
     }
 
     private fun isCurrentSession(): Boolean = userId > 0L && getSharedPreferences(LoginActivity.PREFS_AUTH, MODE_PRIVATE)

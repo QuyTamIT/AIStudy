@@ -1,6 +1,7 @@
 package com.aistudy.aistudy
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -40,6 +41,8 @@ class MainActivity : AppCompatActivity() {
         const val TAB_ASK = "ask"
         const val TAB_HISTORY = "history"
         const val TAB_PROGRESS = "progress"
+        private const val PREFS_NOTIFICATION_PERMISSION = "notification_permission"
+        private const val KEY_PERMISSION_REQUESTED = "requested"
     }
 
     private lateinit var bottomNav: BottomNavigationView
@@ -153,6 +156,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("UseKtx") // Check commit's result; do not prompt if persisting the decision fails.
     private fun requestNotificationPermissionIfNeeded() {
         if (Build.VERSION.SDK_INT < 33) {
             return
@@ -162,6 +166,13 @@ class MainActivity : AppCompatActivity() {
         ) {
             return
         }
-        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        val preferences = getSharedPreferences(PREFS_NOTIFICATION_PERMISSION, MODE_PRIVATE)
+        if (preferences.getBoolean(KEY_PERMISSION_REQUESTED, false)) return
+
+        // Persist before opening the dialog so recreation cannot prompt again after a denial.
+        if (!preferences.edit().putBoolean(KEY_PERMISSION_REQUESTED, true).commit()) return
+        if (!shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
     }
 }

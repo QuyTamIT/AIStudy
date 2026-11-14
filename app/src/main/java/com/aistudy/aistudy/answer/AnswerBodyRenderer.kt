@@ -18,7 +18,7 @@ internal object AnswerBodyRenderer {
         val container = stepView.findViewById<LinearLayout>(R.id.layout_answer_text_blocks)
         val blocks = AnswerTextBlocks.split(source)
         if (blocks.none { it.isCode }) {
-            prose.text = sanitizeProse(source)
+            prose.text = StudyMathText.format(sanitizeProse(source))
             prose.visibility = View.VISIBLE
             container.visibility = View.GONE
             return
@@ -32,7 +32,7 @@ internal object AnswerBodyRenderer {
             val layout = if (block.isCode) R.layout.item_answer_code else R.layout.item_answer_prose
             val view = inflater.inflate(layout, container, false)
             view.findViewById<TextView>(R.id.tv_answer_text_block).text =
-                if (block.isCode) block.text else sanitizeProse(block.text)
+                if (block.isCode) block.text else StudyMathText.format(sanitizeProse(block.text))
             container.addView(view)
         }
     }

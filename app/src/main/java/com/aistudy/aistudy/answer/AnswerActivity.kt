@@ -256,7 +256,7 @@ class AnswerActivity : AppCompatActivity() {
             else -> R.string.answer_final_label_takeaway
         }
         findViewById<TextView>(R.id.tv_final_title).setText(finalLabelRes)
-        findViewById<TextView>(R.id.tv_final_answer).setTextIfChanged(item.finalAnswer.orEmpty())
+        findViewById<TextView>(R.id.tv_final_answer).setTextIfChanged(StudyMathText.format(item.finalAnswer.orEmpty()))
         val finalVisibility = if (content.showFinalAnswer(item.subject) && !item.finalAnswer.isNullOrBlank()) View.VISIBLE else View.GONE
         findViewById<View>(R.id.layout_final_answer).visibility = finalVisibility
 
@@ -275,7 +275,7 @@ class AnswerActivity : AppCompatActivity() {
             for (index in renderedSteps.size until content.steps.size) {
                 val step = content.steps[index]
                 val stepView = layoutInflater.inflate(R.layout.item_answer_step, container, false)
-                val title = step.title.trim()
+                val title = StudyMathText.format(step.title.trim())
 
                 val stepNumberView = stepView.findViewById<TextView>(R.id.tv_answer_step_number)
                 val connectorView = stepView.findViewById<View>(R.id.answer_step_connector)
@@ -305,7 +305,7 @@ class AnswerActivity : AppCompatActivity() {
                 }
 
                 AnswerBodyRenderer.bind(stepView, step.body)
-                stepView.findViewById<TextView>(R.id.tv_answer_step_expr).text = step.expr
+                stepView.findViewById<TextView>(R.id.tv_answer_step_expr).text = StudyMathText.format(step.expr)
                 stepView.findViewById<View>(R.id.layout_answer_step_expr).visibility =
                     if (step.expr.isBlank()) View.GONE else View.VISIBLE
                 container.addView(stepView)
@@ -414,7 +414,7 @@ class AnswerActivity : AppCompatActivity() {
         styleExtraButtons()
         val cached = readExtraField(key)
         if (!cached.isNullOrEmpty()) {
-            tvExtras.text = cached
+            tvExtras.text = StudyMathText.format(cached)
             return
         }
         loadExtras(key)
@@ -445,7 +445,8 @@ class AnswerActivity : AppCompatActivity() {
                     extrasLoading = false
                     progressExtras.visibility = View.GONE
                     val text = AnswerContent.extraField(extras, focusKey)
-                    if (text.isNullOrEmpty()) tvExtras.setText(R.string.answer_extras_error) else tvExtras.text = text
+                    if (text.isNullOrEmpty()) tvExtras.setText(R.string.answer_extras_error)
+                    else tvExtras.text = StudyMathText.format(text)
                 }
             } catch (_: Exception) {
                 runOnUiThread {
