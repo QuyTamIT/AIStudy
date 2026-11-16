@@ -5,7 +5,6 @@ import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.os.SystemClock
-import android.view.accessibility.AccessibilityEvent
 import android.view.View
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
@@ -50,8 +49,8 @@ class AuthFlowInstrumentedTest {
         val password = "TestPass123!"
         val originalUserId = preferences.getLong(LoginActivity.KEY_USER_ID, 0L)
         val originalUserCount = userCount()
-        // Exercise the screens without clearing existing accounts or session preferences.
-
+        instrumentation.uiAutomation.executeShellCommand("pm grant ${context.packageName} android.permission.POST_NOTIFICATIONS").close()
+        assertTrue(preferences.edit().remove(LoginActivity.KEY_USER_ID).commit())
         try {
             ActivityScenario.launch(LoginActivity::class.java).use {
                 awaitActivity(LoginActivity::class.java)
@@ -71,22 +70,23 @@ class AuthFlowInstrumentedTest {
                 assertNull(database.userDao().findByEmail(email))
 
                 onView(withId(R.id.edit_password)).perform(replaceText(password), closeSoftKeyboard())
-                assertEquals("Đăng ký tài khoản thành công!", context.getString(R.string.auth_success_register))
-                submitExpectingToast(R.string.auth_success_register)
-                awaitActivity(LoginActivity::class.java)
+                onView(withId(R.id.btn_submit)).perform(scrollTo(), click())
+                awaitActivity(OnboardingActivity::class.java)
                 val account = database.userDao().findByEmail(email)
                 assertNotNull(account)
                 val userId = requireNotNull(account).id
                 assertTrue(userId > 0L)
                 assertEquals("Auth Regression", account.fullName)
                 assertEquals(originalUserCount + 1, userCount())
-                assertEquals(originalUserId, preferences.getLong(LoginActivity.KEY_USER_ID, 0L))
-                assertSingleLoginActivity()
+                assertEquals(userId, preferences.getLong(LoginActivity.KEY_USER_ID, 0L))
                 val defaultProfile = requireNotNull(database.profileDao().getByUserId(userId))
                 assertFalse(defaultProfile.onboarded)
                 assertEquals(0, defaultProfile.xp)
                 assertEquals(0, defaultProfile.streak)
 
+                completeOnboarding(userId)
+                awaitActivity(MainActivity::class.java)
+                logoutAndAssertAccount(email, userId)
                 onView(withId(R.id.btn_toggle_mode)).perform(scrollTo(), click())
                 awaitActivity(RegisterActivity::class.java)
                 onView(withId(R.id.edit_full_name)).perform(replaceText("Duplicate Account"))
@@ -98,19 +98,17 @@ class AuthFlowInstrumentedTest {
                 assertEquals(userId, database.userDao().findByEmail(email)?.id)
                 assertEquals("Auth Regression", database.userDao().findByEmail(email)?.fullName)
                 assertEquals(originalUserCount + 1, userCount())
-                assertEquals(originalUserId, preferences.getLong(LoginActivity.KEY_USER_ID, 0L))
+                assertNoSession()
 
                 onView(withId(R.id.btn_toggle_mode)).perform(scrollTo(), click())
                 awaitActivity(LoginActivity::class.java)
                 fillLogin(email, "WrongPassword")
                 submitExpectingToast(R.string.auth_error_invalid_credentials)
                 awaitActivity(LoginActivity::class.java)
-                assertEquals(originalUserId, preferences.getLong(LoginActivity.KEY_USER_ID, 0L))
+                assertNoSession()
 
                 fillLogin(email, password)
                 onView(withId(R.id.btn_submit)).perform(scrollTo(), click())
-                awaitActivity(OnboardingActivity::class.java)
-                completeOnboarding(userId)
                 awaitActivity(MainActivity::class.java)
                 assertEquals(userId, preferences.getLong(LoginActivity.KEY_USER_ID, 0L))
 
@@ -145,9 +143,14 @@ class AuthFlowInstrumentedTest {
         } finally {
             val activity = resumedActivity()
             instrumentation.runOnMainSync { activity?.finishAndRemoveTask() }
-            if (originalUserId > 0L) {
-                assertTrue(preferences.edit().putLong(LoginActivity.KEY_USER_ID, originalUserId).commit())
+            database.userDao().findByEmail(email)?.id?.let { createdId ->
+                database.openHelper.writableDatabase.execSQL("DELETE FROM friends WHERE ownerUserId = ?", arrayOf(createdId))
+                database.openHelper.writableDatabase.execSQL("DELETE FROM profiles WHERE userId = ?", arrayOf(createdId))
+                database.openHelper.writableDatabase.execSQL("DELETE FROM users WHERE id = ?", arrayOf(createdId))
             }
+            preferences.edit().remove(LoginActivity.KEY_USER_ID).also {
+                if (originalUserId > 0L) it.putLong(LoginActivity.KEY_USER_ID, originalUserId)
+            }.commit()
         }
     }
 
@@ -218,7 +221,9 @@ class AuthFlowInstrumentedTest {
     }
 
     private fun logoutAndAssertAccount(email: String, userId: Long) {
+        onView(withId(R.id.nav_progress)).perform(click())
         onView(withId(R.id.btn_logout)).perform(click())
+        onView(withId(android.R.id.button1)).perform(click())
         awaitActivity(LoginActivity::class.java)
         assertNoSession()
         assertSingleLoginActivity()
@@ -226,17 +231,31 @@ class AuthFlowInstrumentedTest {
     }
 
     private fun submitExpectingToast(message: Int, buttonId: Int = R.id.btn_submit) {
+        onView(withId(buttonId)).perform(scrollTo(), click())
         val expected = context.getString(message)
-        instrumentation.uiAutomation.executeAndWaitForEvent(
-            { onView(withId(buttonId)).perform(scrollTo(), click()) },
-            { event ->
-                event.eventType == AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED &&
-                    event.text.any { it.toString() == expected }
-            },
-            10_000L
-        )
-        // Allow the toast to finish before submitting the next form.
-        SystemClock.sleep(2_200L)
+        val deadline = SystemClock.uptimeMillis() + 10_000L
+        while (SystemClock.uptimeMillis() < deadline) {
+            var displayed = false
+            instrumentation.runOnMainSync {
+                val activity = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED).firstOrNull()
+                val fieldId = when (message) {
+                    R.string.auth_error_invalid_email, R.string.auth_error_email_taken -> R.id.input_email
+                    R.string.auth_error_password_short -> R.id.input_password
+                    else -> 0
+                }
+                displayed = if (fieldId != 0) {
+                    activity?.findViewById<com.google.android.material.textfield.TextInputLayout>(fieldId)?.error?.toString() == expected
+                } else {
+                    val textId = if (message == R.string.onboarding_pick_subject) R.id.tv_subject_error else R.id.tv_auth_error
+                    activity?.findViewById<android.widget.TextView>(textId)?.let {
+                        it.visibility == View.VISIBLE && it.text.toString() == expected
+                    } == true
+                }
+            }
+            if (displayed) return
+            SystemClock.sleep(50)
+        }
+        throw AssertionError("Expected inline validation: $expected")
     }
 
     private fun assertNoSession() {

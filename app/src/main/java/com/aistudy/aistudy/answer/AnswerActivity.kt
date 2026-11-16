@@ -32,8 +32,6 @@ import com.google.android.material.button.MaterialButton
 import java.util.Calendar
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import org.json.JSONArray
-import org.json.JSONObject
 
 class AnswerActivity : AppCompatActivity() {
     private lateinit var model: AnswerViewModel
@@ -42,6 +40,7 @@ class AnswerActivity : AppCompatActivity() {
     private var renderedSteps = emptyList<AnswerStep>()
 
     private var qaDao: QuestionAnswerDao? = null
+    private lateinit var answerRepository: AnswerRepository
     private lateinit var profileDao: ProfileDao
     private var currentQa: QuestionAnswer? = null
     private var extrasExecutor: ExecutorService? = null
@@ -129,12 +128,12 @@ class AnswerActivity : AppCompatActivity() {
 
         val preferences = getSharedPreferences(LoginActivity.PREFS_AUTH, MODE_PRIVATE)
         val apiKey = BuildConfig.GEMINI_API_KEY
-        val repository = AnswerRepository(database.questionAnswerDao(), qaId, userId,
-            { preferences.getLong(LoginActivity.KEY_USER_ID, 0L) }) { prompt, schema ->
+        answerRepository = AnswerRepository(database.questionAnswerDao(), qaId, userId,
+            { preferences.getLong(LoginActivity.KEY_USER_ID, 0L) }) { prompt, schema, instruction, trace ->
             if (apiKey.isBlank() || apiKey.startsWith("YOUR_", ignoreCase = true)) {
                 throw AnswerViewModel.MissingKeyException()
             }
-            GeminiClient.ask(apiKey, prompt, schema)
+            GeminiClient.ask(apiKey, prompt, schema, instruction, trace)
         }
         model.state.observe(this) { state ->
             if (isFinishing || isDestroyed) return@observe
@@ -149,7 +148,7 @@ class AnswerActivity : AppCompatActivity() {
                 maybeAutoReview()
             }
         }
-        model.start(repository)
+        model.start(answerRepository)
         reviewSessionStartMs = System.currentTimeMillis()
     }
 
@@ -257,7 +256,7 @@ class AnswerActivity : AppCompatActivity() {
             else -> R.string.answer_final_label_takeaway
         }
         findViewById<TextView>(R.id.tv_final_title).setText(finalLabelRes)
-        findViewById<TextView>(R.id.tv_final_answer).setTextIfChanged(item.finalAnswer.orEmpty())
+        findViewById<TextView>(R.id.tv_final_answer).setTextIfChanged(StudyMathText.format(item.finalAnswer.orEmpty()))
         val finalVisibility = if (content.showFinalAnswer(item.subject) && !item.finalAnswer.isNullOrBlank()) View.VISIBLE else View.GONE
         findViewById<View>(R.id.layout_final_answer).visibility = finalVisibility
 
@@ -276,7 +275,7 @@ class AnswerActivity : AppCompatActivity() {
             for (index in renderedSteps.size until content.steps.size) {
                 val step = content.steps[index]
                 val stepView = layoutInflater.inflate(R.layout.item_answer_step, container, false)
-                val title = step.title.trim()
+                val title = StudyMathText.format(step.title.trim())
 
                 val stepNumberView = stepView.findViewById<TextView>(R.id.tv_answer_step_number)
                 val connectorView = stepView.findViewById<View>(R.id.answer_step_connector)
@@ -306,7 +305,7 @@ class AnswerActivity : AppCompatActivity() {
                 }
 
                 AnswerBodyRenderer.bind(stepView, step.body)
-                stepView.findViewById<TextView>(R.id.tv_answer_step_expr).text = step.expr
+                stepView.findViewById<TextView>(R.id.tv_answer_step_expr).text = StudyMathText.format(step.expr)
                 stepView.findViewById<View>(R.id.layout_answer_step_expr).visibility =
                     if (step.expr.isBlank()) View.GONE else View.VISIBLE
                 container.addView(stepView)
@@ -371,27 +370,30 @@ class AnswerActivity : AppCompatActivity() {
 
     private fun markReviewed() {
         val item = currentQa ?: return
+        if (!isCurrentSession() || item.userId != userId) return
         val now = System.currentTimeMillis()
         if (item.reviewedAt != 0L && isSameDay(item.reviewedAt, now)) {
             refreshReviewButton()
             return
         }
-
-        val firstReview = item.reviewedAt == 0L || !isSameDay(item.reviewedAt, now)
+        val previousReviewedAt = item.reviewedAt
         item.reviewedAt = now
         refreshReviewButton()
-
         extrasExecutor?.execute {
-            qaDao?.updateReviewedAt(item.id, now)
-            if (firstReview) {
-                val profile = profileDao.getByUserId(item.userId)
+            val db = AppDatabase.getInstance(applicationContext)
+            var awarded = false
+            db.runInTransaction {
+                if (!isCurrentSession()) return@runInTransaction
+                if (qaDao?.updateReviewedAt(item.id, userId, previousReviewedAt, now) != 1) return@runInTransaction
+                val profile = profileDao.getByUserId(userId)
                 if (profile != null) {
                     XpRules.addXp(profile, profileDao, XpRules.REVIEW)
-                    runOnUiThread {
-                        if (!isFinishing && !isDestroyed) {
-                            Toast.makeText(this@AnswerActivity, R.string.answer_review_xp_toast, Toast.LENGTH_SHORT).show()
-                        }
-                    }
+                    awarded = true
+                }
+            }
+            runOnUiThread {
+                if (awarded && isCurrentSession() && !isFinishing && !isDestroyed) {
+                    Toast.makeText(this@AnswerActivity, R.string.answer_review_xp_toast, Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -407,12 +409,12 @@ class AnswerActivity : AppCompatActivity() {
 
     // Phase 9: Learning Extras Actions & On-demand Gemini caching
     private fun onExtraAction(key: String) {
-        if (extrasLoading) return
+        if (extrasLoading || !isCurrentSession()) return
         activeExtraKey = key
         styleExtraButtons()
         val cached = readExtraField(key)
         if (!cached.isNullOrEmpty()) {
-            tvExtras.text = cached
+            tvExtras.text = StudyMathText.format(cached)
             return
         }
         loadExtras(key)
@@ -425,33 +427,30 @@ class AnswerActivity : AppCompatActivity() {
             return
         }
         val item = currentQa ?: return
-
+        val snapshot = model.state.value?.snapshot ?: return
+        if (snapshot.item.id != item.id || snapshot.item.userId != userId || !isCurrentSession()) return
         extrasLoading = true
         progressExtras.visibility = View.VISIBLE
         tvExtras.setText(R.string.answer_extras_loading)
 
-        val prompt = buildExtrasPrompt(item)
         extrasExecutor?.execute {
+            if (!isCurrentSession()) return@execute
             try {
-                val raw = GeminiClient.ask(apiKey, prompt)
-                val jsonText = extractJson(raw)
-                val extras = JSONObject(jsonText)
-                val payload = extras.toString()
-                item.extrasJson = payload
-                qaDao?.updateExtras(item.id, payload)
-
+                val extras = answerRepository.extras(snapshot)
                 runOnUiThread {
+                    if (!isCurrentSession() || isFinishing || isDestroyed) return@runOnUiThread
+                    val current = currentQa
+                    if (current == null || current.id != snapshot.item.id || current.userId != userId) return@runOnUiThread
+                    current.extrasJson = extras.toString()
                     extrasLoading = false
                     progressExtras.visibility = View.GONE
-                    val text = formatExtra(extras, focusKey)
-                    if (text.isNullOrEmpty()) {
-                        tvExtras.setText(R.string.answer_extras_error)
-                    } else {
-                        tvExtras.text = text
-                    }
+                    val text = AnswerContent.extraField(extras, focusKey)
+                    if (text.isNullOrEmpty()) tvExtras.setText(R.string.answer_extras_error)
+                    else tvExtras.text = StudyMathText.format(text)
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 runOnUiThread {
+                    if (!isCurrentSession() || isFinishing || isDestroyed) return@runOnUiThread
                     extrasLoading = false
                     progressExtras.visibility = View.GONE
                     tvExtras.setText(R.string.answer_extras_error)
@@ -464,48 +463,8 @@ class AnswerActivity : AppCompatActivity() {
     private fun readExtraField(key: String): String? {
         val extrasJson = currentQa?.extrasJson
         if (extrasJson.isNullOrEmpty()) return null
-        return try {
-            formatExtra(JSONObject(extrasJson), key)
-        } catch (e: Exception) {
-            null
-        }
+        return try { AnswerContent.extraField(org.json.JSONObject(extrasJson), key) } catch (_: Exception) { null }
     }
-
-    private fun formatExtra(extras: JSONObject, key: String): String? {
-        return try {
-            val value = extras.opt(key)
-            if (value == null || JSONObject.NULL == value) return null
-            if (value is JSONArray) {
-                val sb = StringBuilder()
-                for (i in 0 until value.length()) {
-                    if (i > 0) sb.append("\n\n")
-                    sb.append("• ").append(value.getString(i))
-                }
-                return sb.toString()
-            }
-            value.toString()
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    private fun buildExtrasPrompt(item: QuestionAnswer): String {
-        return "You are AI Study Mentor. Given this solved question, return ONLY valid JSON " +
-            "(no markdown) with learning support fields:\n" +
-            "{\n" +
-            "  \"simplify\": \"simpler explanation in English\",\n" +
-            "  \"alternative\": \"another way to solve in English\",\n" +
-            "  \"concepts\": [\"key concept 1\", \"key concept 2\"],\n" +
-            "  \"mistakes\": [\"common mistake 1\", \"common mistake 2\"],\n" +
-            "  \"followUps\": [\"follow-up question 1\", \"follow-up question 2\"]\n" +
-            "}\n\n" +
-            "Subject: ${item.subject}\n" +
-            "Difficulty: ${item.difficulty ?: "medium"}\n" +
-            "Question: ${item.question}\n" +
-            "Final answer: ${item.finalAnswer}\n" +
-            "Steps JSON: ${item.steps}"
-    }
-
     private fun styleExtraButtons() {
         styleAction(btnSimplify, KEY_SIMPLIFY == activeExtraKey)
         styleAction(btnAlternative, KEY_ALTERNATIVE == activeExtraKey)
@@ -524,32 +483,8 @@ class AnswerActivity : AppCompatActivity() {
         }
     }
 
-    private fun decodeSampledBitmap(path: String, reqWidth: Int, reqHeight: Int): Bitmap? {
-        val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        BitmapFactory.decodeFile(path, options)
-        if (options.outWidth <= 0 || options.outHeight <= 0) return null
-        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight)
-        options.inJustDecodeBounds = false
-        return try {
-            BitmapFactory.decodeFile(path, options)
-        } catch (_: OutOfMemoryError) {
-            null
-        }
-    }
-
-    private fun calculateInSampleSize(options: BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int {
-        val height = options.outHeight
-        val width = options.outWidth
-        var inSampleSize = 1
-        if (height > reqHeight || width > reqWidth) {
-            val halfHeight = height / 2
-            val halfWidth = width / 2
-            while ((halfHeight / inSampleSize) >= reqHeight && (halfWidth / inSampleSize) >= reqWidth) {
-                inSampleSize *= 2
-            }
-        }
-        return inSampleSize
-    }
+    private fun decodeSampledBitmap(path: String, reqWidth: Int, reqHeight: Int): Bitmap? =
+        com.aistudy.aistudy.ask.ImagePreparation.decodeSampledBitmap(path, reqWidth, reqHeight)
 
     private fun difficultyLabel(difficulty: String?): String {
         return when (difficulty?.lowercase()) {
@@ -570,15 +505,6 @@ class AnswerActivity : AppCompatActivity() {
         }
     }
 
-    private fun extractJson(raw: String): String {
-        val text = raw.trim()
-        val start = text.indexOf('{')
-        val end = text.lastIndexOf('}')
-        if (start >= 0 && end > start) {
-            return text.substring(start, end + 1)
-        }
-        return text
-    }
 
     private fun TextView.setTextIfChanged(value: String) {
         if (text.toString() != value) text = value
@@ -592,7 +518,7 @@ class AnswerActivity : AppCompatActivity() {
     private fun flushReviewSeconds() {
         val item = currentQa
         val dao = qaDao
-        if (item == null || dao == null || reviewSessionStartMs <= 0) {
+        if (item == null || dao == null || reviewSessionStartMs <= 0 || !isCurrentSession() || item.userId != userId) {
             return
         }
         val elapsedMs = System.currentTimeMillis() - reviewSessionStartMs
@@ -607,9 +533,13 @@ class AnswerActivity : AppCompatActivity() {
         item.reviewedSeconds += delta
         val id = item.id
         extrasExecutor?.execute {
-            dao.addReviewedSeconds(id, delta)
+            if (isCurrentSession()) dao.addReviewedSeconds(id, userId, delta)
         }
     }
+
+    private fun isCurrentSession(): Boolean = userId > 0L &&
+        getSharedPreferences(LoginActivity.PREFS_AUTH, MODE_PRIVATE)
+            .getLong(LoginActivity.KEY_USER_ID, 0L) == userId
 
     override fun onDestroy() {
         flushReviewSeconds()

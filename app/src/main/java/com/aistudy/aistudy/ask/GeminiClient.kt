@@ -1,7 +1,6 @@
 package com.aistudy.aistudy.ask
 
 import android.os.Looper
-import android.util.Log
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
@@ -13,7 +12,6 @@ import org.json.JSONException
 import org.json.JSONObject
 
 object GeminiClient {
-    private const val TAG = "GeminiClient"
     private const val MODEL = "gemini-3.6-flash"
     private const val MAX_RETRIES = 2
     private const val INITIAL_BACKOFF_MS = 1_000L
@@ -32,20 +30,14 @@ object GeminiClient {
     ) : IOException("Gemini HTTP $statusCode (${reason.name})")
     class InvalidResponseException : IOException("Gemini did not return a complete answer")
 
-    fun ask(apiKey: String, prompt: String): String =
-        ask(apiKey, prompt, responseSchema = null, imageBase64 = null, mimeType = null)
-
-    fun ask(apiKey: String, prompt: String, responseSchema: JSONObject?): String =
-        ask(apiKey, prompt, responseSchema, imageBase64 = null, mimeType = null)
-
-    fun ask(apiKey: String, prompt: String, imageBase64: String?, mimeType: String?): String =
-        ask(apiKey, prompt, responseSchema = null, imageBase64 = imageBase64, mimeType = mimeType)
 
     // Blocking REST call: callers must use a background executor.
     fun ask(
         apiKey: String,
         prompt: String,
-        responseSchema: JSONObject? = null,
+        responseSchema: JSONObject,
+        systemInstruction: String,
+        trace: AiRequestTrace,
         imageBase64: String? = null,
         mimeType: String? = null
     ): String {
@@ -53,99 +45,109 @@ object GeminiClient {
         check(Looper.myLooper() != Looper.getMainLooper()) {
             "Gemini requests must run on a background thread"
         }
-        var retries = 0
-        while (true) {
-            if (Thread.currentThread().isInterrupted) throw InterruptedException()
-            try {
-                return askOnce(apiKey, prompt, retries, responseSchema, imageBase64, mimeType)
-            } catch (error: RequestException) {
-                if (error.statusCode !in RETRYABLE_STATUS_CODES || retries >= MAX_RETRIES) {
-                    throw error
+        return execute(apiKey, prompt, responseSchema, systemInstruction, trace, imageBase64, mimeType)
+    }
+
+    internal fun execute(
+        apiKey: String,
+        prompt: String,
+        responseSchema: JSONObject,
+        systemInstruction: String,
+        trace: AiRequestTrace,
+        imageBase64: String? = null,
+        mimeType: String? = null,
+        connectionFactory: (URL) -> HttpURLConnection = { it.openConnection() as HttpURLConnection },
+        wait: (Long) -> Unit = Thread::sleep,
+        wallClock: () -> Long = System::currentTimeMillis
+    ): String {
+        trace.beginGeneration()
+        try {
+            var retries = 0
+            while (true) {
+                if (Thread.currentThread().isInterrupted) throw InterruptedException()
+                try {
+                    return askOnce(apiKey, prompt, responseSchema, systemInstruction, trace,
+                        imageBase64, mimeType, connectionFactory, wallClock)
+                } catch (error: RequestException) {
+                    if (error.statusCode !in RETRYABLE_STATUS_CODES || retries >= MAX_RETRIES) throw error
+                    val backoffMillis = (INITIAL_BACKOFF_MS * (1L shl retries))
+                        .coerceAtMost(MAX_RETRY_DELAY_MS)
+                    val delayMillis = maxOf(backoffMillis, error.retryAfterMillis ?: 0L)
+                    if (delayMillis > MAX_RETRY_DELAY_MS) throw error
+                    retries++
+                    wait(delayMillis)
                 }
-                val backoffMillis = (INITIAL_BACKOFF_MS * (1L shl retries))
-                    .coerceAtMost(MAX_RETRY_DELAY_MS)
-                val delayMillis = maxOf(backoffMillis, error.retryAfterMillis ?: 0L)
-                // Never retry earlier than Retry-After, or keep the user waiting indefinitely.
-                if (delayMillis > MAX_RETRY_DELAY_MS) {
-                    Log.w(TAG, "retry skipped httpCode=${error.statusCode} retry=$retries/$MAX_RETRIES reason=retry_after_exceeds_limit")
-                    throw error
-                }
-                retries++
-                Log.d(TAG, "retry scheduled httpCode=${error.statusCode} retry=$retries/$MAX_RETRIES delayMs=$delayMillis")
-                // shutdownNow() in AskFragment interrupts this wait when its view is destroyed.
-                Thread.sleep(delayMillis)
             }
+        } finally {
+            trace.endGeneration()
         }
     }
 
     private fun askOnce(
         apiKey: String,
         prompt: String,
-        retries: Int,
-        responseSchema: JSONObject?,
+        responseSchema: JSONObject,
+        systemInstruction: String,
+        trace: AiRequestTrace,
         imageBase64: String?,
-        mimeType: String?
+        mimeType: String?,
+        connectionFactory: (URL) -> HttpURLConnection,
+        wallClock: () -> Long
     ): String {
-        val hasImage = !imageBase64.isNullOrEmpty()
-        Log.d(TAG, "request start model=$MODEL promptLength=${prompt.length} hasImage=$hasImage retry=$retries/$MAX_RETRIES")
-
-        val connection = URL(
-            "https://generativelanguage.googleapis.com/v1beta/models/$MODEL:generateContent"
-        ).openConnection() as HttpURLConnection
+        trace.beginAttempt()
+        var connection: HttpURLConnection? = null
+        var status: Int? = null
+        var outcome = AiRequestTrace.Outcome.REQUEST_FAILED
+        var reason = AiRequestTrace.Reason.NETWORK_ERROR
         try {
-            connection.requestMethod = "POST"
-            connection.connectTimeout = 30_000
-            connection.readTimeout = 90_000
-            connection.instanceFollowRedirects = false
-            connection.doOutput = true
-            connection.setRequestProperty("Content-Type", "application/json; charset=utf-8")
-            // Keep credentials out of URLs, logs, and exception messages.
-            connection.setRequestProperty("x-goog-api-key", apiKey)
+            val request = connectionFactory(URL(
+                "https://generativelanguage.googleapis.com/v1beta/models/$MODEL:generateContent"))
+            connection = request
+            request.requestMethod = "POST"
+            request.connectTimeout = 30_000
+            request.readTimeout = 90_000
+            request.instanceFollowRedirects = false
+            request.doOutput = true
+            request.setRequestProperty("Content-Type", "application/json; charset=utf-8")
+            request.setRequestProperty("x-goog-api-key", apiKey)
             val generationConfig = JSONObject().put("responseMimeType", "application/json")
-            if (responseSchema != null) generationConfig.put("responseJsonSchema", responseSchema)
-
-            val parts = JSONArray()
-            parts.put(JSONObject().put("text", prompt))
-
-            if (hasImage) {
-                val mime = if (mimeType.isNullOrEmpty()) "image/jpeg" else mimeType
-                parts.put(
-                    JSONObject().put(
-                        "inline_data",
-                        JSONObject()
-                            .put("mime_type", mime)
-                            .put("data", imageBase64)
-                    )
-                )
+                .put("responseJsonSchema", responseSchema)
+            val parts = JSONArray().put(JSONObject().put("text", prompt))
+            if (!imageBase64.isNullOrEmpty()) {
+                parts.put(JSONObject().put("inline_data", JSONObject()
+                    .put("mime_type", mimeType?.takeIf { it.isNotEmpty() } ?: "image/jpeg")
+                    .put("data", imageBase64)))
             }
-
             val payload = JSONObject()
-                .put(
-                    "contents",
-                    JSONArray().put(
-                        JSONObject()
-                            .put("role", "user")
-                            .put("parts", parts)
-                    )
-                )
+                .put("systemInstruction", JSONObject().put("parts",
+                    JSONArray().put(JSONObject().put("text", systemInstruction))))
+                .put("contents", JSONArray().put(JSONObject().put("role", "user").put("parts", parts)))
                 .put("generationConfig", generationConfig)
-
             val bytes = payload.toString().toByteArray(Charsets.UTF_8)
-            connection.setFixedLengthStreamingMode(bytes.size)
-            connection.outputStream.use { it.write(bytes) }
+            request.setFixedLengthStreamingMode(bytes.size)
+            request.outputStream.use { it.write(bytes) }
 
-            val code = connection.responseCode
-            Log.d(TAG, "response httpCode=$code retry=$retries/$MAX_RETRIES")
+            val code = request.responseCode
+            status = code
             if (code !in 200..299) {
-                val error = readRequestError(connection, code)
-                // Only allowlisted reason codes are logged; never the raw response body.
-                Log.w(TAG, "request failed httpCode=$code retry=$retries/$MAX_RETRIES reason=${error.reason.name}")
-                throw error
+                // A failed error-body read must still follow the original HTTP retry policy.
+                val body = try {
+                    request.errorStream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
+                } catch (_: IOException) { "" }
+                val envelope = try { JSONObject(body) } catch (_: JSONException) { null }
+                if (envelope != null) trace.captureResponse(envelope)
+                throw readRequestError(request, code, envelope, wallClock)
             }
-            val response = connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
-            val candidate = JSONObject(response).optJSONArray("candidates")?.optJSONObject(0)
-                ?: throw InvalidResponseException()
+            val body = request.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+            val response = JSONObject(body)
+            trace.captureResponse(response)
+            outcome = AiRequestTrace.Outcome.INVALID_RESPONSE
+            val candidate = response.optJSONArray("candidates")?.optJSONObject(0)
+            reason = AiRequestTrace.Reason.MISSING_CONTENT
+            if (candidate == null) throw InvalidResponseException()
+            reason = AiRequestTrace.Reason.NON_STOP
             if (candidate.optString("finishReason") != "STOP") throw InvalidResponseException()
+            reason = AiRequestTrace.Reason.MISSING_CONTENT
             val candidateParts = candidate.optJSONObject("content")?.optJSONArray("parts")
                 ?: throw InvalidResponseException()
             val answer = buildString {
@@ -154,26 +156,42 @@ object GeminiClient {
                     if (!part.optBoolean("thought", false)) append(part.optString("text", ""))
                 }
             }.trim()
+            reason = AiRequestTrace.Reason.EMPTY_CONTENT
             if (answer.isBlank()) throw InvalidResponseException()
+            outcome = AiRequestTrace.Outcome.SUCCESS
+            reason = AiRequestTrace.Reason.NONE
             return answer
+        } catch (error: Exception) {
+            when (error) {
+                is RequestException -> {
+                    outcome = AiRequestTrace.Outcome.REQUEST_FAILED
+                    reason = if (error.reason == ErrorReason.UNKNOWN) AiRequestTrace.Reason.HTTP_ERROR
+                        else AiRequestTrace.Reason.valueOf(error.reason.name)
+                }
+                is JSONException -> {
+                    outcome = AiRequestTrace.Outcome.INVALID_RESPONSE
+                    reason = AiRequestTrace.Reason.INVALID_ENVELOPE
+                }
+                is InterruptedException -> {
+                    outcome = AiRequestTrace.Outcome.CANCELLED
+                    reason = AiRequestTrace.Reason.INTERRUPTED
+                }
+            }
+            throw error
         } finally {
-            connection.disconnect()
+            try { connection?.disconnect() } finally { trace.endAttempt(status, outcome, reason) }
         }
     }
 
-    private fun readRequestError(connection: HttpURLConnection, code: Int): RequestException {
-        val retryAfterMillis = parseRetryAfter(connection.getHeaderField("Retry-After"))
+    private fun readRequestError(
+        connection: HttpURLConnection,
+        code: Int,
+        envelope: JSONObject?,
+        wallClock: () -> Long
+    ): RequestException {
+        val retryAfterMillis = parseRetryAfter(connection.getHeaderField("Retry-After"), wallClock())
         val genericError = RequestException(code, retryAfterMillis = retryAfterMillis)
-        val body = try {
-            connection.errorStream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
-        } catch (_: IOException) {
-            return genericError
-        }
-        val error = try {
-            JSONObject(body).optJSONObject("error")
-        } catch (_: JSONException) {
-            null
-        } ?: return genericError
+        val error = envelope?.optJSONObject("error") ?: return genericError
         val details = error.optJSONArray("details") ?: return genericError
         for (index in 0 until details.length()) {
             val reason = when (details.optJSONObject(index)?.optString("reason")) {
@@ -191,7 +209,7 @@ object GeminiClient {
         return genericError
     }
 
-    private fun parseRetryAfter(value: String?): Long? {
+    private fun parseRetryAfter(value: String?, nowMillis: Long): Long? {
         val header = value?.trim()?.takeIf { it.isNotEmpty() } ?: return null
         if (header.all { it in '0'..'9' }) {
             val seconds = header.toLongOrNull() ?: return Long.MAX_VALUE
@@ -200,7 +218,7 @@ object GeminiClient {
         return try {
             val retryAt = ZonedDateTime.parse(header, DateTimeFormatter.RFC_1123_DATE_TIME)
                 .toInstant().toEpochMilli()
-            (retryAt - System.currentTimeMillis()).coerceAtLeast(0L)
+            (retryAt - nowMillis).coerceAtLeast(0L)
         } catch (_: DateTimeParseException) {
             null
         }
