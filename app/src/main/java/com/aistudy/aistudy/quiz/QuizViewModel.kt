@@ -11,6 +11,7 @@ import com.aistudy.aistudy.BuildConfig
 import com.aistudy.aistudy.R
 import com.aistudy.aistudy.answer.AnswerPrompts
 import com.aistudy.aistudy.answer.ResponseMode
+import com.aistudy.aistudy.ask.AiErrorMessages
 import com.aistudy.aistudy.ask.AiRequestTrace
 import com.aistudy.aistudy.ask.GeminiClient
 import com.aistudy.aistudy.auth.LoginActivity
@@ -122,7 +123,7 @@ internal class QuizViewModel @JvmOverloads constructor(
                 UiState(error = error.messageRes)
             } catch (error: Exception) {
                 Log.w(TAG, "Quiz operation failed (${error.javaClass.simpleName})")
-                previous.copy(saving = false, error = R.string.quiz_error)
+                previous.copy(saving = false, error = AiErrorMessages.message(error, R.string.quiz_error))
             }
             if (!cleared) mutableState.postValue(result)
         }
@@ -141,7 +142,7 @@ internal class QuizViewModel @JvmOverloads constructor(
         try {
             if (apiKey.isBlank() || apiKey.startsWith("YOUR_", ignoreCase = true)) {
                 outcome = AiRequestTrace.Outcome.KEY_MISSING
-                throw QuizLoadException(R.string.quiz_no_api_key)
+                throw QuizLoadException(R.string.ask_error_key_missing)
             }
             val recent = database.questionAnswerDao().getRecentByUserIdAndSubject(ownerId, subject, RECENT_LIMIT)
             val sources = projectSources(recent, getApplication<Application>().getString(R.string.ask_image_default_question))

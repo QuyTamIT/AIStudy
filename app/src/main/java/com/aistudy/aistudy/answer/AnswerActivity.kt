@@ -19,6 +19,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
 import com.aistudy.aistudy.BuildConfig
 import com.aistudy.aistudy.R
+import com.aistudy.aistudy.ask.AiErrorMessages
 import com.aistudy.aistudy.ask.GeminiClient
 import com.aistudy.aistudy.auth.LoginActivity
 import com.aistudy.aistudy.database.AppDatabase
@@ -448,13 +449,14 @@ class AnswerActivity : AppCompatActivity() {
                     if (text.isNullOrEmpty()) tvExtras.setText(R.string.answer_extras_error)
                     else tvExtras.text = StudyMathText.format(text)
                 }
-            } catch (_: Exception) {
+            } catch (error: Exception) {
+                val message = AiErrorMessages.message(error, R.string.answer_extras_error)
                 runOnUiThread {
                     if (!isCurrentSession() || isFinishing || isDestroyed) return@runOnUiThread
                     extrasLoading = false
                     progressExtras.visibility = View.GONE
-                    tvExtras.setText(R.string.answer_extras_error)
-                    Toast.makeText(this@AnswerActivity, R.string.answer_extras_error, Toast.LENGTH_SHORT).show()
+                    tvExtras.setText(message)
+                    Toast.makeText(this@AnswerActivity, message, Toast.LENGTH_SHORT).show()
                 }
             }
         }

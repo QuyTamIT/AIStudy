@@ -2,11 +2,16 @@ package com.aistudy.aistudy.ask
 
 import android.os.Looper
 import java.io.IOException
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.net.HttpURLConnection
 import java.net.URL
+import java.time.Duration
+import java.time.Instant
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
+import java.util.Locale
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -17,10 +22,13 @@ object GeminiClient {
     private const val INITIAL_BACKOFF_MS = 1_000L
     private const val MAX_RETRY_DELAY_MS = 30_000L
     private val RETRYABLE_STATUS_CODES = setOf(429, 500, 502, 503, 504)
+    private val RETRY_DURATION = Regex("[0-9]+(?:\\.[0-9]{1,9})?s")
+    private val CAMEL_WORD = Regex("([a-z])([A-Z])")
+    private val QUOTA_WINDOW = Regex("(?:^|[^a-z])per[_-](minute|day)(?=$|[^a-z])")
 
     enum class ErrorReason {
         API_KEY_INVALID, API_KEY_EXPIRED, API_KEY_RESTRICTED,
-        SERVICE_DISABLED, BILLING_DISABLED, UNKNOWN
+        SERVICE_DISABLED, BILLING_DISABLED, RATE_LIMITED, QUOTA_EXHAUSTED, UNKNOWN
     }
 
     class RequestException(
@@ -58,7 +66,8 @@ object GeminiClient {
         mimeType: String? = null,
         connectionFactory: (URL) -> HttpURLConnection = { it.openConnection() as HttpURLConnection },
         wait: (Long) -> Unit = Thread::sleep,
-        wallClock: () -> Long = System::currentTimeMillis
+        wallClock: () -> Long = System::currentTimeMillis,
+        errorJson: (String) -> JSONObject = ::readGeminiErrorJson
     ): String {
         trace.beginGeneration()
         try {
@@ -67,9 +76,10 @@ object GeminiClient {
                 if (Thread.currentThread().isInterrupted) throw InterruptedException()
                 try {
                     return askOnce(apiKey, prompt, responseSchema, systemInstruction, trace,
-                        imageBase64, mimeType, connectionFactory, wallClock)
+                        imageBase64, mimeType, connectionFactory, wallClock, errorJson)
                 } catch (error: RequestException) {
-                    if (error.statusCode !in RETRYABLE_STATUS_CODES || retries >= MAX_RETRIES) throw error
+                    if (error.reason == ErrorReason.QUOTA_EXHAUSTED ||
+                        error.statusCode !in RETRYABLE_STATUS_CODES || retries >= MAX_RETRIES) throw error
                     val backoffMillis = (INITIAL_BACKOFF_MS * (1L shl retries))
                         .coerceAtMost(MAX_RETRY_DELAY_MS)
                     val delayMillis = maxOf(backoffMillis, error.retryAfterMillis ?: 0L)
@@ -92,7 +102,8 @@ object GeminiClient {
         imageBase64: String?,
         mimeType: String?,
         connectionFactory: (URL) -> HttpURLConnection,
-        wallClock: () -> Long
+        wallClock: () -> Long,
+        errorJson: (String) -> JSONObject
     ): String {
         trace.beginAttempt()
         var connection: HttpURLConnection? = null
@@ -134,7 +145,10 @@ object GeminiClient {
                 val body = try {
                     request.errorStream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
                 } catch (_: IOException) { "" }
-                val envelope = try { JSONObject(body) } catch (_: JSONException) { null }
+                val envelope = try { errorJson(body) }
+                    catch (_: JSONException) { null }
+                    catch (_: IOException) { null }
+                    catch (_: NumberFormatException) { null }
                 if (envelope != null) trace.captureResponse(envelope)
                 throw readRequestError(request, code, envelope, wallClock)
             }
@@ -189,10 +203,16 @@ object GeminiClient {
         envelope: JSONObject?,
         wallClock: () -> Long
     ): RequestException {
-        val retryAfterMillis = parseRetryAfter(connection.getHeaderField("Retry-After"), wallClock())
-        val genericError = RequestException(code, retryAfterMillis = retryAfterMillis)
-        val error = envelope?.optJSONObject("error") ?: return genericError
-        val details = error.optJSONArray("details") ?: return genericError
+        var retryAfterMillis = parseRetryAfter(connection.getHeaderField("Retry-After"), wallClock())
+        val details = envelope?.optJSONObject("error")?.optJSONArray("details") ?: JSONArray()
+        for (index in 0 until details.length()) {
+            val detail = details.optJSONObject(index) ?: continue
+            if (detail.optString("@type") == "type.googleapis.com/google.rpc.RetryInfo") {
+                parseRetryDelay(detail.opt("retryDelay"))?.let {
+                    retryAfterMillis = maxOf(retryAfterMillis ?: 0L, it)
+                }
+            }
+        }
         for (index in 0 until details.length()) {
             val reason = when (details.optJSONObject(index)?.optString("reason")) {
                 "API_KEY_INVALID" -> ErrorReason.API_KEY_INVALID
@@ -206,7 +226,54 @@ object GeminiClient {
             }
             if (reason != ErrorReason.UNKNOWN) return RequestException(code, reason, retryAfterMillis)
         }
-        return genericError
+        return RequestException(code, if (code == 429) quotaReason(details) else ErrorReason.UNKNOWN, retryAfterMillis)
+    }
+
+    private fun quotaReason(details: JSONArray): ErrorReason {
+        var hasViolation = false
+        var allPerMinute = true
+        for (index in 0 until details.length()) {
+            val detail = details.optJSONObject(index) ?: continue
+            if (detail.optString("@type") != "type.googleapis.com/google.rpc.QuotaFailure") continue
+            val violations = detail.optJSONArray("violations")
+            if (violations == null || violations.length() == 0) allPerMinute = false
+            if (violations == null) continue
+            for (item in 0 until violations.length()) {
+                hasViolation = true
+                val violation = violations.optJSONObject(item)
+                val windows = listOf("quotaId", "quotaMetric").flatMap { field ->
+                    val label = (violation?.opt(field) as? String).orEmpty()
+                        .replace(CAMEL_WORD, "$1_$2").lowercase(Locale.ROOT)
+                    QUOTA_WINDOW.findAll(label).map { it.groupValues[1] }.toList()
+                }
+                val rawQuotaValue = violation?.opt("quotaValue")
+                val quotaValue = parseQuotaValue(rawQuotaValue)
+                // Avoid immediate retries when a daily limit or unavailable quota is reported.
+                if (quotaValue == 0L || "day" in windows) {
+                    return ErrorReason.QUOTA_EXHAUSTED
+                }
+                val invalidValue = rawQuotaValue != null && rawQuotaValue != JSONObject.NULL && quotaValue == null
+                if ("minute" !in windows || invalidValue) allPerMinute = false
+            }
+        }
+        return if (hasViolation && allPerMinute) ErrorReason.RATE_LIMITED else ErrorReason.UNKNOWN
+    }
+
+    private fun parseQuotaValue(value: Any?): Long? {
+        if (value !is Number && value !is String) return null
+        return try {
+            BigDecimal(value.toString()).longValueExact().takeIf { it >= 0L }
+        } catch (_: NumberFormatException) {
+            null
+        } catch (_: ArithmeticException) {
+            null
+        }
+    }
+
+    private fun parseRetryDelay(value: Any?): Long? {
+        if (value !is String || !RETRY_DURATION.matches(value)) return null
+        return BigDecimal(value.dropLast(1)).movePointRight(3).setScale(0, RoundingMode.CEILING)
+            .min(BigDecimal.valueOf(Long.MAX_VALUE)).toLong()
     }
 
     private fun parseRetryAfter(value: String?, nowMillis: Long): Long? {
@@ -216,11 +283,14 @@ object GeminiClient {
             return if (seconds > Long.MAX_VALUE / 1_000L) Long.MAX_VALUE else seconds * 1_000L
         }
         return try {
-            val retryAt = ZonedDateTime.parse(header, DateTimeFormatter.RFC_1123_DATE_TIME)
-                .toInstant().toEpochMilli()
-            (retryAt - nowMillis).coerceAtLeast(0L)
+            val retryAt = ZonedDateTime.parse(header, DateTimeFormatter.RFC_1123_DATE_TIME).toInstant()
+            val delay = Duration.between(Instant.ofEpochMilli(nowMillis), retryAt)
+            if (delay.isNegative) 0L else delay.toMillis()
         } catch (_: DateTimeParseException) {
             null
+        } catch (_: ArithmeticException) {
+            // Preserve the HTTP error and treat an unrepresentable wait as beyond the retry budget.
+            Long.MAX_VALUE
         }
     }
 }

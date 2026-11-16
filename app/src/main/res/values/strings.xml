@@ -28,7 +28,9 @@
     <string name="ask_error_session">Your session has changed. Sign in again before asking.</string>
     <string name="ask_error_access">AI access was denied. Please check the API configuration.</string>
     <string name="ask_error_model">The AI model is unavailable. Please try again later.</string>
-    <string name="ask_error_quota">The AI request limit was reached. Wait a moment and try again.</string>
+    <string name="ask_error_quota">An AI request limit was reached. Please try again later. If this continues, contact support.</string>
+    <string name="ask_error_rate_limit">Too many AI requests right now. Please wait a moment before trying again.</string>
+    <string name="ask_error_quota_exhausted">The AI quota is exhausted or unavailable. Try again after the quota resets, or contact support.</string>
     <string name="ask_error_service">AI is temporarily unavailable. Please try again.</string>
     <string name="ask_error_response">AI could not provide a complete answer. Please try again.</string>
     <string name="ask_error_timeout">The answer took too long. Please try again.</string>

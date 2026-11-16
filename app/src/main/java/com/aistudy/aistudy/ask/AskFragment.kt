@@ -42,7 +42,6 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputLayout
 import java.io.File
 import java.io.IOException
-import java.net.SocketTimeoutException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import org.json.JSONException
@@ -479,28 +478,8 @@ class AskFragment : Fragment() {
 
     private fun errorMessage(error: Exception): Int = when (error) {
         is SessionChangedException -> R.string.ask_error_session
-        is GeminiClient.RequestException -> when (error.reason) {
-            GeminiClient.ErrorReason.API_KEY_INVALID,
-            GeminiClient.ErrorReason.API_KEY_EXPIRED -> R.string.ask_error_key_invalid
-            GeminiClient.ErrorReason.API_KEY_RESTRICTED,
-            GeminiClient.ErrorReason.SERVICE_DISABLED -> R.string.ask_error_access
-            GeminiClient.ErrorReason.BILLING_DISABLED -> R.string.ask_error_billing
-            GeminiClient.ErrorReason.UNKNOWN -> when (error.statusCode) {
-                400, 422 -> R.string.ask_error_request
-                401 -> R.string.ask_error_key_invalid
-                403 -> R.string.ask_error_access
-                404 -> R.string.ask_error_model
-                408, 504 -> R.string.ask_error_timeout
-                413 -> R.string.ask_error_too_large
-                429 -> R.string.ask_error_quota
-                in 500..599 -> R.string.ask_error_service
-                else -> R.string.ask_error_request
-            }
-        }
-        is GeminiClient.InvalidResponseException, is JSONException, is IllegalArgumentException -> R.string.ask_error_response
-        is SocketTimeoutException -> R.string.ask_error_timeout
-        is IOException -> R.string.ask_error_network
-        else -> R.string.ask_error_save
+        is IllegalArgumentException -> R.string.ask_error_response
+        else -> AiErrorMessages.message(error, R.string.ask_error_save)
     }
 
     private class SessionChangedException : IllegalStateException()

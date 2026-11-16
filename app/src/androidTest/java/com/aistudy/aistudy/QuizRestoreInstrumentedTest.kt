@@ -26,6 +26,7 @@ import androidx.test.runner.lifecycle.ActivityLifecycleCallback
 import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
 import androidx.test.runner.lifecycle.Stage
 import com.aistudy.aistudy.ask.AiRequestTrace
+import com.aistudy.aistudy.ask.GeminiClient
 import com.aistudy.aistudy.auth.LoginActivity
 import com.aistudy.aistudy.database.*
 import com.aistudy.aistudy.quiz.QuizActivity
@@ -273,6 +274,39 @@ class QuizRestoreInstrumentedTest {
     }
 
     @Test
+    fun apiFailuresUseSpecificMessagesWithoutCreatingSessionItemsOrXp() = fixture { owner, sessionId ->
+        addSources(owner)
+        val cases = listOf(
+            GeminiClient.RequestException(401) to R.string.ask_error_key_invalid,
+            GeminiClient.RequestException(403, GeminiClient.ErrorReason.BILLING_DISABLED) to R.string.ask_error_billing,
+            GeminiClient.RequestException(429, GeminiClient.ErrorReason.RATE_LIMITED) to R.string.ask_error_rate_limit,
+            GeminiClient.RequestException(429, GeminiClient.ErrorReason.QUOTA_EXHAUSTED) to R.string.ask_error_quota_exhausted,
+            GeminiClient.RequestException(429) to R.string.ask_error_quota,
+            java.net.SocketTimeoutException() to R.string.ask_error_timeout,
+            java.io.IOException() to R.string.ask_error_network
+        )
+        for ((error, message) in cases) {
+            val state = generate(owner) { throw error }
+            assertNull(state.quiz)
+            assertEquals(message, state.error)
+            assertEquals(listOf(sessionId), db.quizSessionDao().getAllByUserId(owner).map { it.id })
+            assertEquals(2, db.quizItemDao().getBySessionId(sessionId).size)
+            assertEquals(11, db.profileDao().getByUserId(owner)?.xp)
+        }
+    }
+
+    @Test
+    fun missingKeyUsesSharedMessageWithoutCallingApi() = fixture { owner, sessionId ->
+        val calls = AtomicInteger()
+        val state = generate(owner, apiKey = "") { calls.incrementAndGet(); generatedBatch() }
+        assertNull(state.quiz)
+        assertEquals(R.string.ask_error_key_missing, state.error)
+        assertEquals(0, calls.get())
+        assertEquals(listOf(sessionId), db.quizSessionDao().getAllByUserId(owner).map { it.id })
+        assertEquals(11, db.profileDao().getByUserId(owner)?.xp)
+    }
+
+    @Test
     fun insufficientEligibleSourcesSkipsGenerationAndPersistence() = fixture { owner, sessionId ->
         addSources(owner, excludeSecond = true)
         val calls = AtomicInteger()
@@ -322,6 +356,7 @@ class QuizRestoreInstrumentedTest {
         owner: Long,
         events: MutableList<JSONObject> = mutableListOf(),
         inspect: (String) -> Unit = {},
+        apiKey: String = "fixture",
         response: () -> String
     ): QuizViewModel.UiState {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
@@ -336,7 +371,7 @@ class QuizRestoreInstrumentedTest {
         }
         val factory = viewModelFactory {
             initializer {
-                QuizViewModel(context.applicationContext as Application, apiKey = "fixture",
+                QuizViewModel(context.applicationContext as Application, apiKey = apiKey,
                     traceFactory = { feature -> AiRequestTrace(feature, sink = { events.add(it) }) },
                     requestQuiz = { _, prompt, _, _, _ -> inspect(prompt); response() })
             }
