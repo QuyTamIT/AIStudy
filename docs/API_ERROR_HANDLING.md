@@ -20,6 +20,7 @@ không đưa thông báo thô của provider lên giao diện.
 | `app/src/main/java/com/aistudy/aistudy/answer/AnswerViewModel.kt` | `errorMessage()` | Phân loại Answer cũ và More topics dùng mapper chung; vẫn giữ thông báo nội dung thay đổi, thiếu key, không đủ chủ đề mới và lỗi lưu. |
 | `app/src/main/java/com/aistudy/aistudy/answer/AnswerActivity.kt` | Khối `catch` của `loadExtras()` | Simplify, Alternative, Concepts, Mistakes và Follow-ups hiển thị đúng lỗi API trong vùng nội dung và Toast thay vì luôn báo lỗi tips chung. |
 | `app/src/main/java/com/aistudy/aistudy/quiz/QuizViewModel.kt` | `runOperation()`, kiểm tra key trong `generateQuiz()` | Quiz chọn đúng thông báo API; thiếu key dùng cùng thông báo với Ask/Answer. Lỗi nghiệp vụ/lưu dữ liệu chưa có phân loại cụ thể vẫn dùng fallback của Quiz. |
+| `app/src/main/java/com/aistudy/aistudy/quiz/QuizActivity.kt`, `app/src/main/res/layout/activity_quiz.xml` | Hiển thị lỗi tạo Quiz | Khi tạo Quiz thất bại, màn hình dừng vòng chờ và giữ thông báo đầy đủ cùng nút Back. |
 | `app/src/main/res/values/strings_quiz.xml` | Xóa `quiz_no_api_key` | Bỏ chuỗi cũ dành cho dev vì Quiz đã dùng `ask_error_key_missing`; không còn hướng dẫn chỉnh `local.properties` trên luồng này. |
 
 Ví dụ: nếu Google từ chối xác thực bằng HTTP 401, Ask, More topics, Learning
@@ -116,7 +117,11 @@ Theo báo cáo OMP người dùng cung cấp, trước phiên vá P2 đã chạy
 `ImageOnlyInputInstrumentedTest` 1 đạt/1 thất bại vì Espresso không thấy đủ diện
 tích nút Send để click. Ca thất bại dừng trước handler gửi. Đây là kết quả OMP
 báo lại, không phải kết quả chạy mới trong phiên vá P2. Lỗi giao diện/test đó
-chưa được xử lý và nằm ngoài phạm vi hai bản vá đã duyệt.
+nằm ngoài phạm vi hai bản vá P2 ban đầu.
+
+Khi chuẩn bị merge vào `master`, Quiz đã chuyển lỗi tạo mới sang màn hình có
+thể cuộn và bài kiểm thử gửi ảnh cuộn tới nút trước khi bấm. Trên AVD API 37,
+42 bài instrumentation đạt. Ca Quiz cũng đạt ở cửa sổ 840 × 730, cỡ chữ 200%.
 
 Lệnh kiểm chứng chính:
 

@@ -18,6 +18,7 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.replaceText
+import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -292,6 +293,54 @@ class QuizRestoreInstrumentedTest {
             assertEquals(listOf(sessionId), db.quizSessionDao().getAllByUserId(owner).map { it.id })
             assertEquals(2, db.quizItemDao().getBySessionId(sessionId).size)
             assertEquals(11, db.profileDao().getByUserId(owner)?.xp)
+        }
+    }
+
+    @Test
+    fun quotaErrorStaysReadableAfterRecreationAndBackClosesQuiz() = fixture { owner, sessionId ->
+        addSources(owner)
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val monitor = ActivityLifecycleMonitorRegistry.getInstance()
+        val respond = CountDownLatch(1)
+        val failed = CountDownLatch(1)
+        val exited = CountDownLatch(1)
+        var expectedExit: QuizActivity? = null
+        val calls = AtomicInteger()
+        val factory = viewModelFactory {
+            initializer {
+                QuizViewModel(context.applicationContext as Application, apiKey = "fixture") { _, _, _, _, _ ->
+                    calls.incrementAndGet()
+                    check(respond.await(15, TimeUnit.SECONDS))
+                    throw GeminiClient.RequestException(429, GeminiClient.ErrorReason.QUOTA_EXHAUSTED)
+                }
+            }
+        }
+        val callback = ActivityLifecycleCallback { activity, stage ->
+            if (activity is QuizActivity && stage == Stage.PRE_ON_CREATE) {
+                val model = ViewModelProvider(activity, factory)[QuizViewModel::class.java]
+                model.state.observe(activity) { if (it.error == R.string.ask_error_quota_exhausted) failed.countDown() }
+            }
+            if (stage == Stage.DESTROYED && activity === expectedExit) exited.countDown()
+        }
+        instrumentation.runOnMainSync { monitor.addLifecycleCallback(callback) }
+        try {
+            val intent = Intent(context, QuizActivity::class.java).putExtra(QuizActivity.EXTRA_SUBJECT, "math")
+            ActivityScenario.launch<QuizActivity>(intent).use { scenario ->
+                respond.countDown()
+                assertTrue("Quiz quota error was not delivered", failed.await(8, TimeUnit.SECONDS))
+                onView(withText(R.string.ask_error_quota_exhausted)).perform(scrollTo()).check(matches(isCompletelyDisplayed()))
+                scenario.recreate()
+                onView(withText(R.string.ask_error_quota_exhausted)).perform(scrollTo()).check(matches(isCompletelyDisplayed()))
+                assertEquals(1, calls.get())
+                scenario.onActivity { expectedExit = it }
+                onView(withText(R.string.quiz_back)).perform(scrollTo(), click())
+                assertTrue("Back did not close the quiz", exited.await(8, TimeUnit.SECONDS))
+                assertEquals(listOf(sessionId), db.quizSessionDao().getAllByUserId(owner).map { it.id })
+                assertEquals(11, db.profileDao().getByUserId(owner)?.xp)
+            }
+        } finally {
+            respond.countDown()
+            instrumentation.runOnMainSync { monitor.removeLifecycleCallback(callback) }
         }
     }
 

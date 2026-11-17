@@ -45,7 +45,7 @@ class QuizActivity : AppCompatActivity() {
         get() = items.getOrNull(currentIndex)?.let { it.userAnswer != null && it.correct != null } == true
     private var restoredDraft: String? = null
 
-    private lateinit var layoutLoading: LinearLayout
+    private lateinit var layoutLoading: View
     private lateinit var layoutQuiz: LinearLayout
     private lateinit var layoutResult: LinearLayout
     private lateinit var tvQuizTitle: TextView
@@ -113,6 +113,7 @@ class QuizActivity : AppCompatActivity() {
         tvQuizTitle.text = getString(R.string.quiz_practice_on, subjectLabel(subject))
         btnBack.setOnClickListener { finish() }
         btnDone.setOnClickListener { finish() }
+        findViewById<View>(R.id.btn_quiz_load_back).setOnClickListener { finish() }
         btnPrimary.setOnClickListener { onPrimaryClick() }
 
         if (savedInstanceState != null && savedInstanceState.getLong("ownerId", userId) != userId) {
@@ -149,7 +150,9 @@ class QuizActivity : AppCompatActivity() {
         }
         val loaded = state.quiz
         if (loaded == null) {
-            state.error?.let { failRestore(it) }
+            state.error?.let { message ->
+                if (requestedSessionId > 0L) failRestore(message) else showGenerationError(message)
+            }
             return
         }
         if (loaded.session.userId != userId || currentIndex !in loaded.items.indices) {
@@ -309,6 +312,12 @@ class QuizActivity : AppCompatActivity() {
         layoutLoading.visibility = View.VISIBLE
         layoutQuiz.visibility = View.GONE
         layoutResult.visibility = View.GONE
+    }
+
+    private fun showGenerationError(@StringRes message: Int) {
+        findViewById<View>(R.id.progress_quiz_loading).visibility = View.GONE
+        findViewById<TextView>(R.id.tv_quiz_status).setText(message)
+        findViewById<View>(R.id.btn_quiz_load_back).visibility = View.VISIBLE
     }
 
     private fun showQuiz() {

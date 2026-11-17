@@ -46,7 +46,8 @@ hiện tại; giữ nguyên các thay đổi Manifest/backup có trước phiên
 Thông báo thiếu key dùng chung `ask_error_key_missing`, kể cả Quiz. Các lỗi
 key sai/hết hạn, quyền, billing, model, timeout, mạng và phản hồi không hợp lệ
 dùng cùng resource trên mọi luồng. Learning extras hiển thị lỗi cụ thể ngay
-trong vùng nội dung và Toast; Quiz giữ cách hiển thị Toast/đóng màn hình hiện có.
+trong vùng nội dung và Toast. Lỗi tạo Quiz hiển thị đầy đủ trên màn hình cùng
+nút Back. Lỗi khôi phục phiên đã lưu vẫn đóng màn Quiz.
 
 ## Kiểm chứng
 

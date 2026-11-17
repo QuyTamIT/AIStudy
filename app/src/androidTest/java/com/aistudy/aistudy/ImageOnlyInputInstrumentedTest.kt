@@ -9,6 +9,7 @@ import androidx.core.content.FileProvider
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -41,10 +42,10 @@ class ImageOnlyInputInstrumentedTest {
         assertTrue(draft.exists())
         // Send must pass the empty-text validation but stop before network: no active account.
         assertTrue(preferences.edit().remove(LoginActivity.KEY_USER_ID).commit())
-        onView(withId(R.id.btn_send)).perform(click())
+        onView(withId(R.id.btn_send)).perform(scrollTo(), click())
         if (BuildConfig.GEMINI_API_KEY.isBlank() || BuildConfig.GEMINI_API_KEY.startsWith("YOUR_", ignoreCase = true)) {
             onView(withId(R.id.tv_ask_error)).check(matches(withText(R.string.ask_error_key_missing)))
-            onView(withId(R.id.btn_remove_image)).perform(click())
+            onView(withId(R.id.btn_remove_image)).perform(scrollTo(), click())
             assertFalse(draft.exists())
         } else {
             val deadline = SystemClock.uptimeMillis() + 8_000L
