@@ -15,8 +15,8 @@
     <color name="auth_input_ring_focus">@color/answer_primary</color>
     <color name="auth_shell_ring">@color/answer_divider</color>
 
-    <color name="streak">#F39C12</color>
-    <color name="streak_soft">#332415</color>
+    <color name="streak">#F59E0B</color>
+    <color name="streak_soft">#382914</color>
     <color name="xp_track">@color/answer_divider</color>
 
     <color name="theme_default_bg">@color/answer_background</color>
@@ -24,8 +24,8 @@
     <color name="theme_pastel_bg">#231F27</color>
 
     <!-- Refined Logout Pill Colors (Night) -->
-    <color name="logout_pill_bg">#2A1817</color>
-    <color name="logout_pill_border">#4E2826</color>
-    <color name="logout_pill_fg">#FF857B</color>
-    <color name="logout_pill_ripple">#26FF857B</color>
+    <color name="logout_pill_bg">#2E151A</color>
+    <color name="logout_pill_border">#541C25</color>
+    <color name="logout_pill_fg">#FB7185</color>
+    <color name="logout_pill_ripple">#26FB7185</color>
 </resources>

@@ -142,7 +142,7 @@
                 android:paddingHorizontal="16dp"
                 android:paddingVertical="6dp"
                 android:text="+45 XP"
-                android:textColor="@color/answer_primary"
+                android:textColor="@color/answer_on_primary"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 

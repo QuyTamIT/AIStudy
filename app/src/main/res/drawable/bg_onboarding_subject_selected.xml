@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="#1A000000">
+    android:color="@color/answer_ripple">
     <item android:id="@android:id/mask">
         <shape android:shape="rectangle">
             <solid android:color="@color/white" />
-            <corners android:radius="@dimen/auth_input_radius" />
+            <corners android:radius="@dimen/answer_control_radius" />
         </shape>
     </item>
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="@color/auth_brand_soft" />
-            <corners android:radius="@dimen/auth_input_radius" />
+            <solid android:color="@color/answer_result_surface" />
+            <corners android:radius="@dimen/answer_control_radius" />
             <stroke
-                android:width="1dp"
-                android:color="@color/auth_brand_ring" />
+                android:width="2dp"
+                android:color="@color/answer_primary" />
         </shape>
     </item>
 </ripple>

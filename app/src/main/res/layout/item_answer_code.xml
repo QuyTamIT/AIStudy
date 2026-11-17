@@ -2,7 +2,8 @@
 <HorizontalScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/bg_answer_expression"
+    android:layout_marginTop="8dp"
+    android:background="@drawable/bg_answer_code"
     android:fillViewport="true"
     android:scrollbarStyle="insideOverlay">
 
@@ -10,9 +11,10 @@
         android:id="@+id/tv_answer_text_block"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:padding="@dimen/answer_space_4"
+        android:padding="14dp"
         android:scrollHorizontally="true"
         android:textAppearance="@style/TextAppearance.AIStudy.Answer.Code"
+        android:textColor="@color/answer_code_text"
         android:textDirection="ltr"
         android:textIsSelectable="true" />
 </HorizontalScrollView>

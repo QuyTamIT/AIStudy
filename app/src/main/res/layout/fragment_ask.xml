@@ -94,21 +94,29 @@
                     android:id="@+id/btn_camera"
                     style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="48dp"
                     android:layout_marginEnd="8dp"
                     android:layout_weight="1"
                     android:text="@string/ask_camera"
                     android:textColor="@color/answer_foreground"
+                    app:icon="@drawable/ic_camera"
+                    app:iconTint="@color/answer_primary"
+                    app:iconGravity="textStart"
+                    app:cornerRadius="12dp"
                     app:strokeColor="@color/answer_divider" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_gallery"
                     style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="48dp"
                     android:layout_weight="1"
                     android:text="@string/ask_gallery"
                     android:textColor="@color/answer_foreground"
+                    app:icon="@drawable/ic_gallery"
+                    app:iconTint="@color/answer_primary"
+                    app:iconGravity="textStart"
+                    app:cornerRadius="12dp"
                     app:strokeColor="@color/answer_divider" />
             </LinearLayout>
 

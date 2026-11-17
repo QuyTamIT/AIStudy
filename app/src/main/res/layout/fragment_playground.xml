@@ -19,7 +19,7 @@
             android:layout_marginHorizontal="@dimen/answer_page_gutter"
             android:orientation="vertical"
             android:paddingTop="@dimen/answer_space_4"
-            android:paddingBottom="@dimen/answer_space_8"
+            android:paddingBottom="72dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -321,23 +321,30 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/answer_space_6"
                 android:background="@drawable/bg_playground_card"
+                android:baselineAligned="false"
+                android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="@dimen/answer_space_4">
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="14dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:includeFontPadding="false"
                     android:text="🔥"
-                    android:textSize="20sp" />
+                    android:textSize="22sp" />
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
+                    android:layout_marginStart="12dp"
                     android:layout_weight="1"
+                    android:includeFontPadding="true"
+                    android:lineSpacingExtra="3dp"
                     android:text="@string/playground_daily_challenge_desc"
-                    android:textAppearance="@style/TextAppearance.AIStudy.Study.Support"
-                    android:textSize="12sp" />
+                    android:textColor="@color/answer_foreground_secondary"
+                    android:textSize="13sp" />
             </LinearLayout>
 
         </LinearLayout>

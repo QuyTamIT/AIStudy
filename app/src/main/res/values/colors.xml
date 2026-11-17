@@ -18,17 +18,17 @@
     <color name="auth_input_ring_focus">@color/answer_primary</color>
     <color name="auth_shell_ring">@color/answer_divider</color>
 
-    <color name="streak">#E67E22</color>
-    <color name="streak_soft">#FDF0E4</color>
-    <color name="xp_track">#E8EAED</color>
+    <color name="streak">#D97706</color>
+    <color name="streak_soft">#FEF3C7</color>
+    <color name="xp_track">#DFE6E0</color>
 
     <color name="theme_default_bg">@color/answer_background</color>
-    <color name="theme_night_bg">@color/answer_forest_950</color>
+    <color name="theme_night_bg">@color/answer_background</color>
     <color name="theme_pastel_bg">#F5EFEB</color>
 
     <!-- Refined Logout Pill Colors (Light) -->
-    <color name="logout_pill_bg">#FFF3F2</color>
-    <color name="logout_pill_border">#FED7D4</color>
-    <color name="logout_pill_fg">#D93829</color>
-    <color name="logout_pill_ripple">#26D93829</color>
+    <color name="logout_pill_bg">#FFF1F2</color>
+    <color name="logout_pill_border">#FECDD3</color>
+    <color name="logout_pill_fg">#BE123C</color>
+    <color name="logout_pill_ripple">#1ABE123C</color>
 </resources>

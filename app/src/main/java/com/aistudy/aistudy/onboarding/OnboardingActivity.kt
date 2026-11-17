@@ -191,7 +191,7 @@ class OnboardingActivity : AppCompatActivity() {
         }
         listOf(R.id.progress_0, R.id.progress_1, R.id.progress_2).forEachIndexed { index, id ->
             findViewById<View>(id).setBackgroundColor(ContextCompat.getColor(
-                this, if (index <= currentStep) R.color.auth_brand else R.color.auth_card
+                this, if (index <= currentStep) R.color.answer_primary else R.color.answer_divider
             ))
         }
         val titles = listOf(R.string.onboarding_step_level_title, R.string.onboarding_step_subjects_title, R.string.onboarding_step_style_title)
