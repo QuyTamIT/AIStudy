@@ -8,8 +8,8 @@
     <dimen name="study_display_line_height">40sp</dimen>
     <dimen name="study_composer_height">160dp</dimen>
     <dimen name="study_suggestion_height">64dp</dimen>
-    <string name="study_ask_loading_detail">Đang chuẩn bị câu trả lời của bạn…</string>
-    <string name="study_login_password_hint">Nhập mật khẩu của bạn</string>
+    <string name="study_ask_loading_detail">Preparing your explanation…</string>
+    <string name="study_login_password_hint">Enter your password</string>
 
     <style name="Theme.AIStudy.Study" parent="Theme.AIStudy.Answer">
         <item name="textInputStyle">@style/Widget.AIStudy.Study.Input</item>

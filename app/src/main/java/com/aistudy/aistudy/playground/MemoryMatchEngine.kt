@@ -35,37 +35,37 @@ class MemoryMatchEngine(private val random: Random = Random()) {
 
         val CONCEPT_CATALOG: List<ConceptPair> = listOf(
             // Math
-            ConceptPair(1, "Toán học", "Định lý Pythagoras", "a² + b² = c²"),
-            ConceptPair(2, "Toán học", "Số Pi (π)", "≈ 3.14159"),
-            ConceptPair(3, "Toán học", "Đạo hàm của x²", "2x"),
-            ConceptPair(4, "Toán học", "Diện tích hình tròn", "S = π · r²"),
-            ConceptPair(5, "Toán học", "Định lý Thales", "Tỉ lệ song song"),
+            ConceptPair(1, "Math", "Pythagorean theorem", "a² + b² = c²"),
+            ConceptPair(2, "Math", "Pi (π)", "≈ 3.14159"),
+            ConceptPair(3, "Math", "Derivative of x²", "2x"),
+            ConceptPair(4, "Math", "Area of a circle", "S = π · r²"),
+            ConceptPair(5, "Math", "Triangle proportionality theorem", "Parallel lines divide sides proportionally"),
 
             // Science
-            ConceptPair(6, "Khoa học", "Công thức Nước", "H₂O"),
-            ConceptPair(7, "Khoa học", "Khí Carbonic", "CO₂"),
-            ConceptPair(8, "Khoa học", "Thuyết tương đối", "E = m · c²"),
-            ConceptPair(9, "Khoa học", "Định luật II Newton", "F = m · a"),
-            ConceptPair(10, "Khoa học", "Vận tốc ánh sáng", "≈ 300.000 km/s"),
-            ConceptPair(11, "Khoa học", "Muối ăn", "NaCl"),
+            ConceptPair(6, "Science", "Water formula", "H₂O"),
+            ConceptPair(7, "Science", "Carbon dioxide", "CO₂"),
+            ConceptPair(8, "Science", "Relativity", "E = m · c²"),
+            ConceptPair(9, "Science", "Newton’s second law", "F = m · a"),
+            ConceptPair(10, "Science", "Speed of light", "≈ 300,000 km/s"),
+            ConceptPair(11, "Science", "Table salt", "NaCl"),
 
             // Code
-            ConceptPair(12, "Lập trình", "Độ phức tạp O(1)", "Thời gian hằng số"),
-            ConceptPair(13, "Lập trình", "Binary Search", "Độ phức tạp O(log n)"),
-            ConceptPair(14, "Lập trình", "Ngôn ngữ SQL", "Truy vấn dữ liệu"),
-            ConceptPair(15, "Lập trình", "Cấu trúc FIFO", "Queue (Hàng đợi)"),
-            ConceptPair(16, "Lập trình", "Cấu trúc LIFO", "Stack (Ngăn xếp)"),
-            ConceptPair(17, "Lập trình", "HTTP 404", "Not Found"),
+            ConceptPair(12, "Programming", "Complexity O(1)", "Constant time"),
+            ConceptPair(13, "Programming", "Binary Search", "Complexity O(log n)"),
+            ConceptPair(14, "Programming", "SQL", "Query data"),
+            ConceptPair(15, "Programming", "FIFO structure", "Queue"),
+            ConceptPair(16, "Programming", "LIFO structure", "Stack"),
+            ConceptPair(17, "Programming", "HTTP 404", "Not Found"),
 
             // History
-            ConceptPair(18, "Lịch sử", "Năm 1945", "CM Tháng 8 & Độc lập"),
-            ConceptPair(19, "Lịch sử", "Năm 1975", "Thống nhất đất nước"),
-            ConceptPair(20, "Lịch sử", "Năm 1911", "Bác Hồ ra đi tìm đường"),
+            ConceptPair(18, "History", "Vietnam, 1945", "August Revolution & Independence"),
+            ConceptPair(19, "History", "Vietnam, 1975", "Reunification"),
+            ConceptPair(20, "History", "Vietnam, 1911", "Ho Chi Minh leaves Vietnam"),
 
             // Language
-            ConceptPair(21, "Ngoại ngữ", "Synonym", "Từ đồng nghĩa"),
-            ConceptPair(22, "Ngoại ngữ", "Antonym", "Từ trái nghĩa"),
-            ConceptPair(23, "Ngoại ngữ", "Metaphor", "Phép ẩn dụ")
+            ConceptPair(21, "Languages", "Synonym", "Words with similar meanings"),
+            ConceptPair(22, "Languages", "Antonym", "Words with opposite meanings"),
+            ConceptPair(23, "Languages", "Metaphor", "Figurative comparison")
         )
     }
 

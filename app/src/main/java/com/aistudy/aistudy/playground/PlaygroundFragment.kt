@@ -83,7 +83,7 @@ class PlaygroundFragment : Fragment() {
         tvMemoryBestMoves.text = if (bestMemory > 0) {
             getString(R.string.game_memory_best_moves, bestMemory)
         } else {
-            "Kỷ lục: —"
+            "Best: —"
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -99,11 +99,11 @@ class PlaygroundFragment : Fragment() {
             val xp = profile?.xp ?: 0
             val streak = profile?.streak ?: 0
             val level = XpRules.levelFromXp(xp)
-            val name = user?.fullName?.ifBlank { "Học giả AIStudy" } ?: "Học giả AIStudy"
+            val name = user?.fullName?.ifBlank { "AIStudy learner" } ?: "AIStudy learner"
 
             tvLevelBadge.text = level.toString()
             tvUserName.text = name
-            tvXpTotal.text = "Tổng tích lũy: $xp XP"
+            tvXpTotal.text = "Total earned: $xp XP"
             tvStreak.text = getString(R.string.home_streak_days, streak)
         }
     }

@@ -49,7 +49,7 @@
             android:textColor="@color/answer_primary"
             android:textSize="10sp"
             android:textStyle="bold"
-            tools:text="Toán học" />
+            tools:text="Math" />
 
         <TextView
             android:id="@+id/tv_card_text"

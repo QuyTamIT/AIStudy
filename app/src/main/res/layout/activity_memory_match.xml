@@ -65,7 +65,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Lượt lật: 0"
+            android:text="Moves: 0"
             android:textColor="@color/answer_foreground_secondary"
             android:textSize="13sp"
             android:textStyle="bold" />
@@ -74,7 +74,7 @@
             android:id="@+id/tv_matched_pairs"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Đã ghép: 0 / 6 cặp"
+            android:text="Matched: 0 / 6 pairs"
             android:textColor="@color/answer_primary"
             android:textSize="13sp"
             android:textStyle="bold" />
@@ -156,7 +156,7 @@
                     android:id="@+id/tv_result_moves"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Số lượt lật: 12 lượt"
+                    android:text="Moves: 12"
                     android:textAppearance="@style/TextAppearance.AIStudy.Answer.Body" />
 
                 <TextView
@@ -164,7 +164,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Thời gian hoàn thành: 00:45"
+                    android:text="Completion time: 00:45"
                     android:textAppearance="@style/TextAppearance.AIStudy.Answer.Body" />
             </LinearLayout>
 

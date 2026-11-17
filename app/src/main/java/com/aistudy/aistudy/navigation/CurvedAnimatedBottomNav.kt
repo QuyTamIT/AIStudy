@@ -49,11 +49,11 @@ class CurvedAnimatedBottomNav @JvmOverloads constructor(
 
     companion object {
         val TABS = listOf(
-            TabDefinition(R.id.nav_home, R.drawable.ic_nav_home, "Trang chủ"),
-            TabDefinition(R.id.nav_ask, R.drawable.ic_nav_ask, "Hỏi đáp"),
-            TabDefinition(R.id.nav_playground, R.drawable.ic_nav_playground, "Sân chơi"),
-            TabDefinition(R.id.nav_history, R.drawable.ic_nav_history, "Lịch sử"),
-            TabDefinition(R.id.nav_progress, R.drawable.ic_nav_progress, "Tiến độ")
+            TabDefinition(R.id.nav_home, R.drawable.ic_nav_home, "Home"),
+            TabDefinition(R.id.nav_ask, R.drawable.ic_nav_ask, "Ask"),
+            TabDefinition(R.id.nav_playground, R.drawable.ic_nav_playground, "Playground"),
+            TabDefinition(R.id.nav_history, R.drawable.ic_nav_history, "History"),
+            TabDefinition(R.id.nav_progress, R.drawable.ic_nav_progress, "Progress")
         )
     }
 

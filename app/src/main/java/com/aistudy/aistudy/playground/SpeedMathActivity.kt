@@ -233,7 +233,7 @@ class SpeedMathActivity : AppCompatActivity() {
             selectedBtn.setBackgroundResource(R.drawable.bg_playground_choice_wrong)
             optionButtons[q.correctIndex].setBackgroundResource(R.drawable.bg_playground_choice_correct)
 
-            tvFeedbackHint.text = "Tiếc quá! ${q.explanation}"
+            tvFeedbackHint.text = "Incorrect! ${q.explanation}"
             tvFeedbackHint.setTextColor(ContextCompat.getColor(this, R.color.answer_error))
             tvFeedbackHint.visibility = View.VISIBLE
         }
@@ -250,7 +250,7 @@ class SpeedMathActivity : AppCompatActivity() {
     }
 
     private fun updateScoreAndComboUI() {
-        tvScore.text = "$currentScore điểm"
+        tvScore.text = "$currentScore points"
         if (currentCombo >= 2) {
             tvComboBadge.visibility = View.VISIBLE
             tvComboBadge.text = getString(R.string.game_speed_math_combo, currentCombo)

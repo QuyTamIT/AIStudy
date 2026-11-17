@@ -57,28 +57,28 @@ class SpeedMathEngine(private val random: Random = Random()) {
                 val b = random.nextInt(60) + 15
                 val ans = a + b
                 val prompt = "$a + $b = ?"
-                createQuestion(prompt, ans, "Phép cộng", "$a + $b = $ans")
+                createQuestion(prompt, ans, "Addition", "$a + $b = $ans")
             }
             1 -> {
                 val a = random.nextInt(70) + 30
                 val b = random.nextInt(a - 15) + 10
                 val ans = a - b
                 val prompt = "$a − $b = ?"
-                createQuestion(prompt, ans, "Phép trừ", "$a − $b = $ans")
+                createQuestion(prompt, ans, "Subtraction", "$a − $b = $ans")
             }
             2 -> {
                 val a = random.nextInt(9) + 6 // 6..14
                 val b = random.nextInt(8) + 4 // 4..11
                 val ans = a * b
                 val prompt = "$a × $b = ?"
-                createQuestion(prompt, ans, "Phép nhân", "$a × $b = $ans")
+                createQuestion(prompt, ans, "Multiplication", "$a × $b = $ans")
             }
             else -> {
                 val b = random.nextInt(8) + 3 // 3..10
                 val ans = random.nextInt(12) + 4 // 4..15
                 val a = b * ans
                 val prompt = "$a ÷ $b = ?"
-                createQuestion(prompt, ans, "Phép chia", "$a ÷ $b = $ans")
+                createQuestion(prompt, ans, "Division", "$a ÷ $b = $ans")
             }
         }
     }
@@ -92,7 +92,7 @@ class SpeedMathEngine(private val random: Random = Random()) {
                 val c = random.nextInt(25) + 5
                 val ans = a * b + c
                 val prompt = "$a × $b + $c = ?"
-                createQuestion(prompt, ans, "Thứ tự phép tính", "($a × $b) + $c = ${a * b} + $c = $ans")
+                createQuestion(prompt, ans, "Order of operations", "($a × $b) + $c = ${a * b} + $c = $ans")
             }
             1 -> {
                 val a = random.nextInt(40) + 50
@@ -100,7 +100,7 @@ class SpeedMathEngine(private val random: Random = Random()) {
                 val c = random.nextInt(6) + 3
                 val ans = a - b * c
                 val prompt = "$a − $b × $c = ?"
-                createQuestion(prompt, ans, "Thứ tự phép tính", "$a − ($b × $c) = $a − ${b * c} = $ans")
+                createQuestion(prompt, ans, "Order of operations", "$a − ($b × $c) = $a − ${b * c} = $ans")
             }
             else -> {
                 val a = random.nextInt(10) + 5
@@ -108,7 +108,7 @@ class SpeedMathEngine(private val random: Random = Random()) {
                 val c = random.nextInt(5) + 2
                 val ans = (a + b) * c
                 val prompt = "($a + $b) × $c = ?"
-                createQuestion(prompt, ans, "Dấu ngoặc", "($a + $b) × $c = ${a + b} × $c = $ans")
+                createQuestion(prompt, ans, "Parentheses", "($a + $b) × $c = ${a + b} × $c = $ans")
             }
         }
     }
@@ -123,7 +123,7 @@ class SpeedMathEngine(private val random: Random = Random()) {
                 val offset = random.nextInt(15) + 5
                 val ans = power - offset
                 val prompt = "2^$exp − $offset = ?"
-                createQuestion(prompt, ans, "Lũy thừa", "2^$exp = $power, $power − $offset = $ans")
+                createQuestion(prompt, ans, "Powers", "2^$exp = $power, $power − $offset = $ans")
             }
             1 -> {
                 val base = 3
@@ -133,7 +133,7 @@ class SpeedMathEngine(private val random: Random = Random()) {
                 val offset = random.nextInt(15) + 5
                 val ans = power + offset
                 val prompt = "3^$exp + $offset = ?"
-                createQuestion(prompt, ans, "Lũy thừa", "3^$exp = $power, $power + $offset = $ans")
+                createQuestion(prompt, ans, "Powers", "3^$exp = $power, $power + $offset = $ans")
             }
             else -> {
                 val roots = intArrayOf(4, 5, 6, 7, 8, 9, 10, 11, 12)
@@ -142,7 +142,7 @@ class SpeedMathEngine(private val random: Random = Random()) {
                 val offset = random.nextInt(15) + 5
                 val ans = r + offset
                 val prompt = "√$square + $offset = ?"
-                createQuestion(prompt, ans, "Căn bậc hai", "√$square = $r, $r + $offset = $ans")
+                createQuestion(prompt, ans, "Square roots", "√$square = $r, $r + $offset = $ans")
             }
         }
     }
@@ -153,7 +153,7 @@ class SpeedMathEngine(private val random: Random = Random()) {
         val b = random.nextInt(20) + 5
         val c = a * x + b
         val prompt = "$a·x + $b = $c   (x = ?)"
-        return createQuestion(prompt, x, "Phương trình", "$a·x = $c − $b = ${a * x} ⇒ x = $x")
+        return createQuestion(prompt, x, "Equations", "$a·x = $c − $b = ${a * x} ⇒ x = $x")
     }
 
     private fun generateCodeLogic(): MathQuestion {
@@ -163,14 +163,14 @@ class SpeedMathEngine(private val random: Random = Random()) {
                 val a = random.nextInt(35) + 15
                 val b = random.nextInt(6) + 3 // 3..8
                 val ans = a % b
-                val prompt = "$a % $b = ? (chia lấy dư)"
-                createQuestion(prompt, ans, "Toán tử Modulo", "$a = $b × ${a / b} + $ans ⇒ số dư là $ans")
+                val prompt = "$a % $b = ? (remainder)"
+                createQuestion(prompt, ans, "Modulo", "$a = $b × ${a / b} + $ans ⇒ remainder is $ans")
             }
             else -> {
                 val shift = random.nextInt(4) + 1 // 1..4
                 val ans = 1 shl shift
-                val prompt = "1 shl $shift (dịch bit trái 1 << $shift) = ?"
-                createQuestion(prompt, ans, "Phép toán Bit", "1 << $shift = 2^$shift = $ans")
+                val prompt = "1 shl $shift (left bit shift 1 << $shift) = ?"
+                createQuestion(prompt, ans, "Bitwise operations", "1 << $shift = 2^$shift = $ans")
             }
         }
     }

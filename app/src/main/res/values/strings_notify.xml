@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="notify_channel_name">Nhắc nhở học tập</string>
-    <string name="notify_channel_desc">Thông báo đánh dấu bài học, lỗi cần ôn lại, động lực học và tổng kết tuần</string>
-    <string name="notify_bookmark_title">Ôn tập bài học đã lưu</string>
-    <string name="notify_bookmark_body">Bạn đã gắn sao một bài học hơn 48 giờ trước. Chạm để ôn tập lại ngay.</string>
-    <string name="notify_mistakes_title">Lỗi sai cần củng cố</string>
-    <string name="notify_mistakes_body">Gần đây bạn trả lời sai một số câu môn %1$s. Hãy luyện tập để nắm vững hơn nhé.</string>
-    <string name="notify_motivational_title">Cố gắng lên nào!</string>
-    <string name="notify_motivational_streak">Chuỗi %1$d ngày học tập của bạn sắp gián đoạn — hãy hỏi hoặc ôn bài hôm nay!</string>
-    <string name="notify_motivational_level">Chỉ còn %1$d XP nữa là bạn sẽ đạt cấp độ %2$d.</string>
-    <string name="notify_summary_daily_title">Tổng kết học tập hôm nay</string>
-    <string name="notify_summary_weekly_title">Tổng kết học tập tuần này</string>
-    <string name="notify_summary_body">Câu hỏi: %1$d · Độ chính xác: %2$d%% · XP tuần: %3$d</string>
+    <string name="notify_channel_name">Learning reminders</string>
+    <string name="notify_channel_desc">Bookmarks, mistakes, motivation, and weekly summary</string>
+    <string name="notify_bookmark_title">Review a bookmarked answer</string>
+    <string name="notify_bookmark_body">You starred an answer more than 48 hours ago. Tap to review it.</string>
+    <string name="notify_mistakes_title">Repeated mistakes</string>
+    <string name="notify_mistakes_body">You missed several %1$s quiz items recently. Practice that subject.</string>
+    <string name="notify_motivational_title">Keep going</string>
+    <string name="notify_motivational_streak">Your %1$d-day streak is at risk — ask or review today!</string>
+    <string name="notify_motivational_level">Only %1$d XP left to reach level %2$d.</string>
+    <string name="notify_summary_daily_title">Daily learning summary</string>
+    <string name="notify_summary_weekly_title">Weekly learning summary</string>
+    <string name="notify_summary_body">Questions: %1$d · Quiz accuracy: %2$d%% · Weekly XP: %3$d</string>
 </resources>
