@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Gamepad controller outline matching Deep Sage and stroke 1.8dp -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="@color/answer_primary"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M7,6H17C19.76,6 22,8.24 22,11V15.5C22,17.98 19.98,20 17.5,20C16.32,20 15.25,19.54 14.47,18.79L12.71,17.03C12.33,16.65 11.67,16.65 11.29,17.03L9.53,18.79C8.75,19.54 7.68,20 6.5,20C4.02,20 2,17.98 2,15.5V11C2,8.24 4.24,6 7,6Z" />
+    <!-- D-pad cross -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="@color/answer_primary"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M6,11.5H10M8,9.5V13.5" />
+    <!-- Action buttons -->
+    <path
+        android:fillColor="@color/answer_primary"
+        android:pathData="M15,10.5m-1,0a1,1 0 1,1 2,0a1,1 0 1,1 -2,0" />
+    <path
+        android:fillColor="@color/answer_primary"
+        android:pathData="M17.5,12.5m-1,0a1,1 0 1,1 2,0a1,1 0 1,1 -2,0" />
+</vector>
+

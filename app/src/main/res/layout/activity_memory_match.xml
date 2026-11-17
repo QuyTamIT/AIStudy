@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/answer_background">
+
+    <!-- Top App Bar -->
+    <LinearLayout
+        android:id="@+id/memory_top_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="@dimen/answer_page_gutter"
+        android:paddingTop="@dimen/answer_space_4"
+        android:paddingBottom="@dimen/answer_space_2"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageButton
+            android:id="@+id/btn_back"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/quiz_back"
+            android:src="@drawable/ic_answer_back"
+            app:tint="@color/answer_primary" />
+
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:text="@string/game_memory_title"
+            android:textAppearance="@style/TextAppearance.AIStudy.Answer.StepTitle" />
+
+        <TextView
+            android:id="@+id/tv_timer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_history_chip"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="4dp"
+            android:text="00:00"
+            android:textColor="@color/answer_primary"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- Info Stats Row -->
+    <LinearLayout
+        android:id="@+id/memory_status_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="@dimen/answer_page_gutter"
+        android:paddingVertical="8dp"
+        app:layout_constraintTop_toBottomOf="@id/memory_top_bar">
+
+        <TextView
+            android:id="@+id/tv_moves"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Lượt lật: 0"
+            android:textColor="@color/answer_foreground_secondary"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_matched_pairs"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Đã ghép: 0 / 6 cặp"
+            android:textColor="@color/answer_primary"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- Card Grid Container -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_cards"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/memory_status_bar"
+        app:layout_constraintWidth_max="640dp" />
+
+    <!-- Result / Victory Overlay -->
+    <LinearLayout
+        android:id="@+id/layout_result"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/answer_background"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="@dimen/answer_page_gutter"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_playground_card"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="28dp"
+            app:layout_constraintWidth_max="480dp">
+
+            <TextView
+                android:id="@+id/tv_stars"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="⭐⭐⭐"
+                android:textSize="32sp" />
+
+            <TextView
+                android:id="@+id/tv_result_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/game_result_victory"
+                android:textAppearance="@style/TextAppearance.AIStudy.Answer.Question" />
+
+            <TextView
+                android:id="@+id/tv_result_xp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_history_chip_active"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="6dp"
+                android:text="+45 XP"
+                android:textColor="@color/answer_primary"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_result_moves"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Số lượt lật: 12 lượt"
+                    android:textAppearance="@style/TextAppearance.AIStudy.Answer.Body" />
+
+                <TextView
+                    android:id="@+id/tv_result_time"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Thời gian hoàn thành: 00:45"
+                    android:textAppearance="@style/TextAppearance.AIStudy.Answer.Body" />
+            </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_play_again"
+                style="@style/Widget.AIStudy.Study.Primary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="28dp"
+                android:text="@string/game_btn_play_again"
+                app:icon="@drawable/ic_study_arrow"
+                app:iconGravity="textEnd" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_done"
+                style="@style/Widget.AIStudy.Answer.Back"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/game_btn_back_playground" />
+        </LinearLayout>
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+

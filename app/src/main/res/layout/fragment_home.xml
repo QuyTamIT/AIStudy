@@ -271,6 +271,69 @@
                     app:cornerRadius="12dp" />
             </LinearLayout>
 
+            <!-- Playground Banner (Educational Mini-Games) -->
+            <LinearLayout
+                android:id="@+id/card_home_playground"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/answer_space_6"
+                android:background="@drawable/bg_playground_hero"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:orientation="vertical"
+                android:padding="@dimen/answer_space_6">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/home_playground_banner_tag"
+                        android:textAllCaps="true"
+                        android:textColor="@color/answer_primary"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🎮"
+                        android:textSize="18sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/home_playground_banner_title"
+                    android:textAppearance="@style/TextAppearance.AIStudy.Answer.StepTitle"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/home_playground_banner_sub"
+                    android:textAppearance="@style/TextAppearance.AIStudy.Study.Support"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/tv_home_playground_cta"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/home_playground_banner_cta"
+                    android:textColor="@color/answer_primary"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
             <!-- Topic Review Suggestion (Phase 12) -->
             <LinearLayout
                 android:id="@+id/card_review_suggest"

@@ -491,13 +491,13 @@ class AnswerActivity : AppCompatActivity() {
 
     private fun buildExtrasPrompt(item: QuestionAnswer): String {
         return "You are AI Study Mentor. Given this solved question, return ONLY valid JSON " +
-            "(no markdown) with learning support fields:\n" +
+            "(no markdown) with learning support fields. Always return all explanations, concepts, mistakes, and questions in natural Vietnamese (Tiếng Việt):\n" +
             "{\n" +
-            "  \"simplify\": \"simpler explanation in English\",\n" +
-            "  \"alternative\": \"another way to solve in English\",\n" +
-            "  \"concepts\": [\"key concept 1\", \"key concept 2\"],\n" +
-            "  \"mistakes\": [\"common mistake 1\", \"common mistake 2\"],\n" +
-            "  \"followUps\": [\"follow-up question 1\", \"follow-up question 2\"]\n" +
+            "  \"simplify\": \"giải thích đơn giản, dễ hiểu bằng tiếng Việt\",\n" +
+            "  \"alternative\": \"cách tiếp cận hoặc phương pháp giải khác bằng tiếng Việt\",\n" +
+            "  \"concepts\": [\"khái niệm quan trọng 1\", \"khái niệm quan trọng 2\"],\n" +
+            "  \"mistakes\": [\"lỗi sai phổ biến cần tránh 1\", \"lỗi sai phổ biến cần tránh 2\"],\n" +
+            "  \"followUps\": [\"câu hỏi mở rộng 1\", \"câu hỏi mở rộng 2\"]\n" +
             "}\n\n" +
             "Subject: ${item.subject}\n" +
             "Difficulty: ${item.difficulty ?: "medium"}\n" +

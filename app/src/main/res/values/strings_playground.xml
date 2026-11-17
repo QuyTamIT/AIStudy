@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Playground Tab & Navigation -->
+    <string name="nav_playground">Sân chơi</string>
+    <string name="playground_title">Sân Chơi Học Tập</string>
+    <string name="playground_subtitle">Luyện phản xạ tính toán, củng cố kiến thức và tích lũy XP qua các mini-game giáo dục mỗi ngày!</string>
+    <string name="playground_daily_challenge">Thử Thách Trí Tuệ</string>
+    <string name="playground_daily_challenge_desc">Chơi ít nhất 1 trò chơi để duy trì chuỗi ngày học tập và thăng hạng!</string>
+    <string name="playground_hero_title">Học Vui · Nhớ Lâu</string>
+    <string name="playground_hero_sub">Thử thách trí tuệ mỗi ngày giúp kích hoạt tư duy và duy trì chuỗi học tập (Streak).</string>
+    <string name="playground_stat_xp">XP Sân Chơi</string>
+    <string name="playground_stat_games">Ván đã chơi</string>
+    <string name="playground_stat_streak">Chuỗi ngày</string>
+
+    <!-- Speed Math & Logic Blitz -->
+    <string name="game_speed_math_title">Đấu Trí Siêu Tốc</string>
+    <string name="game_speed_math_badge">Phản xạ &amp; Tính toán</string>
+    <string name="game_speed_math_desc">45 giây rèn luyện tốc độ tính nhẩm, công thức và tư duy logic với chuỗi Combo bùng nổ điểm số!</string>
+    <string name="game_speed_math_play">Bắt đầu chơi</string>
+    <string name="game_speed_math_best_score">Kỷ lục: %1$d điểm</string>
+    <string name="game_speed_math_combo">COMBO x%1$d 🔥</string>
+    <string name="game_speed_math_time_left">%1$ds</string>
+    <string name="game_speed_math_score">Điểm: %1$d</string>
+    <string name="game_speed_math_question_progress">Câu %1$d</string>
+
+    <!-- Concept Memory Match -->
+    <string name="game_memory_title">Ghép Cặp Trí Tuệ</string>
+    <string name="game_memory_badge">Ghi nhớ &amp; Khái niệm</string>
+    <string name="game_memory_desc">Lật thẻ tìm cặp thuật ngữ, công thức và kiến thức liên môn (Toán, Khoa học, Lập trình, Lịch sử, Ngoại ngữ)!</string>
+    <string name="game_memory_play">Bắt đầu chơi</string>
+    <string name="game_memory_best_moves">Kỷ lục: %1$d lượt</string>
+    <string name="game_memory_moves">Lượt lật: %1$d</string>
+    <string name="game_memory_pairs_matched">Đã ghép: %1$d / %2$d cặp</string>
+    <string name="game_memory_time">Thời gian: %1$02d:%2$02d</string>
+
+    <!-- Results & Dialogs -->
+    <string name="game_result_congrats">Xuất Sắc!</string>
+    <string name="game_result_game_over">Hết Giờ!</string>
+    <string name="game_result_victory">Chiến Thắng Hoàn Hảo!</string>
+    <string name="game_result_xp_earned">+%1$d XP</string>
+    <string name="game_result_score_label">Tổng điểm: %1$d</string>
+    <string name="game_result_correct_label">Số câu đúng: %1$d / %2$d</string>
+    <string name="game_result_accuracy_label">Độ chính xác: %1$d%%</string>
+    <string name="game_result_max_combo">Chuỗi combo cao nhất: x%1$d</string>
+    <string name="game_result_moves_label">Số lượt lật: %1$d lượt</string>
+    <string name="game_result_time_label">Thời gian hoàn thành: %1$s</string>
+    <string name="game_btn_play_again">Chơi lại</string>
+    <string name="game_btn_back_playground">Về Sân Chơi</string>
+    <string name="game_quit_confirm_title">Dừng ván chơi?</string>
+    <string name="game_quit_confirm_message">Tiến trình ván chơi này sẽ không được tính. Bạn có chắc muốn thoát?</string>
+    <string name="game_quit_stay">Tiếp tục chơi</string>
+    <string name="game_quit_exit">Thoát</string>
+
+    <!-- Home Banner -->
+    <string name="home_playground_banner_tag">SÂN CHƠI TRÍ TUỆ</string>
+    <string name="home_playground_banner_title">Rèn luyện phản xạ &amp; Nhận XP</string>
+    <string name="home_playground_banner_sub">Chinh phục Đấu Trí Siêu Tốc và Ghép Cặp Khái Niệm để tích lũy điểm thưởng.</string>
+    <string name="home_playground_banner_cta">Chơi ngay ›</string>
+</resources>

@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/playground_scroll"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/answer_background"
+    android:clipToPadding="false"
+    android:fillViewport="true">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/answer_page_gutter"
+            android:orientation="vertical"
+            android:paddingTop="@dimen/answer_space_4"
+            android:paddingBottom="@dimen/answer_space_8"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintWidth_max="@dimen/home_column_width">
+
+            <!-- Top bar: Brand -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/home_brand"
+                android:textAppearance="@style/TextAppearance.AIStudy.Home.Brand" />
+
+            <!-- Title & Subtitle -->
+            <TextView
+                android:id="@+id/tv_playground_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/answer_space_4"
+                android:text="@string/playground_title"
+                android:textAppearance="@style/TextAppearance.AIStudy.Answer.Question" />
+
+            <TextView
+                android:id="@+id/tv_playground_subtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/answer_space_1"
+                android:text="@string/playground_subtitle"
+                android:textAppearance="@style/TextAppearance.AIStudy.Study.Support" />
+
+            <!-- Learner Level & Streak Stats Card -->
+            <LinearLayout
+                android:id="@+id/card_learner_stats"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/answer_space_6"
+                android:background="@drawable/bg_playground_card"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="@dimen/answer_space_4">
+
+                <TextView
+                    android:id="@+id/tv_level_badge"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_level_badge"
+                    android:gravity="center"
+                    android:textColor="@color/answer_primary"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    tools:text="1" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tv_user_name"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/answer_foreground"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        tools:text="Học giả AIStudy" />
+
+                    <TextView
+                        android:id="@+id/tv_xp_total"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/answer_foreground_secondary"
+                        android:textSize="12sp"
+                        tools:text="Tổng tích lũy: 350 XP" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tv_streak"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_streak_pill"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="6dp"
+                    android:textColor="@color/streak"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    tools:text="3 ngày" />
+            </LinearLayout>
+
+            <!-- Hero Banner: Học Vui · Nhớ Lâu -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/answer_space_6"
+                android:background="@drawable/bg_playground_hero"
+                android:orientation="vertical"
+                android:padding="@dimen/answer_space_6">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_history_chip"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="4dp"
+                    android:text="@string/playground_daily_challenge"
+                    android:textColor="@color/answer_primary"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/playground_hero_title"
+                    android:textAppearance="@style/TextAppearance.AIStudy.Answer.StepTitle"
+                    android:textSize="20sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/playground_hero_sub"
+                    android:textAppearance="@style/TextAppearance.AIStudy.Answer.Body"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <!-- Section Label: Các trò chơi -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/answer_space_6"
+                android:text="CÁC TRÒ CHƠI HỌC TẬP"
+                android:textAllCaps="true"
+                android:textColor="@color/answer_foreground_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <!-- Game 1: Đấu Trí Siêu Tốc (Speed Math & Logic Blitz) -->
+            <LinearLayout
+                android:id="@+id/card_speed_math"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/answer_space_3"
+                android:background="@drawable/bg_playground_card"
+                android:orientation="vertical"
+                android:padding="@dimen/answer_space_6">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:background="@drawable/bg_level_badge"
+                        android:gravity="center"
+                        android:text="⚡"
+                        android:textSize="20sp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/game_speed_math_title"
+                            android:textAppearance="@style/TextAppearance.AIStudy.Answer.StepTitle" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/game_speed_math_badge"
+                            android:textColor="@color/answer_primary"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tv_speed_best_score"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_history_chip"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="4dp"
+                        android:text="Kỷ lục: 0"
+                        android:textColor="@color/answer_foreground_secondary"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/answer_space_3"
+                    android:text="@string/game_speed_math_desc"
+                    android:textAppearance="@style/TextAppearance.AIStudy.Study.Support"
+                    android:textSize="13sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_play_speed_math"
+                    style="@style/Widget.AIStudy.Study.Primary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/answer_space_4"
+                    android:text="@string/game_speed_math_play"
+                    app:icon="@drawable/ic_study_arrow"
+                    app:iconGravity="textEnd" />
+            </LinearLayout>
+
+            <!-- Game 2: Ghép Cặp Trí Tuệ (Concept Memory Match) -->
+            <LinearLayout
+                android:id="@+id/card_memory_match"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/answer_space_4"
+                android:background="@drawable/bg_playground_card"
+                android:orientation="vertical"
+                android:padding="@dimen/answer_space_6">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:background="@drawable/bg_subject_icon"
+                        android:gravity="center"
+                        android:text="🧠"
+                        android:textSize="20sp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/game_memory_title"
+                            android:textAppearance="@style/TextAppearance.AIStudy.Answer.StepTitle" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/game_memory_badge"
+                            android:textColor="@color/answer_primary"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tv_memory_best_moves"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_history_chip"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="4dp"
+                        android:text="Kỷ lục: —"
+                        android:textColor="@color/answer_foreground_secondary"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/answer_space_3"
+                    android:text="@string/game_memory_desc"
+                    android:textAppearance="@style/TextAppearance.AIStudy.Study.Support"
+                    android:textSize="13sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_play_memory"
+                    style="@style/Widget.AIStudy.Study.Primary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/answer_space_4"
+                    android:text="@string/game_memory_play"
+                    app:icon="@drawable/ic_study_arrow"
+                    app:iconGravity="textEnd" />
+            </LinearLayout>
+
+            <!-- Streak Tip Card -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/answer_space_6"
+                android:background="@drawable/bg_playground_card"
+                android:orientation="horizontal"
+                android:padding="@dimen/answer_space_4">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🔥"
+                    android:textSize="20sp" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1"
+                    android:text="@string/playground_daily_challenge_desc"
+                    android:textAppearance="@style/TextAppearance.AIStudy.Study.Support"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>
+

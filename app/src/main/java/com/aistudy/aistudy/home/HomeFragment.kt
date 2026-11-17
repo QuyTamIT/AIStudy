@@ -22,7 +22,6 @@ import com.aistudy.aistudy.database.QuestionAnswer
 import com.aistudy.aistudy.quiz.QuizActivity
 import com.aistudy.aistudy.xp.UnlockCatalog
 import com.aistudy.aistudy.xp.XpRules
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -125,6 +124,10 @@ class HomeFragment : Fragment() {
         tvCountLanguage = view.findViewById(R.id.tv_count_language)
 
         view.findViewById<View>(R.id.btn_logout)?.setOnClickListener { showLogoutConfirmation() }
+
+        view.findViewById<View>(R.id.card_home_playground)?.setOnClickListener {
+            selectTab(R.id.nav_playground)
+        }
 
         btnAsk.setOnClickListener { selectTab(R.id.nav_ask) }
         btnPracticeRecent.setOnClickListener {
@@ -335,7 +338,7 @@ class HomeFragment : Fragment() {
     private fun selectTab(menuItemId: Int) {
         val act = activity
         if (act is MainActivity) {
-            act.findViewById<BottomNavigationView>(R.id.bottom_nav)?.selectedItemId = menuItemId
+            act.selectTab(menuItemId)
         }
     }
 

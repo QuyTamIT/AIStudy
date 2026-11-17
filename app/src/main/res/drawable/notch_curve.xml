@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Notch SVG curve inspired by Reference Image 1 (.nav2-notch-svg: width: 92px, height: 34px) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="92dp"
+    android:height="34dp"
+    android:viewportWidth="92"
+    android:viewportHeight="34">
+    <!-- Smooth scooped concave notch fill matching surface background -->
+    <path
+        android:fillColor="@color/answer_surface"
+        android:pathData="M 0,0 C 18,0 26,30 46,30 C 66,30 74,0 92,0 L 92,34 L 0,34 Z" />
+    <!-- Top divider stroke along the curve -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="@color/answer_divider"
+        android:strokeWidth="1"
+        android:strokeLineCap="round"
+        android:pathData="M 0,0 C 18,0 26,30 46,30 C 66,30 74,0 92,0" />
+</vector>
+

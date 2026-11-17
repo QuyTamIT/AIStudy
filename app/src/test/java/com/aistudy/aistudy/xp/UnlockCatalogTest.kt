@@ -58,8 +58,8 @@ class UnlockCatalogTest {
         assertEquals("🐱", UnlockCatalog.emojiForAvatar(UnlockCatalog.AVATAR_CAT))
         assertEquals("🚀", UnlockCatalog.emojiForAvatar(UnlockCatalog.AVATAR_ROCKET))
 
-        assertEquals("Default", UnlockCatalog.labelForTheme(UnlockCatalog.THEME_DEFAULT))
-        assertEquals("Night", UnlockCatalog.labelForTheme(UnlockCatalog.THEME_NIGHT))
+        assertEquals("Mặc định", UnlockCatalog.labelForTheme(UnlockCatalog.THEME_DEFAULT))
+        assertEquals("Ban đêm", UnlockCatalog.labelForTheme(UnlockCatalog.THEME_NIGHT))
         assertEquals("Pastel", UnlockCatalog.labelForTheme(UnlockCatalog.THEME_PASTEL))
     }
 }

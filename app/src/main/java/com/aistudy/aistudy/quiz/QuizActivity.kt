@@ -466,7 +466,7 @@ class QuizActivity : AppCompatActivity() {
             .append("- For mcq: options must have exactly 4 distinct choices; correctAnswer must equal one option exactly\n")
             .append("- Subject: ").append(subject).append("\n")
             .append("- Questions must be based on the source material below (similar concepts, not identical copies)\n")
-            .append("- English only\n\n")
+            .append("- Return all prompts, options, and explanations in natural Vietnamese (Tiếng Việt)\n\n")
             .append("Source questions:\n")
         for ((i, qa) in sources.withIndex()) {
             sb.append(i + 1).append(". Q: ").append(qa.question)
