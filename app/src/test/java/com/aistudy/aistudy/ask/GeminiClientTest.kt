@@ -416,6 +416,16 @@ class GeminiClientTest {
         assertEquals(GeminiClient.ErrorReason.BILLING_DISABLED, error.reason)
     }
 
+    @Test fun billingMessageWithoutDetailsIsClassifiedAsBillingDisabled() {
+        val body = JSONObject().put("error", JSONObject()
+            .put("code", 403)
+            .put("message", "The Gemini API free tier is not available for this project. To use the Gemini API, please set up billing to upgrade to the paid tier at https://aistudio.google.com/billing.")
+            .put("status", "PERMISSION_DENIED")).toString()
+        val trace = AiRequestTrace(AiRequestTrace.Feature.ASK_TEXT, sink = { })
+        val error = assertThrows(GeminiClient.RequestException::class.java) { execute(trace, Connection(403, body)) }
+        assertEquals(GeminiClient.ErrorReason.BILLING_DISABLED, error.reason)
+    }
+
     @Test fun overflowingRetryAfterDatePreservesTheHttpStatusAndStructuredReason() {
         val keyError = JSONObject().put("error", JSONObject().put("message", canary)
             .put("details", JSONArray().put(JSONObject().put("reason", "API_KEY_INVALID")))).toString()

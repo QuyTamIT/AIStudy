@@ -226,6 +226,10 @@ object GeminiClient {
             }
             if (reason != ErrorReason.UNKNOWN) return RequestException(code, reason, retryAfterMillis)
         }
+        val errorMessage = envelope?.optJSONObject("error")?.optString("message").orEmpty()
+        if (code == 403 && (errorMessage.contains("billing", ignoreCase = true) || errorMessage.contains("paid tier", ignoreCase = true))) {
+            return RequestException(code, ErrorReason.BILLING_DISABLED, retryAfterMillis)
+        }
         return RequestException(code, if (code == 429) quotaReason(details) else ErrorReason.UNKNOWN, retryAfterMillis)
     }
 
