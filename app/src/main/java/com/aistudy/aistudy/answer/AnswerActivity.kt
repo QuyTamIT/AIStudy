@@ -467,45 +467,7 @@ class AnswerActivity : AppCompatActivity() {
         if (extrasJson.isNullOrEmpty()) return null
         return try { AnswerContent.extraField(org.json.JSONObject(extrasJson), key) } catch (_: Exception) { null }
     }
-<<<<<<< HEAD
 
-    private fun formatExtra(extras: JSONObject, key: String): String? {
-        return try {
-            val value = extras.opt(key)
-            if (value == null || JSONObject.NULL == value) return null
-            if (value is JSONArray) {
-                val sb = StringBuilder()
-                for (i in 0 until value.length()) {
-                    if (i > 0) sb.append("\n\n")
-                    sb.append("• ").append(value.getString(i))
-                }
-                return sb.toString()
-            }
-            value.toString()
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    private fun buildExtrasPrompt(item: QuestionAnswer): String {
-        return "You are AI Study Mentor. Given this solved question, return ONLY valid JSON " +
-            "(no markdown) with learning support fields. Always return all explanations, concepts, mistakes, and questions in natural Vietnamese (Tiếng Việt):\n" +
-            "{\n" +
-            "  \"simplify\": \"giải thích đơn giản, dễ hiểu bằng tiếng Việt\",\n" +
-            "  \"alternative\": \"cách tiếp cận hoặc phương pháp giải khác bằng tiếng Việt\",\n" +
-            "  \"concepts\": [\"khái niệm quan trọng 1\", \"khái niệm quan trọng 2\"],\n" +
-            "  \"mistakes\": [\"lỗi sai phổ biến cần tránh 1\", \"lỗi sai phổ biến cần tránh 2\"],\n" +
-            "  \"followUps\": [\"câu hỏi mở rộng 1\", \"câu hỏi mở rộng 2\"]\n" +
-            "}\n\n" +
-            "Subject: ${item.subject}\n" +
-            "Difficulty: ${item.difficulty ?: "medium"}\n" +
-            "Question: ${item.question}\n" +
-            "Final answer: ${item.finalAnswer}\n" +
-            "Steps JSON: ${item.steps}"
-    }
-
-=======
->>>>>>> c732e854838e926e5f8f6f70148a615fb567aada
     private fun styleExtraButtons() {
         styleAction(btnSimplify, KEY_SIMPLIFY == activeExtraKey)
         styleAction(btnAlternative, KEY_ALTERNATIVE == activeExtraKey)

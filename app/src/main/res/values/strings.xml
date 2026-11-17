@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">AIStudy</string>
-<<<<<<< HEAD
+    <string name="startup_database_error_title">Study data unavailable</string>
+    <string name="startup_database_error_message">AIStudy could not open your saved data. Your data is still on this device. Try updating the app and opening it again.</string>
     <string name="hello_blank_fragment">Xin chào</string>
     <string name="logout">Đăng xuất</string>
     <string name="logout_dialog_title">Đăng xuất khỏi AIStudy?</string>
@@ -28,6 +29,8 @@
     <string name="ask_error_access">Truy cập AI bị từ chối. Vui lòng kiểm tra cấu hình.</string>
     <string name="ask_error_model">Mô hình AI hiện không khả dụng. Vui lòng thử lại sau.</string>
     <string name="ask_error_quota">Đã đạt giới hạn yêu cầu AI. Vui lòng đợi trong giây lát và thử lại.</string>
+    <string name="ask_error_rate_limit">Too many AI requests right now. Please wait a moment before trying again.</string>
+    <string name="ask_error_quota_exhausted">The AI quota is exhausted or unavailable. Try again after the quota resets, or contact support.</string>
     <string name="ask_error_service">Dịch vụ AI tạm thời gián đoạn. Vui lòng thử lại.</string>
     <string name="ask_error_response">AI không thể cung cấp câu trả lời đầy đủ. Vui lòng thử lại.</string>
     <string name="ask_error_timeout">Thời gian phản hồi quá lâu. Vui lòng thử lại.</string>
@@ -38,49 +41,6 @@
     <string name="answer_explanation">Giải thích chi tiết</string>
     <string name="answer_final_title">Đáp án cuối cùng</string>
     <string name="answer_step_number">Bước %1$d</string>
-=======
-    <string name="startup_database_error_title">Study data unavailable</string>
-    <string name="startup_database_error_message">AIStudy could not open your saved data. Your data is still on this device. Try updating the app and opening it again.</string>
-    <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="logout">Logout</string>
-    <string name="logout_dialog_title">Log out of AIStudy?</string>
-    <string name="logout_dialog_message">Are you sure you want to log out? Your learning streak and progress are saved safely.</string>
-    <string name="logout_confirm">Log out</string>
-    <string name="logout_cancel">Cancel</string>
-    <string name="ask_title">Ask AIStudy</string>
-    <string name="ask_subtitle">Get an explanation tailored to your study level and learning style.</string>
-    <string name="ask_question_label">Your question</string>
-    <string name="ask_hint">Type a question you want to understand…</string>
-    <string name="ask_send">Get an answer</string>
-    <string name="ask_sending">Thinking…</string>
-    <string name="ask_suggestions_title">Try a question</string>
-    <string name="ask_suggestion_1">Solve x² − 5x + 6 = 0.</string>
-    <string name="ask_suggestion_2">Why does the Earth have seasons?</string>
-    <string name="ask_suggestion_3">Explain a for loop in Python with an example.</string>
-    <string name="ask_suggestion_4">How do I use the present perfect tense?</string>
-    <string name="ask_error_empty">Enter a question first.</string>
-    <string name="ask_error_key_missing">AI answers are not configured yet. Please try again later.</string>
-    <string name="ask_error_key_invalid">AI authentication failed: the configured API key is invalid or expired.</string>
-    <string name="ask_error_request">AI rejected this request. Please rephrase your question and try again.</string>
-    <string name="ask_error_too_large">Your question is too long. Please shorten it and try again.</string>
-    <string name="ask_error_billing">AI access requires an active billing configuration.</string>
-    <string name="ask_error_session">Your session has changed. Sign in again before asking.</string>
-    <string name="ask_error_access">AI access was denied. Please check the API configuration.</string>
-    <string name="ask_error_model">The AI model is unavailable. Please try again later.</string>
-    <string name="ask_error_quota">An AI request limit was reached. Please try again later. If this continues, contact support.</string>
-    <string name="ask_error_rate_limit">Too many AI requests right now. Please wait a moment before trying again.</string>
-    <string name="ask_error_quota_exhausted">The AI quota is exhausted or unavailable. Try again after the quota resets, or contact support.</string>
-    <string name="ask_error_service">AI is temporarily unavailable. Please try again.</string>
-    <string name="ask_error_response">AI could not provide a complete answer. Please try again.</string>
-    <string name="ask_error_timeout">The answer took too long. Please try again.</string>
-    <string name="ask_error_network">Could not connect. Check your internet connection and try again.</string>
-    <string name="ask_error_save">Could not save your answer. Please try again.</string>
-    <string name="answer_back">Back to question</string>
-    <string name="answer_loading">Loading your answer</string>
-    <string name="answer_explanation">Explanation</string>
-    <string name="answer_final_title">Final answer</string>
-    <string name="answer_step_number">Step %1$d</string>
->>>>>>> c732e854838e926e5f8f6f70148a615fb567aada
     <string name="answer_step_title">%1$d. %2$s</string>
     <string name="answer_error_load">Không thể mở câu trả lời này. Vui lòng quay lại màn hình Hỏi đáp.</string>
     <string name="answer_not_found">Không tìm thấy câu trả lời.</string>

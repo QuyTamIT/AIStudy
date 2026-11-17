@@ -326,69 +326,7 @@ class QuizActivity : AppCompatActivity() {
         layoutResult.visibility = View.GONE
     }
 
-<<<<<<< HEAD
-    private fun buildQuizPrompt(sources: List<QuestionAnswer>): String {
-        val sb = StringBuilder()
-        sb.append("You are AI Study Mentor. Create a practice quiz from the student's recent questions.\n")
-            .append("Return ONLY valid JSON (no markdown):\n")
-            .append("{\n")
-            .append("  \"items\": [\n")
-            .append("    {\n")
-            .append("      \"type\": \"mcq\",\n")
-            .append("      \"prompt\": \"question text\",\n")
-            .append("      \"options\": [\"A\", \"B\", \"C\", \"D\"],\n")
-            .append("      \"correctAnswer\": \"exact matching option text\",\n")
-            .append("      \"explanation\": \"why this is correct\"\n")
-            .append("    },\n")
-            .append("    {\n")
-            .append("      \"type\": \"short\",\n")
-            .append("      \"prompt\": \"question text\",\n")
-            .append("      \"options\": [],\n")
-            .append("      \"correctAnswer\": \"expected short answer\",\n")
-            .append("      \"explanation\": \"brief explanation\"\n")
-            .append("    },\n")
-            .append("    {\n")
-            .append("      \"type\": \"blank\",\n")
-            .append("      \"prompt\": \"Fill in the blank: ...\",\n")
-            .append("      \"options\": [],\n")
-            .append("      \"correctAnswer\": \"word or phrase\",\n")
-            .append("      \"explanation\": \"brief explanation\"\n")
-            .append("    }\n")
-            .append("  ]\n")
-            .append("}\n\n")
-            .append("Rules:\n")
-            .append("- Create exactly ").append(TARGET_ITEMS).append(" items\n")
-            .append("- Mix types: include at least one mcq, one short, one blank if possible\n")
-            .append("- For mcq: options must have exactly 4 distinct choices; correctAnswer must equal one option exactly\n")
-            .append("- Subject: ").append(subject).append("\n")
-            .append("- Questions must be based on the source material below (similar concepts, not identical copies)\n")
-            .append("- Return all prompts, options, and explanations in natural Vietnamese (Tiếng Việt)\n\n")
-            .append("Source questions:\n")
-        for ((i, qa) in sources.withIndex()) {
-            sb.append(i + 1).append(". Q: ").append(qa.question)
-                .append("\n   Final: ").append(qa.finalAnswer)
-                .append("\n   Difficulty: ").append(qa.difficulty ?: "medium")
-                .append("\n")
-        }
-        return sb.toString()
-    }
 
-    private fun normalizeType(type: String): String {
-        return when (type) {
-            "short", "blank", "mcq" -> type
-            else -> "mcq"
-        }
-    }
-
-    private fun normalizeAnswer(value: String?): String {
-        if (value == null) {
-            return ""
-        }
-        return value.trim().replace(Regex("\\s+"), " ").lowercase()
-    }
-
-=======
->>>>>>> c732e854838e926e5f8f6f70148a615fb567aada
     private fun typeLabel(type: String?): String {
         return when (type) {
             "short" -> getString(R.string.quiz_type_short)

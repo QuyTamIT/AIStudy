@@ -22,11 +22,12 @@ import com.aistudy.aistudy.database.ProfileDefaults
 import com.aistudy.aistudy.history.HistoryFragment
 import com.aistudy.aistudy.home.HomeFragment
 import com.aistudy.aistudy.notify.NotificationScheduler
+import com.aistudy.aistudy.navigation.CurvedAnimatedBottomNav
 import com.aistudy.aistudy.onboarding.OnboardingActivity
+import com.aistudy.aistudy.playground.PlaygroundFragment
 import com.aistudy.aistudy.progress.ProgressFragment
 import com.aistudy.aistudy.xp.FriendSeeder
 import com.aistudy.aistudy.xp.UnlockCatalog
-import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MainActivity : AppCompatActivity() {
 
@@ -35,11 +36,16 @@ class MainActivity : AppCompatActivity() {
         const val EXTRA_QA_ID = "qa_id"
         const val TAB_HOME = "home"
         const val TAB_ASK = "ask"
+        const val TAB_PLAYGROUND = "playground"
         const val TAB_HISTORY = "history"
         const val TAB_PROGRESS = "progress"
     }
 
-    private lateinit var bottomNav: BottomNavigationView
+    private lateinit var bottomNav: CurvedAnimatedBottomNav
+
+    fun selectTab(itemId: Int) {
+        bottomNav.selectedItemId = itemId
+    }
     private val notificationPermissionLauncher: ActivityResultLauncher<String> =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
@@ -83,6 +89,7 @@ class MainActivity : AppCompatActivity() {
             val fragment: Fragment = when (item.itemId) {
                 R.id.nav_home -> HomeFragment()
                 R.id.nav_ask -> AskFragment()
+                R.id.nav_playground -> PlaygroundFragment()
                 R.id.nav_history -> HistoryFragment()
                 R.id.nav_progress -> ProgressFragment()
                 else -> return@setOnItemSelectedListener false
@@ -123,6 +130,7 @@ class MainActivity : AppCompatActivity() {
         }
         bottomNav.selectedItemId = when (intent.getStringExtra(EXTRA_OPEN_TAB)) {
             TAB_ASK -> R.id.nav_ask
+            TAB_PLAYGROUND -> R.id.nav_playground
             TAB_HISTORY -> R.id.nav_history
             TAB_PROGRESS -> R.id.nav_progress
             else -> R.id.nav_home
