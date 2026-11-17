@@ -70,12 +70,12 @@ class AiRequestTrace(
         blockReason = allowed(response.optJSONObject("promptFeedback")?.opt("blockReason"), BLOCK_REASONS)
     }
 
-    internal fun endAttempt(status: Int?, outcome: Outcome, reason: Reason) {
+    internal fun endAttempt(status: Int?, outcome: Outcome, reason: Reason, model: String = "gemini-3.5-flash-lite") {
         val start = attemptStartedAt ?: return
         attemptStartedAt = null
         requestReason = reason
         emit(base("attempt_end")
-            .put("ordinal", attempts).put("model", "gemini-3.6-flash")
+            .put("ordinal", attempts).put("model", model)
             .put("httpStatus", status ?: JSONObject.NULL)
             .put("outcome", outcome.name.lowercase()).put("reason", reason.name.lowercase())
             .put("finishReason", finishReason ?: JSONObject.NULL)

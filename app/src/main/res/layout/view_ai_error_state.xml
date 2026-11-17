@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/card_ai_error"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_ai_error_card"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:visibility="gone"
+    tools:visibility="visible">
+
+    <FrameLayout
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:background="@drawable/bg_ai_error_icon_bubble">
+
+        <ImageView
+            android:id="@+id/iv_error_icon"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_gravity="center"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_study_error"
+            app:tint="@color/answer_error" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/tv_error_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:gravity="center"
+        android:textColor="@color/answer_foreground"
+        android:textSize="17sp"
+        android:textStyle="bold"
+        tools:text="@string/ai_error_title_quota" />
+
+    <TextView
+        android:id="@+id/tv_error_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:lineSpacingExtra="3dp"
+        android:textColor="@color/answer_foreground_secondary"
+        android:textSize="14sp"
+        tools:text="@string/ask_error_rate_limit" />
+
+    <TextView
+        android:id="@+id/tv_error_hint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:textColor="@color/streak"
+        android:textSize="12sp"
+        android:visibility="gone"
+        tools:text="Vui lòng đợi 5 giây trước khi thử lại…"
+        tools:visibility="visible" />
+
+    <LinearLayout
+        android:id="@+id/layout_error_actions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_error_home"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:text="@string/ai_action_home"
+            android:textColor="@color/answer_foreground"
+            app:cornerRadius="12dp"
+            app:icon="@drawable/ic_nav_home"
+            app:iconGravity="textStart"
+            app:iconTint="@color/answer_foreground_secondary"
+            app:strokeColor="@color/answer_divider" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_error_retry"
+            style="@style/Widget.AIStudy.Study.Primary"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:text="@string/ai_action_retry"
+            app:cornerRadius="12dp"
+            app:icon="@drawable/ic_answer_more"
+            app:iconGravity="textStart" />
+    </LinearLayout>
+</LinearLayout>

@@ -55,6 +55,7 @@ class AnswerActivity : AppCompatActivity() {
     private lateinit var tvExtras: TextView
     private lateinit var progressExtras: ProgressBar
     private lateinit var btnMarkReviewed: MaterialButton
+    private var aiErrorHelper: com.aistudy.aistudy.ask.AiErrorUiHelper? = null
 
     private var activeExtraKey: String? = null
     private var extrasLoading = false
@@ -123,6 +124,17 @@ class AnswerActivity : AppCompatActivity() {
 
         model = ViewModelProvider(this)[AnswerViewModel::class.java]
         findViewById<View>(R.id.btn_more_topics).setOnClickListener { model.showMore() }
+        aiErrorHelper = com.aistudy.aistudy.ask.AiErrorUiHelper(
+            root = findViewById(R.id.layout_answer_ai_error),
+            onRetry = {
+                findViewById<View>(R.id.progress_answer_loading).visibility = View.VISIBLE
+                aiErrorHelper?.hide()
+                model.start(answerRepository)
+            },
+            onGoHome = {
+                finish()
+            }
+        )
         val database = AppDatabase.getInstance(applicationContext)
         qaDao = database.questionAnswerDao()
         profileDao = database.profileDao()
@@ -328,6 +340,7 @@ class AnswerActivity : AppCompatActivity() {
         }
         renderedQaId = item.id
         renderedSteps = content.steps
+        aiErrorHelper?.hide()
         findViewById<View>(R.id.progress_answer_loading).visibility = View.GONE
         findViewById<View>(R.id.answer_content).visibility = View.VISIBLE
     }
@@ -514,8 +527,15 @@ class AnswerActivity : AppCompatActivity() {
     }
 
     private fun showLoadError() {
-        Toast.makeText(this, R.string.answer_error_load, Toast.LENGTH_LONG).show()
-        finish()
+        findViewById<View>(R.id.progress_answer_loading).visibility = View.GONE
+        findViewById<View>(R.id.answer_content).visibility = View.GONE
+        val info = com.aistudy.aistudy.ask.AiErrorMessages.AiErrorInfo(
+            titleRes = R.string.ai_error_title_general,
+            messageRes = R.string.answer_error_load,
+            canRetry = true,
+            isQuotaError = false
+        )
+        aiErrorHelper?.showError(info)
     }
 
     private fun flushReviewSeconds() {
@@ -545,6 +565,8 @@ class AnswerActivity : AppCompatActivity() {
             .getLong(LoginActivity.KEY_USER_ID, 0L) == userId
 
     override fun onDestroy() {
+        aiErrorHelper?.cancelCooldown()
+        aiErrorHelper = null
         flushReviewSeconds()
         extrasExecutor?.shutdown()
         super.onDestroy()

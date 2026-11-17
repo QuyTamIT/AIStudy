@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">AIStudy</string>
-    <string name="startup_database_error_title">Study data unavailable</string>
-    <string name="startup_database_error_message">AIStudy could not open your saved data. Your data is still on this device. Try updating the app and opening it again.</string>
+    <string name="startup_database_error_title">Dữ liệu học tập không khả dụng</string>
+    <string name="startup_database_error_message">AIStudy không thể mở dữ liệu đã lưu. Dữ liệu của bạn vẫn an toàn trên thiết bị này. Vui lòng cập nhật ứng dụng và thử mở lại.</string>
     <string name="hello_blank_fragment">Xin chào</string>
     <string name="logout">Đăng xuất</string>
     <string name="logout_dialog_title">Đăng xuất khỏi AIStudy?</string>
@@ -29,8 +29,8 @@
     <string name="ask_error_access">Truy cập AI bị từ chối. Vui lòng kiểm tra cấu hình.</string>
     <string name="ask_error_model">Mô hình AI hiện không khả dụng. Vui lòng thử lại sau.</string>
     <string name="ask_error_quota">Đã đạt giới hạn yêu cầu AI. Vui lòng đợi trong giây lát và thử lại.</string>
-    <string name="ask_error_rate_limit">Too many AI requests right now. Please wait a moment before trying again.</string>
-    <string name="ask_error_quota_exhausted">The AI quota is exhausted or unavailable. Try again after the quota resets, or contact support.</string>
+    <string name="ask_error_rate_limit">Đang có quá nhiều yêu cầu gửi tới AI (429). Vui lòng đợi trong giây lát rồi thử lại.</string>
+    <string name="ask_error_quota_exhausted">Hạn ngạch AI hôm nay đã đạt giới hạn. Vui lòng quay lại vào ngày mai hoặc liên hệ hỗ trợ.</string>
     <string name="ask_error_service">Dịch vụ AI tạm thời gián đoạn. Vui lòng thử lại.</string>
     <string name="ask_error_response">AI không thể cung cấp câu trả lời đầy đủ. Vui lòng thử lại.</string>
     <string name="ask_error_timeout">Thời gian phản hồi quá lâu. Vui lòng thử lại.</string>
@@ -82,4 +82,71 @@
     <string name="ask_permission_gallery">Cần cấp quyền truy cập ảnh để chọn hình từ thư viện.</string>
     <string name="ask_image_error">Không thể tải hình ảnh đã chọn.</string>
     <string name="answer_image_label">Ảnh đính kèm</string>
+
+    <!-- AI Error State UI (Vietnamese) -->
+    <string name="ai_error_title_quota">Giới hạn yêu cầu AI (429)</string>
+    <string name="ai_error_title_quota_exhausted">Hết hạn ngạch AI hôm nay</string>
+    <string name="ai_error_title_billing">Lỗi tài khoản &amp; thanh toán</string>
+    <string name="ai_error_title_auth">Lỗi xác thực khóa API</string>
+    <string name="ai_error_title_network">Không có kết nối mạng</string>
+    <string name="ai_error_title_timeout">Hết thời gian phản hồi</string>
+    <string name="ai_error_title_server">Máy chủ AI tạm gián đoạn (5xx)</string>
+    <string name="ai_error_title_general">Không thể hoàn tất yêu cầu</string>
+    <string name="ai_action_retry">Thử lại</string>
+    <string name="ai_action_home">Về trang chủ</string>
+    <string name="ai_retry_wait">Vui lòng đợi %1$d giây trước khi thử lại…</string>
+    <string name="ai_quota_daily_hint">Gợi ý: Hạn ngạch miễn phí được làm mới mỗi ngày. Bạn vẫn có thể ôn tập các bài học đã lưu.</string>
+
+    <!-- Student Profile Strings -->
+    <string name="profile_screen_title">Hồ sơ học sinh</string>
+    <string name="profile_edit_title">Chỉnh sửa thông tin</string>
+    <string name="profile_name_label">Họ và tên</string>
+    <string name="profile_email_label">Email tài khoản</string>
+    <string name="profile_level_format">Cấp %1$d</string>
+    <string name="profile_level_title">Cấp %1$d · %2$s</string>
+    <string name="profile_streak_format">%1$d ngày học liên tiếp</string>
+    <string name="profile_xp_format">%1$d XP</string>
+    <string name="profile_xp_next_level">Còn %1$d XP để lên Cấp %2$d</string>
+    <string name="profile_stats_heading">Thống kê học tập</string>
+    <string name="profile_stat_questions">Câu hỏi đã hỏi</string>
+    <string name="profile_stat_starred">Đã lưu sao</string>
+    <string name="profile_stat_review_time">Thời gian ôn tập</string>
+    <string name="profile_stat_accuracy">Độ chính xác Quiz</string>
+    <string name="profile_stat_accuracy_format">%1$d%%</string>
+    <string name="profile_stat_time_minutes">%1$d phút</string>
+    <string name="profile_stat_time_hours_minutes">%1$d giờ %2$d phút</string>
+    <string name="profile_preferences_heading">Tùy chọn học tập</string>
+    <string name="profile_grade_level">Trình độ học vấn</string>
+    <string name="profile_learning_style">Phong cách giải thích</string>
+    <string name="profile_favorite_subjects">Môn học yêu thích</string>
+    <string name="profile_subject_distribution">Phân bố môn học</string>
+    <string name="profile_recent_questions">Lịch sử câu hỏi gần đây</string>
+    <string name="profile_history_empty">Chưa có câu hỏi nào. Hãy đặt câu hỏi đầu tiên!</string>
+    <string name="profile_view_all_history">Xem tất cả lịch sử</string>
+    <string name="profile_choose_avatar">Chọn ảnh đại diện</string>
+    <string name="profile_avatar_unlocked">Đã mở khóa</string>
+    <string name="profile_avatar_locked">Mở khóa ở Cấp %1$d</string>
+    <string name="profile_settings_heading">Cài đặt tài khoản &amp; Bảo mật</string>
+    <string name="profile_btn_edit">Chỉnh sửa</string>
+    <string name="profile_btn_save">Lưu thay đổi</string>
+    <string name="profile_saved_success">Cập nhật hồ sơ thành công!</string>
+    <string name="profile_error_name_empty">Họ và tên không được để trống.</string>
+    <string name="profile_error_load">Không thể tải thông tin hồ sơ.</string>
+    <string name="profile_error_save">Không thể lưu thông tin hồ sơ. Vui lòng thử lại.</string>
+    <string name="profile_cloud_sync_title">Đồng bộ đám mây (Firebase)</string>
+    <string name="profile_cloud_sync_desc">Dữ liệu được bảo mật và đồng bộ hóa qua Firebase Authentication &amp; Firestore.</string>
+    <string name="profile_cloud_synced">Đã đồng bộ</string>
+    <string name="profile_cloud_sync_now">Đồng bộ ngay</string>
+    <string name="profile_change_password">Đổi mật khẩu</string>
+    <string name="profile_dialog_password_title">Đổi mật khẩu tài khoản</string>
+    <string name="profile_old_password">Mật khẩu hiện tại</string>
+    <string name="profile_new_password">Mật khẩu mới (tối thiểu 6 ký tự)</string>
+    <string name="profile_confirm_password">Nhập lại mật khẩu mới</string>
+    <string name="profile_password_changed">Đổi mật khẩu thành công!</string>
+    <string name="profile_password_mismatch">Mật khẩu mới không trùng khớp.</string>
+    <string name="profile_password_wrong_old">Mật khẩu hiện tại không đúng.</string>
+    <string name="profile_password_too_short">Mật khẩu mới phải có ít nhất 6 ký tự.</string>
+    <string name="profile_notifications_title">Nhắc nhở học tập hàng ngày</string>
+    <string name="profile_notifications_desc">Nhận thông báo nhắc ôn tập và duy trì chuỗi ngày học</string>
+    <string name="profile_avatar_desc">Ảnh đại diện sinh viên</string>
 </resources>

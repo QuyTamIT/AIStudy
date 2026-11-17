@@ -37,7 +37,8 @@ internal class QuizViewModel @JvmOverloads constructor(
     data class UiState(
         val quiz: Quiz? = null,
         val saving: Boolean = false,
-        @get:StringRes val error: Int? = null
+        @get:StringRes val error: Int? = null,
+        val errorInfo: AiErrorMessages.AiErrorInfo? = null
     )
 
     private val database by lazy { AppDatabase.getInstance(application) }
@@ -62,6 +63,14 @@ internal class QuizViewModel @JvmOverloads constructor(
             } else {
                 generateQuiz(ownerId, subject)
             }
+        }
+    }
+
+    fun retry(ownerId: Long, subject: String) {
+        started = true
+        runOperation(UiState()) {
+            checkActiveUser(ownerId)
+            generateQuiz(ownerId, subject)
         }
     }
 
@@ -120,10 +129,11 @@ internal class QuizViewModel @JvmOverloads constructor(
             val result = try {
                 UiState(quiz = operation())
             } catch (error: QuizLoadException) {
-                UiState(error = error.messageRes)
+                UiState(error = error.messageRes, errorInfo = AiErrorMessages.getErrorInfo(error, error.messageRes))
             } catch (error: Exception) {
                 Log.w(TAG, "Quiz operation failed (${error.javaClass.simpleName})")
-                previous.copy(saving = false, error = AiErrorMessages.message(error, R.string.quiz_error))
+                val info = AiErrorMessages.getErrorInfo(error, R.string.quiz_error)
+                previous.copy(saving = false, error = info.messageRes, errorInfo = info)
             }
             if (!cleared) mutableState.postValue(result)
         }

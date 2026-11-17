@@ -13,6 +13,8 @@ object NotificationScheduler {
 
     const val UNIQUE_DAILY = "aistudy_daily_learning"
     const val UNIQUE_FORCE = "aistudy_force_learning"
+    const val PREFS_NOTIF = "notify_settings"
+    const val KEY_NOTIF_ENABLED = "daily_notif_enabled"
 
     fun schedule(context: Context) {
         NotificationHelper.ensureChannel(context)
@@ -58,6 +60,10 @@ object NotificationScheduler {
             target.add(Calendar.DAY_OF_MONTH, 1)
         }
         return target.timeInMillis - now.timeInMillis
+    }
+
+    fun cancel(context: Context) {
+        WorkManager.getInstance(context).cancelUniqueWork(UNIQUE_DAILY)
     }
 }
 

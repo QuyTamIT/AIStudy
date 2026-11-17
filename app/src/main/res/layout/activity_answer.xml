@@ -52,6 +52,17 @@
                 app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
+            <include
+                android:id="@+id/layout_answer_ai_error"
+                layout="@layout/view_ai_error_state"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/answer_space_8"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintWidth_max="@dimen/answer_column_width" />
+
             <LinearLayout android:id="@+id/answer_content"
                 android:layout_width="0dp" android:layout_height="wrap_content"
                 android:orientation="vertical" android:paddingTop="@dimen/answer_space_8"
