@@ -14,10 +14,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         QuestionAnswer::class,
         QuizSession::class,
         QuizItem::class,
-        Friend::class,
-        GameResult::class
+        Friend::class
     ],
-    version = 9,
+    version = 8,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -33,8 +32,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun quizItemDao(): QuizItemDao
 
     abstract fun friendDao(): FriendDao
-
-    abstract fun gameResultDao(): GameResultDao
 
     companion object {
 
@@ -146,26 +143,6 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        val MIGRATION_8_9 = object : Migration(8, 9) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("""
-                    CREATE TABLE IF NOT EXISTS `game_results` (
-                        `roundId` TEXT NOT NULL,
-                        `userId` INTEGER NOT NULL,
-                        `subject` TEXT NOT NULL,
-                        `timed` INTEGER NOT NULL,
-                        `score` INTEGER NOT NULL,
-                        `correctCount` INTEGER NOT NULL,
-                        `attempted` INTEGER NOT NULL,
-                        `bestCombo` INTEGER NOT NULL,
-                        `xpAwarded` INTEGER NOT NULL,
-                        `completedAt` INTEGER NOT NULL,
-                        PRIMARY KEY(`roundId`)
-                    )
-                """.trimIndent())
-            }
-        }
-
         @Volatile
         private var instance: AppDatabase? = null
 
@@ -184,8 +161,7 @@ abstract class AppDatabase : RoomDatabase() {
                         MIGRATION_4_5,
                         MIGRATION_5_6,
                         MIGRATION_6_7,
-                        MIGRATION_7_8,
-                        MIGRATION_8_9
+                        MIGRATION_7_8
                     )
                     .fallbackToDestructiveMigration(false)
                     .build()

@@ -5,11 +5,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.aistudy.aistudy.R
-import com.aistudy.aistudy.ask.GeminiClient
-import java.io.IOException
-import java.net.SocketTimeoutException
+import com.aistudy.aistudy.ask.AiErrorMessages
 import java.util.concurrent.Executors
-import org.json.JSONException
 
 data class AnswerUiState(
     val snapshot: AnswerSnapshot? = null,
@@ -73,26 +70,8 @@ class AnswerViewModel : ViewModel() {
     private fun errorMessage(error: Exception, classify: Boolean): Int = when (error) {
         is MissingKeyException -> R.string.ask_error_key_missing
         is AnswerRepository.ContentChangedException -> R.string.answer_error_changed
-        is GeminiClient.RequestException -> when (error.reason) {
-            GeminiClient.ErrorReason.API_KEY_INVALID, GeminiClient.ErrorReason.API_KEY_EXPIRED -> R.string.ask_error_key_invalid
-            GeminiClient.ErrorReason.API_KEY_RESTRICTED, GeminiClient.ErrorReason.SERVICE_DISABLED -> R.string.ask_error_access
-            GeminiClient.ErrorReason.BILLING_DISABLED -> R.string.ask_error_billing
-            GeminiClient.ErrorReason.UNKNOWN -> when (error.statusCode) {
-                401 -> R.string.ask_error_key_invalid
-                403 -> R.string.ask_error_access
-                404 -> R.string.ask_error_model
-                408, 504 -> R.string.ask_error_timeout
-                413 -> R.string.ask_error_too_large
-                429 -> R.string.ask_error_quota
-                in 500..599 -> R.string.ask_error_service
-                else -> R.string.ask_error_request
-            }
-        }
-        is SocketTimeoutException -> R.string.ask_error_timeout
-        is GeminiClient.InvalidResponseException, is JSONException -> R.string.ask_error_response
         is IllegalArgumentException -> if (classify) R.string.ask_error_response else R.string.answer_error_more_response
-        is IOException -> R.string.ask_error_network
-        else -> R.string.answer_error_save_more
+        else -> AiErrorMessages.message(error, R.string.answer_error_save_more)
     }
 
     override fun onCleared() {

@@ -69,7 +69,7 @@ class DailyLearningWorker(context: Context, params: WorkerParameters) : Worker(c
             context,
             NotificationHelper.ID_MISTAKES,
             context.getString(R.string.notify_mistakes_title),
-            context.getString(R.string.notify_mistakes_body, capitalize(subject)),
+            context.getString(R.string.notify_mistakes_body, localizedSubject(context, subject)),
             MainActivity.TAB_PROGRESS,
             -1
         )
@@ -179,11 +179,15 @@ class DailyLearningWorker(context: Context, params: WorkerParameters) : Worker(c
         private const val HOURS_48_MS = 48L * 60L * 60L * 1000L
         private const val DAYS_7_MS = 7L * 24L * 60L * 60L * 1000L
 
-        private fun capitalize(subject: String?): String {
-            if (subject.isNullOrEmpty()) {
-                return ""
+        private fun localizedSubject(context: Context, subject: String?): String {
+            return when (subject?.lowercase(Locale.ROOT)) {
+                "math" -> context.getString(R.string.subject_math)
+                "science" -> context.getString(R.string.subject_science)
+                "code" -> context.getString(R.string.subject_code)
+                "history" -> context.getString(R.string.subject_history)
+                "language" -> context.getString(R.string.subject_language)
+                else -> subject ?: context.getString(R.string.subject_other)
             }
-            return subject.substring(0, 1).uppercase(Locale.US) + subject.substring(1)
         }
     }
 }

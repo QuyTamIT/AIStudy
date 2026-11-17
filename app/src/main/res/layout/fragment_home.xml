@@ -262,9 +262,6 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_practice_recent"
-                    app:icon="@drawable/ic_study_practice"
-                    app:iconSize="20dp"
-                    app:iconGravity="textStart"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
@@ -272,22 +269,6 @@
                     android:visibility="gone"
                     app:backgroundTint="@color/auth_brand"
                     app:cornerRadius="12dp" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:layout_marginTop="24dp" android:orientation="vertical"
-                android:padding="20dp" android:background="@drawable/bg_home_card">
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:text="@string/game_title" android:accessibilityHeading="true"
-                    android:textAppearance="@style/TextAppearance.AIStudy.Answer.Section" />
-                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp" android:text="@string/game_home_body"
-                    android:textAppearance="@style/TextAppearance.AIStudy.Study.Support" />
-                <com.google.android.material.button.MaterialButton android:id="@+id/btn_game"
-                    style="@style/Widget.AIStudy.Study.Primary" android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:layout_marginTop="16dp"
-                    android:text="@string/game_open" app:icon="@drawable/ic_study_game" />
             </LinearLayout>
 
             <!-- Topic Review Suggestion (Phase 12) -->
@@ -456,13 +437,15 @@
                     android:orientation="vertical"
                     android:padding="@dimen/answer_space_4">
 
-                    <ImageView
+                    <TextView
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_subject_icon"
-                        android:padding="6dp"
-                        android:src="@drawable/ic_study_math"
-                        android:importantForAccessibility="no" />
+                        android:gravity="center"
+                        android:text="@string/home_subject_math_icon"
+                        android:textColor="@color/answer_primary"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="match_parent"
@@ -493,13 +476,15 @@
                     android:orientation="vertical"
                     android:padding="@dimen/answer_space_4">
 
-                    <ImageView
+                    <TextView
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_subject_icon"
-                        android:padding="6dp"
-                        android:src="@drawable/ic_study_science"
-                        android:importantForAccessibility="no" />
+                        android:gravity="center"
+                        android:text="@string/home_subject_science_icon"
+                        android:textColor="@color/answer_primary"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="match_parent"
@@ -538,13 +523,15 @@
                     android:orientation="vertical"
                     android:padding="@dimen/answer_space_4">
 
-                    <ImageView
+                    <TextView
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_subject_icon"
-                        android:padding="6dp"
-                        android:src="@drawable/ic_study_code"
-                        android:importantForAccessibility="no" />
+                        android:gravity="center"
+                        android:text="@string/home_subject_code_icon"
+                        android:textColor="@color/answer_primary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="match_parent"
@@ -575,13 +562,15 @@
                     android:orientation="vertical"
                     android:padding="@dimen/answer_space_4">
 
-                    <ImageView
+                    <TextView
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_subject_icon"
-                        android:padding="6dp"
-                        android:src="@drawable/ic_study_history"
-                        android:importantForAccessibility="no" />
+                        android:gravity="center"
+                        android:text="@string/home_subject_history_icon"
+                        android:textColor="@color/answer_primary"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="match_parent"
@@ -620,13 +609,15 @@
                     android:orientation="vertical"
                     android:padding="@dimen/answer_space_4">
 
-                    <ImageView
+                    <TextView
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_subject_icon"
-                        android:padding="6dp"
-                        android:src="@drawable/ic_study_language"
-                        android:importantForAccessibility="no" />
+                        android:gravity="center"
+                        android:text="@string/home_subject_language_icon"
+                        android:textColor="@color/answer_primary"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="match_parent"
