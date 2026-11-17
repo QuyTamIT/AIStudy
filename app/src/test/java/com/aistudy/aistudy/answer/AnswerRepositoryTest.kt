@@ -222,5 +222,7 @@ class AnswerRepositoryTest {
             row.takeIf { it.userId == userId && it.starred && it.reviewedAt == 0L && it.createdAt <= beforeMs }
         override fun countUnreviewedStarredBefore(userId: Long, beforeMs: Long) =
             if (row.userId == userId && row.starred && row.reviewedAt == 0L && row.createdAt <= beforeMs) 1 else 0
+        override fun deleteById(id: Long, userId: Long): Int = 0
+        override fun deleteAllByUserId(userId: Long): Int = 0
     }
 }

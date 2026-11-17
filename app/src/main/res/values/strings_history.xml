@@ -9,4 +9,15 @@
     <string name="history_hours_ago">%d giờ trước</string>
     <string name="history_days_ago">%d ngày trước</string>
     <string name="history_star">★</string>
+    <string name="history_delete_item">Xóa câu hỏi</string>
+    <string name="history_clear_all">Xóa tất cả</string>
+    <string name="history_dialog_delete_title">Xóa câu hỏi?</string>
+    <string name="history_dialog_delete_message">Bạn có chắc chắn muốn xóa câu hỏi này khỏi lịch sử học tập không?</string>
+    <string name="history_dialog_clear_title">Xóa toàn bộ lịch sử?</string>
+    <string name="history_dialog_clear_message">Tất cả câu hỏi đã lưu trong lịch sử sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn tác.</string>
+    <string name="history_delete_confirm">Xóa</string>
+    <string name="history_clear_confirm">Xóa tất cả</string>
+    <string name="history_delete_cancel">Hủy</string>
+    <string name="history_deleted_single">Đã xóa câu hỏi khỏi lịch sử</string>
+    <string name="history_deleted_all">Đã xóa toàn bộ lịch sử câu hỏi</string>
 </resources>

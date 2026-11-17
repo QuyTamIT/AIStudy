@@ -18,6 +18,7 @@ class HistoryAdapter(
     interface Listener {
         fun onItemClick(qa: QuestionAnswer)
         fun onStarClick(qa: QuestionAnswer)
+        fun onDeleteClick(qa: QuestionAnswer)
     }
 
     private val items = mutableListOf<QuestionAnswer>()
@@ -56,7 +57,12 @@ class HistoryAdapter(
         }
         holder.tvStar.setTextColor(starColor)
         holder.itemView.setOnClickListener { listener.onItemClick(qa) }
+        holder.itemView.setOnLongClickListener {
+            listener.onDeleteClick(qa)
+            true
+        }
         holder.tvStar.setOnClickListener { listener.onStarClick(qa) }
+        holder.btnDelete.setOnClickListener { listener.onDeleteClick(qa) }
     }
 
     override fun getItemCount(): Int = items.size
@@ -64,6 +70,7 @@ class HistoryAdapter(
     class Holder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val tvQuestion: TextView = itemView.findViewById(R.id.tv_question)
         val tvStar: TextView = itemView.findViewById(R.id.tv_star)
+        val btnDelete: View = itemView.findViewById(R.id.btn_delete_item)
         val tvSubject: TextView = itemView.findViewById(R.id.tv_subject)
         val tvTime: TextView = itemView.findViewById(R.id.tv_time)
     }
