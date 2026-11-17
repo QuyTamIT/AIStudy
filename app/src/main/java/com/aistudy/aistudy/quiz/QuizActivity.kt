@@ -10,54 +10,42 @@ import android.widget.RadioGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.aistudy.aistudy.BuildConfig
+import androidx.core.view.children
+import androidx.lifecycle.ViewModelProvider
 import com.aistudy.aistudy.R
-import com.aistudy.aistudy.ask.GeminiClient
+import com.aistudy.aistudy.answer.StudyMathText
 import com.aistudy.aistudy.auth.LoginActivity
-import com.aistudy.aistudy.database.AppDatabase
-import com.aistudy.aistudy.database.ProfileDao
-import com.aistudy.aistudy.database.QuestionAnswer
-import com.aistudy.aistudy.database.QuestionAnswerDao
 import com.aistudy.aistudy.database.QuizItem
-import com.aistudy.aistudy.database.QuizItemDao
-import com.aistudy.aistudy.database.QuizSession
-import com.aistudy.aistudy.database.QuizSessionDao
 import com.aistudy.aistudy.xp.XpRules
 import com.google.android.material.button.MaterialButton
 import org.json.JSONArray
-import org.json.JSONObject
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 import kotlin.math.roundToInt
 
 class QuizActivity : AppCompatActivity() {
 
     companion object {
         const val EXTRA_SUBJECT = "subject"
-
-        private const val MIN_SOURCE_QA = 2
-        private const val RECENT_LIMIT = 5
-        private const val TARGET_ITEMS = 4
+        const val EXTRA_SESSION_ID = "sessionId"
     }
 
-    private lateinit var qaDao: QuestionAnswerDao
-    private lateinit var sessionDao: QuizSessionDao
-    private lateinit var itemDao: QuizItemDao
-    private lateinit var profileDao: ProfileDao
-    private lateinit var executor: ExecutorService
-
+    private lateinit var model: QuizViewModel
     private var userId: Long = -1
     private lateinit var subject: String
-    private lateinit var session: QuizSession
-    private val items = mutableListOf<QuizItem>()
+    private var requestedSessionId = -1L
+    private var quiz: QuizViewModel.Quiz? = null
+    private val items: List<QuizItem>
+        get() = quiz?.items.orEmpty()
     private var currentIndex = 0
-    private var answered = false
+    private val answered: Boolean
+        get() = items.getOrNull(currentIndex)?.let { it.userAnswer != null && it.correct != null } == true
+    private var restoredDraft: String? = null
 
-    private lateinit var layoutLoading: LinearLayout
+    private lateinit var layoutLoading: View
     private lateinit var layoutQuiz: LinearLayout
     private lateinit var layoutResult: LinearLayout
     private lateinit var tvQuizTitle: TextView
@@ -96,17 +84,10 @@ class QuizActivity : AppCompatActivity() {
 
         userId = getSharedPreferences(LoginActivity.PREFS_AUTH, MODE_PRIVATE)
             .getLong(LoginActivity.KEY_USER_ID, -1)
-        if (userId == -1L) {
+        if (userId <= 0L) {
             finish()
             return
         }
-
-        val db = AppDatabase.getInstance(this)
-        qaDao = db.questionAnswerDao()
-        sessionDao = db.quizSessionDao()
-        itemDao = db.quizItemDao()
-        profileDao = db.profileDao()
-        executor = Executors.newSingleThreadExecutor()
 
         layoutLoading = findViewById(R.id.layout_loading)
         layoutQuiz = findViewById(R.id.layout_quiz)
@@ -117,6 +98,8 @@ class QuizActivity : AppCompatActivity() {
         tvPrompt = findViewById(R.id.tv_prompt)
         groupOptions = findViewById(R.id.group_options)
         etAnswer = findViewById(R.id.et_answer)
+        groupOptions.isSaveEnabled = false
+        etAnswer.isSaveEnabled = false
         layoutFeedback = findViewById(R.id.layout_feedback)
         tvFeedbackResult = findViewById(R.id.tv_feedback_result)
         tvFeedbackCorrect = findViewById(R.id.tv_feedback_correct)
@@ -130,190 +113,96 @@ class QuizActivity : AppCompatActivity() {
         tvQuizTitle.text = getString(R.string.quiz_practice_on, subjectLabel(subject))
         btnBack.setOnClickListener { finish() }
         btnDone.setOnClickListener { finish() }
+        findViewById<View>(R.id.btn_quiz_load_back).setOnClickListener { finish() }
         btnPrimary.setOnClickListener { onPrimaryClick() }
 
-        val savedSessionId = savedInstanceState?.getLong("sessionId", -1L) ?: -1L
-        if (savedSessionId > 0L) {
-            currentIndex = savedInstanceState?.getInt("currentIndex", 0) ?: 0
-            answered = savedInstanceState?.getBoolean("answered", false) ?: false
-            restoreSession(savedSessionId)
-        } else {
-            startGenerate()
+        if (savedInstanceState != null && savedInstanceState.getLong("ownerId", userId) != userId) {
+            failRestore()
+            return
         }
+        requestedSessionId = savedInstanceState?.getLong(EXTRA_SESSION_ID, -1L)?.takeIf { it > 0L }
+            ?: intent.getLongExtra(EXTRA_SESSION_ID, -1L)
+        currentIndex = savedInstanceState?.getInt("currentIndex", 0) ?: 0
+        restoredDraft = savedInstanceState?.getString("draftAnswer")
+
+        showLoading()
+        model = ViewModelProvider(this)[QuizViewModel::class.java]
+        model.start(userId, subject, requestedSessionId, savedInstanceState != null)
+        model.state.observe(this, ::renderState)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        if (::session.isInitialized) {
-            outState.putLong("sessionId", session.id)
-            outState.putInt("currentIndex", currentIndex)
-            outState.putBoolean("answered", answered)
-            outState.putString("subject", subject)
-        }
+        if (!::model.isInitialized) return
+        val sessionId = model.state.value?.quiz?.session?.id ?: requestedSessionId
+        outState.putLong(EXTRA_SESSION_ID, sessionId)
+        outState.putInt("currentIndex", currentIndex)
+        outState.putString("subject", subject)
+        outState.putLong("ownerId", userId)
+        outState.putString("draftAnswer", if (quiz != null) currentInput() else restoredDraft)
     }
 
-    private fun restoreSession(sessionId: Long) {
-        showLoading()
-        executor.execute {
-            try {
-                val existingSession = sessionDao.getById(sessionId)
-                val sessionItems = itemDao.getBySessionId(sessionId)
-                if (existingSession == null || sessionItems.isEmpty()) {
-                    startGenerate()
-                    return@execute
-                }
-                runOnUiThread {
-                    session = existingSession
-                    items.clear()
-                    items.addAll(sessionItems)
-                    if (existingSession.completed) {
-                        showResult(existingSession.score, existingSession.total)
-                    } else {
-                        showQuiz()
-                        bindCurrentItem()
-                    }
-                }
-            } catch (_: Exception) {
-                startGenerate()
-            }
-        }
-    }
-
-    private fun startGenerate() {
-        val apiKey = BuildConfig.GEMINI_API_KEY
-        if (apiKey.isBlank() || apiKey.startsWith("YOUR_", ignoreCase = true)) {
-            Toast.makeText(this, R.string.quiz_no_api_key, Toast.LENGTH_LONG).show()
-            finish()
+    private fun renderState(state: QuizViewModel.UiState) {
+        if (isFinishing || isDestroyed) return
+        if (!isCurrentSession()) {
+            failRestore()
             return
         }
-
-        showLoading()
-        executor.execute {
-            try {
-                val sources = qaDao.getRecentByUserIdAndSubject(userId, subject, RECENT_LIMIT)
-                if (sources.size < MIN_SOURCE_QA) {
-                    runOnUiThread {
-                        Toast.makeText(this@QuizActivity, R.string.quiz_need_more, Toast.LENGTH_LONG).show()
-                        finish()
-                    }
-                    return@execute
-                }
-
-                val prompt = buildQuizPrompt(sources)
-                val sourceIds = JSONArray()
-                for (qa in sources) {
-                    sourceIds.put(qa.id)
-                }
-
-                val raw = GeminiClient.ask(apiKey, prompt)
-                val jsonText = extractJson(raw)
-                val root = JSONObject(jsonText)
-                val arr = root.getJSONArray("items")
-                if (arr.length() == 0) {
-                    throw Exception("empty items")
-                }
-
-                val newSession = QuizSession().apply {
-                    this.userId = this@QuizActivity.userId
-                    this.subject = this@QuizActivity.subject
-                    this.sourceQaIds = sourceIds.toString()
-                    this.createdAt = System.currentTimeMillis()
-                    this.score = 0
-                    this.total = 0
-                    this.completed = false
-                }
-                val sessionId = sessionDao.insert(newSession)
-                newSession.id = sessionId
-
-                val generated = mutableListOf<QuizItem>()
-                val limit = minOf(arr.length(), TARGET_ITEMS)
-                for (i in 0 until limit) {
-                    val obj = arr.getJSONObject(i)
-                    val item = QuizItem().apply {
-                        this.sessionId = sessionId
-                        this.type = normalizeType(obj.optString("type", "mcq"))
-                        this.prompt = obj.optString("prompt", "").trim()
-                        this.correctAnswer = obj.optString("correctAnswer", "").trim()
-                        this.explanation = obj.optString("explanation", "").trim()
-                        val options = obj.optJSONArray("options")
-                        this.optionsJson = options?.toString() ?: "[]"
-                        this.userAnswer = null
-                        this.correct = null
-                    }
-                    if (item.prompt.isNullOrEmpty() || item.correctAnswer.isNullOrEmpty()) {
-                        continue
-                    }
-                    item.id = itemDao.insert(item)
-                    generated.add(item)
-                }
-
-                if (generated.isEmpty()) {
-                    throw Exception("no valid items")
-                }
-
-                newSession.total = generated.size
-                sessionDao.update(newSession)
-
-                runOnUiThread {
-                    session = newSession
-                    items.clear()
-                    items.addAll(generated)
-                    currentIndex = 0
-                    answered = false
-                    showQuiz()
-                    bindCurrentItem()
-                }
-            } catch (e: Exception) {
-                runOnUiThread {
-                    Toast.makeText(this@QuizActivity, R.string.quiz_error, Toast.LENGTH_LONG).show()
-                    finish()
-                }
+        val loaded = state.quiz
+        if (loaded == null) {
+            state.error?.let { message ->
+                if (requestedSessionId > 0L) failRestore(message) else showGenerationError(message)
             }
+            return
         }
+        if (loaded.session.userId != userId || currentIndex !in loaded.items.indices) {
+            failRestore()
+            return
+        }
+        if (loaded.session.completed) {
+            quiz = loaded
+            showResult(loaded.session.score, loaded.session.total)
+            return
+        }
+        if (quiz !== loaded) {
+            quiz = loaded
+            showQuiz()
+            bindCurrentItem()
+        }
+        btnPrimary.isEnabled = !state.saving
+        setInputsEnabled(!answered && !state.saving)
+        state.error?.let { Toast.makeText(this, it, Toast.LENGTH_SHORT).show() }
     }
 
     private fun onPrimaryClick() {
+        if (!isCurrentSession()) {
+            failRestore()
+            return
+        }
+        if (model.state.value?.saving == true) return
+        val item = items.getOrNull(currentIndex) ?: return
         if (!answered) {
-            checkAnswer()
-        } else if (currentIndex < items.size - 1) {
+            checkAnswer(item)
+        } else if (currentIndex < items.lastIndex) {
             currentIndex++
-            answered = false
             bindCurrentItem()
         } else {
-            finishQuiz()
+            model.finishQuiz()
         }
     }
 
-    private fun checkAnswer() {
-        if (items.isEmpty() || currentIndex >= items.size) {
+    private fun checkAnswer(item: QuizItem) {
+        val userAnswer = currentInput()
+        if (userAnswer.isBlank()) {
+            val message = if (item.type == "mcq") R.string.quiz_select_option else R.string.quiz_enter_answer
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
             return
         }
-        val item = items[currentIndex]
-        val userAnswer: String
-        if (item.type == "mcq") {
-            val checkedId = groupOptions.checkedRadioButtonId
-            if (checkedId == -1) {
-                Toast.makeText(this, R.string.quiz_select_option, Toast.LENGTH_SHORT).show()
-                return
-            }
-            val selected = findViewById<RadioButton>(checkedId)
-            userAnswer = selected.text.toString().trim()
-        } else {
-            userAnswer = etAnswer.text?.toString()?.trim() ?: ""
-            if (userAnswer.isEmpty()) {
-                Toast.makeText(this, R.string.quiz_enter_answer, Toast.LENGTH_SHORT).show()
-                return
-            }
-        }
+        model.grade(item.id, if (item.type == "mcq") userAnswer else userAnswer.trim())
+    }
 
-        val correct = normalizeAnswer(userAnswer) == normalizeAnswer(item.correctAnswer)
-        item.userAnswer = userAnswer
-        item.correct = correct
-        executor.execute {
-            itemDao.update(item)
-        }
-
-        answered = true
+    private fun renderFeedback(item: QuizItem) {
+        val correct = item.correct == true
         layoutFeedback.visibility = View.VISIBLE
         if (correct) {
             tvFeedbackResult.setText(R.string.quiz_correct)
@@ -323,9 +212,11 @@ class QuizActivity : AppCompatActivity() {
             tvFeedbackResult.setText(R.string.quiz_incorrect)
             tvFeedbackResult.setTextColor(ContextCompat.getColor(this, R.color.streak))
             tvFeedbackCorrect.visibility = View.VISIBLE
-            tvFeedbackCorrect.text = getString(R.string.quiz_correct_answer_label, item.correctAnswer)
+            tvFeedbackCorrect.text = getString(R.string.quiz_correct_answer_label,
+                StudyMathText.format(item.correctAnswer.orEmpty()))
         }
-        tvExplanation.text = if (item.explanation.isNullOrEmpty()) "—" else item.explanation
+        tvExplanation.text = if (item.explanation.isNullOrEmpty()) "—"
+            else StudyMathText.format(item.explanation.orEmpty())
 
         setInputsEnabled(false)
         if (currentIndex < items.size - 1) {
@@ -335,37 +226,8 @@ class QuizActivity : AppCompatActivity() {
         }
     }
 
-    private fun finishQuiz() {
-        btnPrimary.isEnabled = false
-        if (::session.isInitialized && session.completed) {
-            return
-        }
-        val score = items.count { it.correct == true }
+    private fun showResult(score: Int, total: Int) {
         val xpGain = score * XpRules.QUIZ_CORRECT + XpRules.QUIZ_COMPLETE_BONUS
-
-        executor.execute {
-            val db = AppDatabase.getInstance(applicationContext)
-            db.runInTransaction {
-                if (session.completed) return@runInTransaction
-                session.score = score
-                session.total = items.size
-                session.completed = true
-                sessionDao.update(session)
-
-                val profile = profileDao.getByUserId(userId)
-                if (profile != null) {
-                    XpRules.recordDailyActivity(profile, profileDao)
-                    XpRules.addXp(profile, profileDao, xpGain)
-                }
-            }
-
-            runOnUiThread {
-                showResult(score, items.size, xpGain)
-            }
-        }
-    }
-
-    private fun showResult(score: Int, total: Int, xpGain: Int = score * XpRules.QUIZ_CORRECT + XpRules.QUIZ_COMPLETE_BONUS) {
         layoutQuiz.visibility = View.GONE
         layoutLoading.visibility = View.GONE
         layoutResult.visibility = View.VISIBLE
@@ -377,7 +239,7 @@ class QuizActivity : AppCompatActivity() {
         val item = items[currentIndex]
         tvProgress.text = getString(R.string.quiz_progress, currentIndex + 1, items.size)
         tvItemType.text = typeLabel(item.type)
-        tvPrompt.text = item.prompt
+        tvPrompt.text = StudyMathText.format(item.prompt.orEmpty())
         layoutFeedback.visibility = View.GONE
         btnPrimary.isEnabled = true
         btnPrimary.setText(R.string.quiz_check)
@@ -398,7 +260,8 @@ class QuizActivity : AppCompatActivity() {
                     val option = options.getString(i)
                     val rb = RadioButton(this)
                     rb.id = View.generateViewId()
-                    rb.text = option
+                    rb.text = StudyMathText.format(option)
+                    rb.tag = option
                     rb.setTextColor(ContextCompat.getColor(this, R.color.answer_foreground))
                     rb.setPadding(padH, padV, padH, padV)
                     rb.minHeight = dp(48)
@@ -406,10 +269,36 @@ class QuizActivity : AppCompatActivity() {
                 }
             } catch (_: Exception) {
             }
+
+            val selected = item.userAnswer ?: restoredDraft
+            val options = groupOptions.children.filterIsInstance<RadioButton>()
+            val checked = options.firstOrNull { it.tag == selected }
+                ?: item.userAnswer?.let { saved ->
+                    // Older versions trimmed the option before saving the answer.
+                    options.firstOrNull { (it.tag as String).trim() == saved }
+                }
+            checked?.let { groupOptions.check(it.id) }
         } else {
             groupOptions.visibility = View.GONE
             etAnswer.visibility = View.VISIBLE
+            etAnswer.setText(item.userAnswer ?: restoredDraft.orEmpty())
         }
+        restoredDraft = null
+        if (answered) renderFeedback(item)
+    }
+
+    private fun currentInput(): String {
+        if (items.getOrNull(currentIndex)?.type != "mcq") return etAnswer.text?.toString().orEmpty()
+        return (findViewById<RadioButton>(groupOptions.checkedRadioButtonId)?.tag as? String).orEmpty()
+    }
+
+    private fun isCurrentSession(): Boolean = userId > 0L && getSharedPreferences(LoginActivity.PREFS_AUTH, MODE_PRIVATE)
+        .getLong(LoginActivity.KEY_USER_ID, 0L) == userId
+
+    private fun failRestore(@StringRes message: Int = R.string.quiz_error) {
+        if (isFinishing || isDestroyed) return
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        finish()
     }
 
     private fun setInputsEnabled(enabled: Boolean) {
@@ -425,12 +314,19 @@ class QuizActivity : AppCompatActivity() {
         layoutResult.visibility = View.GONE
     }
 
+    private fun showGenerationError(@StringRes message: Int) {
+        findViewById<View>(R.id.progress_quiz_loading).visibility = View.GONE
+        findViewById<TextView>(R.id.tv_quiz_status).setText(message)
+        findViewById<View>(R.id.btn_quiz_load_back).visibility = View.VISIBLE
+    }
+
     private fun showQuiz() {
         layoutLoading.visibility = View.GONE
         layoutQuiz.visibility = View.VISIBLE
         layoutResult.visibility = View.GONE
     }
 
+<<<<<<< HEAD
     private fun buildQuizPrompt(sources: List<QuestionAnswer>): String {
         val sb = StringBuilder()
         sb.append("You are AI Study Mentor. Create a practice quiz from the student's recent questions.\n")
@@ -491,6 +387,8 @@ class QuizActivity : AppCompatActivity() {
         return value.trim().replace(Regex("\\s+"), " ").lowercase()
     }
 
+=======
+>>>>>>> c732e854838e926e5f8f6f70148a615fb567aada
     private fun typeLabel(type: String?): String {
         return when (type) {
             "short" -> getString(R.string.quiz_type_short)
@@ -510,24 +408,7 @@ class QuizActivity : AppCompatActivity() {
         }
     }
 
-    private fun extractJson(raw: String): String {
-        val text = raw.trim()
-        val start = text.indexOf('{')
-        val end = text.lastIndexOf('}')
-        if (start >= 0 && end > start) {
-            return text.substring(start, end + 1)
-        }
-        return text
-    }
-
     private fun dp(value: Int): Int {
         return (value * resources.displayMetrics.density).roundToInt()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        if (::executor.isInitialized) {
-            executor.shutdown()
-        }
     }
 }

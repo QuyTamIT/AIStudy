@@ -146,27 +146,19 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var instance: AppDatabase? = null
 
-        fun getInstance(context: Context): AppDatabase {
-            return instance ?: synchronized(this) {
-                instance ?: Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    "aistudy.db"
-                )
-                    .allowMainThreadQueries()
-                    .addMigrations(
-                        MIGRATION_1_2,
-                        MIGRATION_2_3,
-                        MIGRATION_3_4,
-                        MIGRATION_4_5,
-                        MIGRATION_5_6,
-                        MIGRATION_6_7,
-                        MIGRATION_7_8
-                    )
-                    .fallbackToDestructiveMigration(false)
-                    .build()
-                    .also { instance = it }
-            }
+        fun getInstance(context: Context): AppDatabase = instance ?: synchronized(this) {
+            instance ?: create(context, "aistudy.db").also { instance = it }
         }
+
+        fun create(context: Context, name: String): AppDatabase = Room.databaseBuilder(
+            context.applicationContext, AppDatabase::class.java, name
+        )
+            .allowMainThreadQueries()
+            .addMigrations(
+                MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5,
+                MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8
+            )
+            .build()
+
     }
 }
