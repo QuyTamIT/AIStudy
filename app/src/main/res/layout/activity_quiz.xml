@@ -5,6 +5,7 @@
     android:layout_height="match_parent"
     android:background="@color/answer_background">
 
+    <!-- Loading Screen -->
     <ScrollView
         android:id="@+id/layout_loading"
         android:layout_width="match_parent"
@@ -16,35 +17,48 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:orientation="vertical"
-            android:padding="24dp">
+            android:padding="28dp">
 
             <ProgressBar
                 android:id="@+id/progress_quiz_loading"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
                 android:indeterminateTint="@color/answer_primary" />
 
             <TextView
                 android:id="@+id/tv_quiz_status"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="20dp"
                 android:accessibilityLiveRegion="polite"
                 android:gravity="center"
                 android:text="@string/quiz_loading"
                 android:textColor="@color/answer_foreground"
-                android:textSize="14sp" />
+                android:textSize="15sp"
+                android:lineSpacingExtra="3dp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_quiz_load_back"
+                style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_height="48dp"
+                android:layout_marginTop="24dp"
                 android:text="@string/quiz_back"
+                android:textColor="@color/answer_primary"
+                app:cornerRadius="14dp"
+                app:strokeColor="@color/answer_divider"
                 android:visibility="gone" />
+
+            <include
+                android:id="@+id/layout_quiz_ai_error"
+                layout="@layout/view_ai_error_state"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp" />
         </LinearLayout>
     </ScrollView>
 
+    <!-- Quiz Question Flow -->
     <LinearLayout
         android:id="@+id/layout_quiz"
         android:layout_width="match_parent"
@@ -52,18 +66,19 @@
         android:orientation="vertical"
         android:visibility="gone">
 
+        <!-- Top Bar -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:paddingHorizontal="16dp"
+            android:paddingHorizontal="@dimen/answer_page_gutter"
             android:paddingVertical="12dp">
 
             <ImageButton
                 android:id="@+id/btn_back"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/quiz_back"
                 android:src="@drawable/ic_answer_back"
@@ -73,19 +88,23 @@
                 android:id="@+id/tv_quiz_title"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginHorizontal="12dp"
                 android:layout_weight="1"
                 android:gravity="center"
                 android:text="@string/quiz_title"
-                android:textColor="@color/answer_primary"
-                android:textSize="14sp"
+                android:textColor="@color/answer_foreground"
+                android:textSize="16sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tv_progress"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/answer_foreground_secondary"
-                android:textSize="13sp"
+                android:background="@drawable/bg_difficulty_badge"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="5dp"
+                android:textColor="@color/answer_primary"
+                android:textSize="12sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
@@ -94,6 +113,7 @@
             android:layout_height="1dp"
             android:background="@color/answer_divider" />
 
+        <!-- Question Body -->
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="0dp"
@@ -105,38 +125,42 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingHorizontal="@dimen/auth_screen_padding_horizontal"
+                android:paddingHorizontal="@dimen/answer_page_gutter"
                 android:paddingTop="20dp"
                 android:paddingBottom="24dp">
 
+                <!-- Difficulty Badge -->
                 <TextView
                     android:id="@+id/tv_item_type"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="@drawable/bg_difficulty_badge"
-                    android:paddingHorizontal="10dp"
+                    android:paddingHorizontal="12dp"
                     android:paddingVertical="4dp"
                     android:textColor="@color/answer_primary"
                     android:textSize="12sp"
                     android:textStyle="bold" />
 
+                <!-- Question Prompt -->
                 <TextView
                     android:id="@+id/tv_prompt"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:lineSpacingExtra="4dp"
+                    android:lineSpacingExtra="5dp"
                     android:textColor="@color/answer_foreground"
-                    android:textSize="17sp"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
 
+                <!-- Options -->
                 <RadioGroup
                     android:id="@+id/group_options"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="20dp"
                     android:orientation="vertical" />
 
+                <!-- Freeform Text Input (Fallback) -->
                 <EditText
                     android:id="@+id/et_answer"
                     android:layout_width="match_parent"
@@ -146,12 +170,13 @@
                     android:hint="@string/quiz_hint_answer"
                     android:inputType="textMultiLine"
                     android:minHeight="56dp"
-                    android:padding="14dp"
+                    android:padding="16dp"
                     android:textColor="@color/answer_foreground"
                     android:textColorHint="@color/answer_foreground_secondary"
                     android:textSize="15sp"
                     android:visibility="gone" />
 
+                <!-- Feedback Card -->
                 <LinearLayout
                     android:id="@+id/layout_feedback"
                     android:layout_width="match_parent"
@@ -159,14 +184,14 @@
                     android:layout_marginTop="20dp"
                     android:background="@drawable/bg_home_card"
                     android:orientation="vertical"
-                    android:padding="16dp"
+                    android:padding="18dp"
                     android:visibility="gone">
 
                     <TextView
                         android:id="@+id/tv_feedback_result"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:textSize="15sp"
+                        android:textSize="16sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -175,17 +200,17 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:textColor="@color/answer_foreground_secondary"
-                        android:textSize="13sp"
+                        android:textSize="14sp"
                         android:visibility="gone" />
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
+                        android:layout_marginTop="14dp"
                         android:text="@string/quiz_explanation_label"
                         android:textAllCaps="true"
-                        android:textColor="@color/answer_foreground_secondary"
-                        android:textSize="10sp"
+                        android:textColor="@color/answer_primary"
+                        android:textSize="11sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -193,38 +218,61 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="6dp"
+                        android:lineSpacingExtra="3dp"
                         android:textColor="@color/answer_foreground"
                         android:textSize="14sp" />
                 </LinearLayout>
             </LinearLayout>
         </ScrollView>
 
+        <!-- Bottom Action Button -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_primary"
             style="@style/Widget.AIStudy.Study.Primary"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="@dimen/auth_screen_padding_horizontal"
+            android:layout_height="52dp"
+            android:minHeight="52dp"
+            android:layout_marginHorizontal="@dimen/answer_page_gutter"
             android:layout_marginBottom="24dp"
-            android:text="@string/quiz_check" />
+            android:text="@string/quiz_check"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            app:cornerRadius="14dp" />
     </LinearLayout>
 
+    <!-- Quiz Result / Completion Celebration Screen -->
     <LinearLayout
         android:id="@+id/layout_result"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
         android:orientation="vertical"
-        android:padding="24dp"
+        android:padding="32dp"
         android:visibility="gone">
+
+        <FrameLayout
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:background="@drawable/bg_home_hero"
+            android:elevation="2dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="🏆"
+                android:textSize="36sp" />
+        </FrameLayout>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
             android:text="@string/quiz_result_title"
             android:textColor="@color/answer_foreground"
             android:textSize="24sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:letterSpacing="-0.02" />
 
         <TextView
             android:id="@+id/tv_result_score"
@@ -239,17 +287,24 @@
             android:id="@+id/tv_result_xp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_difficulty_badge"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="6dp"
             android:textColor="@color/answer_primary"
-            android:textSize="16sp"
+            android:textSize="15sp"
             android:textStyle="bold" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_done"
             style="@style/Widget.AIStudy.Study.Primary"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="28dp"
-            android:text="@string/quiz_done" />
+            android:layout_height="52dp"
+            android:minHeight="52dp"
+            android:layout_marginTop="36dp"
+            android:text="@string/quiz_done"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            app:cornerRadius="14dp" />
     </LinearLayout>
 </FrameLayout>

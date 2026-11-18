@@ -44,6 +44,7 @@ class HistoryFragment : Fragment() {
     private lateinit var chipLanguage: TextView
     private lateinit var chipStarred: TextView
     private lateinit var btnPractice: MaterialButton
+    private lateinit var btnClearAll: MaterialButton
     private lateinit var rvHistory: RecyclerView
     private lateinit var tvEmpty: TextView
 
@@ -76,8 +77,11 @@ class HistoryFragment : Fragment() {
         chipLanguage = view.findViewById(R.id.chip_language)
         chipStarred = view.findViewById(R.id.chip_starred)
         btnPractice = view.findViewById(R.id.btn_practice)
+        btnClearAll = view.findViewById(R.id.btn_clear_all)
         rvHistory = view.findViewById(R.id.rv_history)
         tvEmpty = view.findViewById(R.id.tv_empty)
+
+        btnClearAll.setOnClickListener { showClearAllConfirmation() }
 
         btnPractice.setOnClickListener {
             if (subjectFilter == "all" || starredOnly) {
@@ -128,6 +132,10 @@ class HistoryFragment : Fragment() {
                         if (!isAdded || preferences.getLong(LoginActivity.KEY_USER_ID, 0L) != ownerId) return@launch
                         loadHistory()
                     }
+                }
+
+                override fun onDeleteClick(qa: QuestionAnswer) {
+                    showDeleteConfirmation(qa)
                 }
             },
             ::subjectLabel,
@@ -238,7 +246,63 @@ class HistoryFragment : Fragment() {
         val empty = filtered.isEmpty()
         tvEmpty.visibility = if (empty) View.VISIBLE else View.GONE
         rvHistory.visibility = if (empty) View.GONE else View.VISIBLE
+        btnClearAll.visibility = if (allItems.isNotEmpty()) View.VISIBLE else View.GONE
         refreshPracticeButton()
+    }
+
+    private fun showDeleteConfirmation(qa: QuestionAnswer) {
+        val currentContext = context ?: return
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(currentContext)
+            .setTitle(R.string.history_dialog_delete_title)
+            .setMessage(R.string.history_dialog_delete_message)
+            .setPositiveButton(R.string.history_delete_confirm) { _, _ ->
+                deleteItem(qa)
+            }
+            .setNegativeButton(R.string.history_delete_cancel, null)
+            .show()
+    }
+
+    private fun deleteItem(qa: QuestionAnswer) {
+        val currentContext = context ?: return
+        val ownerId = userId
+        if (ownerId <= 0L || qa.userId != ownerId) return
+        viewLifecycleOwner.lifecycleScope.launch {
+            withContext(Dispatchers.IO) {
+                AppDatabase.getInstance(currentContext.applicationContext)
+                    .questionAnswerDao().deleteById(qa.id, ownerId)
+            }
+            if (!isAdded) return@launch
+            Toast.makeText(requireContext(), R.string.history_deleted_single, Toast.LENGTH_SHORT).show()
+            loadHistory()
+        }
+    }
+
+    private fun showClearAllConfirmation() {
+        val currentContext = context ?: return
+        if (allItems.isEmpty()) return
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(currentContext)
+            .setTitle(R.string.history_dialog_clear_title)
+            .setMessage(R.string.history_dialog_clear_message)
+            .setPositiveButton(R.string.history_clear_confirm) { _, _ ->
+                clearAllHistory()
+            }
+            .setNegativeButton(R.string.history_delete_cancel, null)
+            .show()
+    }
+
+    private fun clearAllHistory() {
+        val currentContext = context ?: return
+        val currentUserId = userId
+        if (currentUserId <= 0L) return
+        viewLifecycleOwner.lifecycleScope.launch {
+            withContext(Dispatchers.IO) {
+                AppDatabase.getInstance(currentContext.applicationContext)
+                    .questionAnswerDao().deleteAllByUserId(currentUserId)
+            }
+            if (!isAdded) return@launch
+            Toast.makeText(requireContext(), R.string.history_deleted_all, Toast.LENGTH_SHORT).show()
+            loadHistory()
+        }
     }
 
     private fun refreshPracticeButton() {

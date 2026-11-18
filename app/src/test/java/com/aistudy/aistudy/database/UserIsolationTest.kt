@@ -88,6 +88,18 @@ class UserIsolationTest {
 
         override fun countUnreviewedStarredBefore(userId: Long, beforeMs: Long): Int =
             rows.count { it.userId == userId && it.starred && it.reviewedAt == 0L && it.createdAt <= beforeMs }
+
+        override fun deleteById(id: Long, userId: Long): Int {
+            val initial = rows.size
+            rows.removeAll { it.id == id && it.userId == userId }
+            return initial - rows.size
+        }
+
+        override fun deleteAllByUserId(userId: Long): Int {
+            val initial = rows.size
+            rows.removeAll { it.userId == userId }
+            return initial - rows.size
+        }
     }
 
     @Test

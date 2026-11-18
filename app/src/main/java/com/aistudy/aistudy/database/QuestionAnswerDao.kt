@@ -61,4 +61,10 @@ interface QuestionAnswerDao {
 
     @Query("SELECT COUNT(*) FROM question_answers WHERE userId = :userId AND starred = 1 AND reviewedAt = 0 AND createdAt <= :beforeMs")
     fun countUnreviewedStarredBefore(userId: Long, beforeMs: Long): Int
+
+    @Query("DELETE FROM question_answers WHERE id = :id AND userId = :userId")
+    fun deleteById(id: Long, userId: Long): Int
+
+    @Query("DELETE FROM question_answers WHERE userId = :userId")
+    fun deleteAllByUserId(userId: Long): Int
 }

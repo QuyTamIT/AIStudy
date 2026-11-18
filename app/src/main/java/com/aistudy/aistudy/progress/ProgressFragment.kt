@@ -239,7 +239,7 @@ class ProgressFragment : Fragment() {
                     if (profile.avatarId.isNullOrEmpty()) {
                         profile.avatarId = UnlockCatalog.AVATAR_FOX
                     }
-                    if (profile.themeId.isNullOrEmpty()) {
+                    if (profile.themeId.isNullOrEmpty() || profile.themeId == UnlockCatalog.THEME_NIGHT) {
                         profile.themeId = UnlockCatalog.THEME_DEFAULT
                     }
                     profileDao.update(profile)
@@ -491,7 +491,12 @@ class ProgressFragment : Fragment() {
             return
         }
         val themeId = UnlockCatalog.normalizeThemeId(profile.themeId)
-        root.setBackgroundResource(UnlockCatalog.backgroundColorRes(themeId))
+        val colorRes = if (themeId == UnlockCatalog.THEME_NIGHT) {
+            R.color.theme_default_bg
+        } else {
+            UnlockCatalog.backgroundColorRes(themeId)
+        }
+        root.setBackgroundResource(colorRes)
     }
 
     private fun bindLeaderboard(fullName: String?, weeklyXp: Int, friends: List<Friend>) {

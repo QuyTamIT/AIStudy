@@ -17,7 +17,12 @@ import org.json.JSONException
 import org.json.JSONObject
 
 object GeminiClient {
-    private const val MODEL = "gemini-3.6-flash"
+    val CANDIDATE_MODELS = listOf(
+        "gemini-3.5-flash-lite",
+        "gemini-flash-lite-latest",
+        "gemini-3.1-flash-lite",
+        "gemini-3.6-flash"
+    )
     private const val MAX_RETRIES = 2
     private const val INITIAL_BACKOFF_MS = 1_000L
     private const val MAX_RETRY_DELAY_MS = 30_000L
@@ -64,6 +69,7 @@ object GeminiClient {
         trace: AiRequestTrace,
         imageBase64: String? = null,
         mimeType: String? = null,
+        candidateModels: List<String> = CANDIDATE_MODELS,
         connectionFactory: (URL) -> HttpURLConnection = { it.openConnection() as HttpURLConnection },
         wait: (Long) -> Unit = Thread::sleep,
         wallClock: () -> Long = System::currentTimeMillis,
@@ -72,11 +78,13 @@ object GeminiClient {
         trace.beginGeneration()
         try {
             var retries = 0
+            var modelIndex = 0
             while (true) {
                 if (Thread.currentThread().isInterrupted) throw InterruptedException()
+                val currentModel = candidateModels.getOrElse(modelIndex) { candidateModels.last() }
                 try {
                     return askOnce(apiKey, prompt, responseSchema, systemInstruction, trace,
-                        imageBase64, mimeType, connectionFactory, wallClock, errorJson)
+                        imageBase64, mimeType, connectionFactory, wallClock, errorJson, currentModel)
                 } catch (error: RequestException) {
                     if (error.reason == ErrorReason.QUOTA_EXHAUSTED ||
                         error.statusCode !in RETRYABLE_STATUS_CODES || retries >= MAX_RETRIES) throw error
@@ -85,6 +93,9 @@ object GeminiClient {
                     val delayMillis = maxOf(backoffMillis, error.retryAfterMillis ?: 0L)
                     if (delayMillis > MAX_RETRY_DELAY_MS) throw error
                     retries++
+                    if (modelIndex + 1 < candidateModels.size) {
+                        modelIndex++
+                    }
                     wait(delayMillis)
                 }
             }
@@ -103,7 +114,8 @@ object GeminiClient {
         mimeType: String?,
         connectionFactory: (URL) -> HttpURLConnection,
         wallClock: () -> Long,
-        errorJson: (String) -> JSONObject
+        errorJson: (String) -> JSONObject,
+        model: String = CANDIDATE_MODELS.first()
     ): String {
         trace.beginAttempt()
         var connection: HttpURLConnection? = null
@@ -112,7 +124,7 @@ object GeminiClient {
         var reason = AiRequestTrace.Reason.NETWORK_ERROR
         try {
             val request = connectionFactory(URL(
-                "https://generativelanguage.googleapis.com/v1beta/models/$MODEL:generateContent"))
+                "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent"))
             connection = request
             request.requestMethod = "POST"
             request.connectTimeout = 30_000
@@ -193,7 +205,7 @@ object GeminiClient {
             }
             throw error
         } finally {
-            try { connection?.disconnect() } finally { trace.endAttempt(status, outcome, reason) }
+            try { connection?.disconnect() } finally { trace.endAttempt(status, outcome, reason, model) }
         }
     }
 
@@ -226,7 +238,20 @@ object GeminiClient {
             }
             if (reason != ErrorReason.UNKNOWN) return RequestException(code, reason, retryAfterMillis)
         }
-        return RequestException(code, if (code == 429) quotaReason(details) else ErrorReason.UNKNOWN, retryAfterMillis)
+        val errorMessage = envelope?.optJSONObject("error")?.optString("message").orEmpty()
+        if (code == 403 && (errorMessage.contains("billing", ignoreCase = true) || errorMessage.contains("paid tier", ignoreCase = true))) {
+            return RequestException(code, ErrorReason.BILLING_DISABLED, retryAfterMillis)
+        }
+        val reason = if (code == 429) {
+            val specific = quotaReason(details)
+            if (specific != ErrorReason.UNKNOWN) specific
+            else if (errorMessage.contains("daily", ignoreCase = true) ||
+                errorMessage.contains("day", ignoreCase = true) ||
+                errorMessage.contains("exhausted", ignoreCase = true)
+            ) ErrorReason.QUOTA_EXHAUSTED
+            else ErrorReason.UNKNOWN
+        } else ErrorReason.UNKNOWN
+        return RequestException(code, reason, retryAfterMillis)
     }
 
     private fun quotaReason(details: JSONArray): ErrorReason {

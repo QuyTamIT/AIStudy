@@ -14,4 +14,28 @@
     <color name="answer_on_error">@color/answer_red_900</color>
     <color name="answer_ripple">@color/answer_sage_ripple_dark</color>
     <color name="answer_text_selection">@color/answer_sage_selection_dark</color>
+
+    <!-- Night Subject Specific Accents -->
+    <color name="subject_math">#A9CBB0</color>
+    <color name="subject_math_bg">#25382B</color>
+    <color name="subject_science">#5EEAD4</color>
+    <color name="subject_science_bg">#134E48</color>
+    <color name="subject_code">#93C5FD</color>
+    <color name="subject_code_bg">#1E3A8A</color>
+    <color name="subject_history">#FCD34D</color>
+    <color name="subject_history_bg">#451A03</color>
+    <color name="subject_language">#C4B5FD</color>
+    <color name="subject_language_bg">#4C1D95</color>
+    <color name="subject_other">#D1D5DB</color>
+    <color name="subject_other_bg">#374151</color>
+
+    <!-- Night Difficulty Badges -->
+    <color name="difficulty_easy">#4ADE80</color>
+    <color name="difficulty_easy_bg">#14532D</color>
+    <color name="difficulty_medium">#FBBF24</color>
+    <color name="difficulty_medium_bg">#451A03</color>
+    <color name="difficulty_hard">#F87171</color>
+    <color name="difficulty_hard_bg">#450A0A</color>
+    <color name="answer_code_surface">#121915</color>
+    <color name="answer_code_text">#E6EDE8</color>
 </resources>

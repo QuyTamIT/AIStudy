@@ -15,6 +15,7 @@ import androidx.lifecycle.lifecycleScope
 import com.aistudy.aistudy.MainActivity
 import com.aistudy.aistudy.R
 import com.aistudy.aistudy.answer.AnswerActivity
+import com.aistudy.aistudy.ask.ImagePreparation
 import com.aistudy.aistudy.auth.LoginActivity
 import com.aistudy.aistudy.database.AppDatabase
 import com.aistudy.aistudy.database.ProfileDefaults
@@ -24,6 +25,8 @@ import com.aistudy.aistudy.game.GameActivity
 import com.aistudy.aistudy.xp.UnlockCatalog
 import com.aistudy.aistudy.xp.XpRules
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.imageview.ShapeableImageView
+import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -61,6 +64,9 @@ class HomeFragment : Fragment() {
     private lateinit var tvCountCode: TextView
     private lateinit var tvCountHistory: TextView
     private lateinit var tvCountLanguage: TextView
+    private lateinit var cardHomeAvatar: View
+    private lateinit var ivHomeAvatar: ShapeableImageView
+    private lateinit var tvHomeAvatar: TextView
 
     private var latestQaId = -1L
     private var latestSubject: String? = null
@@ -71,6 +77,7 @@ class HomeFragment : Fragment() {
         val fullName: String,
         val xp: Int,
         val streak: Int,
+        val avatarId: String?,
         val themeId: String?,
         val level: String?,
         val style: String?,
@@ -123,6 +130,16 @@ class HomeFragment : Fragment() {
         tvCountCode = view.findViewById(R.id.tv_count_code)
         tvCountHistory = view.findViewById(R.id.tv_count_history)
         tvCountLanguage = view.findViewById(R.id.tv_count_language)
+        cardHomeAvatar = view.findViewById(R.id.card_home_avatar)
+        ivHomeAvatar = view.findViewById(R.id.iv_home_avatar)
+        tvHomeAvatar = view.findViewById(R.id.tv_home_avatar)
+
+        cardHomeAvatar.setOnClickListener {
+            startActivity(Intent(requireContext(), com.aistudy.aistudy.profile.ProfileActivity::class.java))
+        }
+        homeProfile.setOnClickListener {
+            startActivity(Intent(requireContext(), com.aistudy.aistudy.profile.ProfileActivity::class.java))
+        }
 
         view.findViewById<View>(R.id.btn_logout)?.setOnClickListener { showLogoutConfirmation() }
 
@@ -209,6 +226,7 @@ class HomeFragment : Fragment() {
                     fullName = user?.fullName.orEmpty(),
                     xp = profile?.xp ?: 0,
                     streak = profile?.streak ?: 0,
+                    avatarId = profile?.avatarId,
                     themeId = profile?.themeId,
                     level = profile?.level,
                     style = profile?.style,
@@ -242,6 +260,31 @@ class HomeFragment : Fragment() {
         tvXpPercent.text = getString(R.string.home_xp_percent, xpPct)
         progressXp.progress = xpPct
         tvGreeting.text = getString(R.string.home_greeting, data.fullName)
+
+        if (UnlockCatalog.isCustomAvatar(data.avatarId)) {
+            val path = UnlockCatalog.getCustomAvatarPath(data.avatarId)
+            val file = if (path != null) File(path) else null
+            if (file != null && file.exists()) {
+                val bitmap = ImagePreparation.decodeSampledBitmap(file.absolutePath, 80, 80)
+                if (bitmap != null) {
+                    ivHomeAvatar.setImageBitmap(bitmap)
+                    ivHomeAvatar.visibility = View.VISIBLE
+                    tvHomeAvatar.visibility = View.GONE
+                } else {
+                    ivHomeAvatar.visibility = View.GONE
+                    tvHomeAvatar.visibility = View.VISIBLE
+                    tvHomeAvatar.text = "👤"
+                }
+            } else {
+                ivHomeAvatar.visibility = View.GONE
+                tvHomeAvatar.visibility = View.VISIBLE
+                tvHomeAvatar.text = "👤"
+            }
+        } else {
+            ivHomeAvatar.visibility = View.GONE
+            tvHomeAvatar.visibility = View.VISIBLE
+            tvHomeAvatar.text = UnlockCatalog.emojiForAvatar(data.avatarId)
+        }
 
         if (data.themeId != null) {
             activity?.findViewById<View>(R.id.main)?.setBackgroundResource(

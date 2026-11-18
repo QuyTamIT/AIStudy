@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- History (Phase 7): Library of learner's past questions with search,
+<!-- History: Library of learner's past questions with search,
      subject/star filters, and star toggle. Room owns all state. -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -19,23 +19,56 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintWidth_max="@dimen/home_column_width">
 
-        <!-- Title -->
-        <TextView
-            android:id="@+id/tv_history_title"
+        <!-- Title & Clear All Action -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:accessibilityHeading="true"
-            android:text="@string/history_title"
-            android:textAppearance="@style/TextAppearance.AIStudy.Answer.Question" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tv_history_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:accessibilityHeading="true"
+                android:text="@string/history_title"
+                android:textAppearance="@style/TextAppearance.AIStudy.Answer.Question" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_clear_all"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:minHeight="36dp"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="0dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:text="@string/history_clear_all"
+                android:textColor="@color/logout_pill_fg"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:visibility="gone"
+                tools:visibility="visible"
+                app:icon="@drawable/ic_trash"
+                app:iconTint="@color/logout_pill_fg"
+                app:iconSize="14dp"
+                app:iconPadding="4dp"
+                app:iconGravity="textStart"
+                app:rippleColor="@color/logout_pill_ripple" />
+        </LinearLayout>
 
         <!-- Search Bar -->
         <EditText
             android:id="@+id/et_search"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="50dp"
             android:layout_marginTop="@dimen/answer_space_4"
             android:background="@drawable/bg_home_card"
             android:hint="@string/history_search_hint"
+            android:drawableStart="@drawable/ic_search"
+            android:drawablePadding="12dp"
             android:imeOptions="actionDone"
             android:inputType="text"
             android:maxLines="1"
@@ -166,16 +199,26 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_practice"
-                    app:icon="@drawable/ic_study_practice"
-                    app:iconSize="20dp"
-                    app:iconGravity="textStart"
+
+style="@style/Widget.AIStudy.Study.Primary"
+app:icon="@drawable/ic_study_practice"
+app:iconSize="20dp"
+app:iconGravity="textStart"
+android:layout_width="match_parent"
+android:layout_height="52dp"
+android:minHeight="52dp"
+android:layout_marginTop="12dp"
+android:text="@string/quiz_practice"
+android:visibility="gone"
+app:cornerRadius="14dp" />
+
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="52dp"
+            android:minHeight="52dp"
             android:layout_marginTop="12dp"
             android:text="@string/quiz_practice"
             android:visibility="gone"
-            app:backgroundTint="@color/auth_brand"
-            app:cornerRadius="12dp" />
+            app:cornerRadius="14dp" />
 
         <!-- Question List / Empty State -->
         <FrameLayout
@@ -189,7 +232,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
-                android:paddingBottom="24dp"
+                android:paddingBottom="72dp"
                 tools:listitem="@layout/item_history" />
 
             <TextView
@@ -201,6 +244,7 @@
                 android:text="@string/history_empty"
                 android:textColor="@color/answer_foreground_secondary"
                 android:textSize="15sp"
+                android:lineSpacingExtra="3dp"
                 android:visibility="gone"
                 tools:visibility="visible" />
         </FrameLayout>

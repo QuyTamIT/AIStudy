@@ -1,20 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ripple xmlns:android="http://schemas.android.com/apk/res/android" android:color="@color/answer_ripple">
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/answer_ripple">
+    <item android:id="@android:id/mask">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/white" />
+            <corners android:radius="@dimen/answer_card_radius" />
+        </shape>
+    </item>
     <item>
-        <selector>
-            <item android:state_focused="true">
-                <shape>
-                    <solid android:color="@color/answer_result_surface" />
-                    <stroke android:width="@dimen/answer_rule_width" android:color="@color/answer_primary" />
-                    <corners android:radius="@dimen/answer_control_radius" />
-                </shape>
-            </item>
-            <item>
-                <shape>
-                    <solid android:color="@color/answer_result_surface" />
-                    <corners android:radius="@dimen/answer_control_radius" />
-                </shape>
-            </item>
-        </selector>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/answer_result_surface" />
+            <stroke android:width="@dimen/answer_rule_width" android:color="@color/answer_divider" />
+            <corners android:radius="@dimen/answer_card_radius" />
+        </shape>
     </item>
 </ripple>

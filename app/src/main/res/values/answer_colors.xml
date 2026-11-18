@@ -1,33 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Primitives: the Answer rollout is isolated from the existing auth palette. -->
-    <color name="answer_sage_700">#3F5F45</color>
+    <!-- Primitives: Deep Forest Green + Warm Neutral EdTech Palette -->
+    <color name="answer_sage_700">#234B36</color>
+    <color name="answer_sage_800">#193727</color>
+    <color name="answer_sage_600">#2E5D44</color>
     <color name="answer_sage_200">#A9CBB0</color>
-    <color name="answer_paper_50">#F7F8F5</color>
+    <color name="answer_sage_100">#D2E4D6</color>
+    <color name="answer_sage_50">#EAF2EC</color>
+    <color name="answer_paper_50">#F8F9F6</color>
     <color name="answer_paper_0">#FFFFFF</color>
-    <color name="answer_ink_900">#1E2A24</color>
-    <color name="answer_ink_600">#5E6B63</color>
-    <color name="answer_sage_50">#E7EFE8</color>
-    <color name="answer_outline_500">#7C8A80</color>
-    <color name="answer_rule_100">#DCE3DD</color>
-    <color name="answer_forest_950">#121A16</color>
+    <color name="answer_ink_900">#18251E</color>
+    <color name="answer_ink_700">#36453D</color>
+    <color name="answer_ink_600">#586A5F</color>
+    <color name="answer_outline_500">#76877B</color>
+    <color name="answer_rule_100">#DFE6E0</color>
+    <color name="answer_forest_950">#121915</color>
     <color name="answer_forest_900">#1B2520</color>
-    <color name="answer_forest_800">#183222</color>
-    <color name="answer_forest_700">#293C2F</color>
-    <color name="answer_mist_100">#E2EBE4</color>
-    <color name="answer_mist_400">#ACB9B0</color>
-    <color name="answer_outline_400">#7D9183</color>
-    <color name="answer_rule_800">#35443A</color>
-    <color name="answer_red_700">#B3261E</color>
-    <color name="answer_red_100">#F9DEDC</color>
-    <color name="answer_red_900">#601410</color>
+    <color name="answer_forest_800">#16281D</color>
+    <color name="answer_forest_700">#25382B</color>
+    <color name="answer_mist_100">#E6EDE8</color>
+    <color name="answer_mist_400">#A3B4A9</color>
+    <color name="answer_outline_400">#7E9384</color>
+    <color name="answer_rule_800">#2E3D33</color>
+    <color name="answer_red_700">#C5221F</color>
+    <color name="answer_red_100">#FCE8E6</color>
+    <color name="answer_red_900">#441412</color>
     <color name="answer_red_200">#F2B8B5</color>
-    <color name="answer_sage_ripple_light">#1F3F5F45</color>
-    <color name="answer_sage_ripple_dark">#1FA9CBB0</color>
-    <color name="answer_sage_selection_light">#403F5F45</color>
-    <color name="answer_sage_selection_dark">#40A9CBB0</color>
+    <color name="answer_sage_ripple_light">#1A234B36</color>
+    <color name="answer_sage_ripple_dark">#26A9CBB0</color>
+    <color name="answer_sage_selection_light">#33234B36</color>
+    <color name="answer_sage_selection_dark">#3FA9CBB0</color>
 
-    <!-- Semantic roles; components never depend on a particular primitive. -->
+    <!-- Subject Specific Color Accents -->
+    <color name="subject_math">#234B36</color>
+    <color name="subject_math_bg">#EAF2EC</color>
+    <color name="subject_science">#0D9488</color>
+    <color name="subject_science_bg">#E6FFFA</color>
+    <color name="subject_code">#2563EB</color>
+    <color name="subject_code_bg">#EFF6FF</color>
+    <color name="subject_history">#D97706</color>
+    <color name="subject_history_bg">#FEF3C7</color>
+    <color name="subject_language">#7C3AED</color>
+    <color name="subject_language_bg">#F5F3FF</color>
+    <color name="subject_other">#4B5563</color>
+    <color name="subject_other_bg">#F3F4F6</color>
+
+    <!-- Difficulty Badges -->
+    <color name="difficulty_easy">#16A34A</color>
+    <color name="difficulty_easy_bg">#DCFCE7</color>
+    <color name="difficulty_medium">#D97706</color>
+    <color name="difficulty_medium_bg">#FEF3C7</color>
+    <color name="difficulty_hard">#DC2626</color>
+    <color name="difficulty_hard_bg">#FEE2E2</color>
+
+    <!-- Semantic roles -->
     <color name="answer_background">@color/answer_paper_50</color>
     <color name="answer_surface">@color/answer_paper_0</color>
     <color name="answer_primary">@color/answer_sage_700</color>
@@ -42,4 +68,6 @@
     <color name="answer_on_error">@color/answer_paper_0</color>
     <color name="answer_ripple">@color/answer_sage_ripple_light</color>
     <color name="answer_text_selection">@color/answer_sage_selection_light</color>
+    <color name="answer_code_surface">#1C2A22</color>
+    <color name="answer_code_text">#E6EDE8</color>
 </resources>

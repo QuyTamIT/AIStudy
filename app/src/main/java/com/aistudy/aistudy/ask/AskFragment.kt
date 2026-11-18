@@ -57,6 +57,7 @@ class AskFragment : Fragment() {
     private var btnRemoveImage: View? = null
     private lateinit var progressLoading: View
     private lateinit var textError: TextView
+    private var aiErrorHelper: AiErrorUiHelper? = null
 
     private var suggestionButtons = emptyList<MaterialButton>()
     private var executor: ExecutorService? = null
@@ -140,10 +141,16 @@ class AskFragment : Fragment() {
         btnRemoveImage = view.findViewById(R.id.btn_remove_image)
         progressLoading = view.findViewById(R.id.progress_loading)
         textError = view.findViewById(R.id.tv_ask_error)
+        aiErrorHelper = AiErrorUiHelper(
+            root = view,
+            onRetry = { submit() },
+            onGoHome = { (activity as? com.aistudy.aistudy.MainActivity)?.selectTab(R.id.nav_home) }
+        )
 
         editQuestion.doAfterTextChanged {
             view.findViewById<TextInputLayout>(R.id.input_question).error = null
             textError.visibility = View.GONE
+            aiErrorHelper?.hide()
         }
 
         // Main already handles system bars. Only the remaining IME overlap belongs to Ask.
@@ -207,6 +214,8 @@ class AskFragment : Fragment() {
     override fun onDestroyView() {
         executor?.shutdownNow()
         executor = null
+        aiErrorHelper?.cancelCooldown()
+        aiErrorHelper = null
         suggestionButtons = emptyList()
         btnRemoveImage = null
         super.onDestroyView()
@@ -332,6 +341,13 @@ class AskFragment : Fragment() {
 
         val apiKey = BuildConfig.GEMINI_API_KEY
         if (apiKey.isBlank() || apiKey.startsWith("YOUR_", ignoreCase = true)) {
+            val info = AiErrorMessages.AiErrorInfo(
+                titleRes = R.string.ai_error_title_auth,
+                messageRes = R.string.ask_error_key_missing,
+                canRetry = false,
+                isQuotaError = false
+            )
+            aiErrorHelper?.showError(info)
             showError(R.string.ask_error_key_missing)
             return
         }
@@ -349,6 +365,7 @@ class AskFragment : Fragment() {
         }
         val database = AppDatabase.getInstance(host.applicationContext)
         textError.visibility = View.GONE
+        aiErrorHelper?.hide()
         view?.findViewById<TextInputLayout>(R.id.input_question)?.error = null
         setLoading(true)
 
@@ -430,6 +447,8 @@ class AskFragment : Fragment() {
                 postToView(host, requestView) {
                     setLoading(false)
                     // Do NOT clear the user's question or attached image on error so they can retry
+                    val info = AiErrorMessages.getErrorInfo(error, R.string.ask_error_save)
+                    aiErrorHelper?.showError(info)
                     showError(errorMessage(error))
                 }
             }

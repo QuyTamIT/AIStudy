@@ -61,6 +61,7 @@ class QuizActivity : AppCompatActivity() {
     private lateinit var btnPrimary: MaterialButton
     private lateinit var tvResultScore: TextView
     private lateinit var tvResultXp: TextView
+    private var aiErrorHelper: com.aistudy.aistudy.ask.AiErrorUiHelper? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setTheme(R.style.Theme_AIStudy_Study)
@@ -125,6 +126,17 @@ class QuizActivity : AppCompatActivity() {
         currentIndex = savedInstanceState?.getInt("currentIndex", 0) ?: 0
         restoredDraft = savedInstanceState?.getString("draftAnswer")
 
+        aiErrorHelper = com.aistudy.aistudy.ask.AiErrorUiHelper(
+            root = layoutLoading,
+            onRetry = {
+                showLoading()
+                model.retry(userId, subject)
+            },
+            onGoHome = {
+                finish()
+            }
+        )
+
         showLoading()
         model = ViewModelProvider(this)[QuizViewModel::class.java]
         model.start(userId, subject, requestedSessionId, savedInstanceState != null)
@@ -151,7 +163,7 @@ class QuizActivity : AppCompatActivity() {
         val loaded = state.quiz
         if (loaded == null) {
             state.error?.let { message ->
-                if (requestedSessionId > 0L) failRestore(message) else showGenerationError(message)
+                if (requestedSessionId > 0L) failRestore(message) else showGenerationError(message, state.errorInfo)
             }
             return
         }
@@ -310,20 +322,41 @@ class QuizActivity : AppCompatActivity() {
 
     private fun showLoading() {
         layoutLoading.visibility = View.VISIBLE
+        findViewById<View>(R.id.progress_quiz_loading).visibility = View.VISIBLE
+        findViewById<TextView>(R.id.tv_quiz_status).apply {
+            visibility = View.VISIBLE
+            setText(R.string.quiz_loading)
+        }
+        findViewById<View>(R.id.btn_quiz_load_back).visibility = View.GONE
+        aiErrorHelper?.hide()
         layoutQuiz.visibility = View.GONE
         layoutResult.visibility = View.GONE
     }
 
-    private fun showGenerationError(@StringRes message: Int) {
+    private fun showGenerationError(@StringRes message: Int, errorInfo: com.aistudy.aistudy.ask.AiErrorMessages.AiErrorInfo? = null) {
         findViewById<View>(R.id.progress_quiz_loading).visibility = View.GONE
-        findViewById<TextView>(R.id.tv_quiz_status).setText(message)
-        findViewById<View>(R.id.btn_quiz_load_back).visibility = View.VISIBLE
+        findViewById<View>(R.id.tv_quiz_status).visibility = View.GONE
+        findViewById<View>(R.id.btn_quiz_load_back).visibility = View.GONE
+        val info = errorInfo ?: com.aistudy.aistudy.ask.AiErrorMessages.AiErrorInfo(
+            titleRes = R.string.ai_error_title_general,
+            messageRes = message,
+            canRetry = true,
+            isQuotaError = message == R.string.ask_error_quota || message == R.string.ask_error_quota_exhausted || message == R.string.ask_error_rate_limit
+        )
+        aiErrorHelper?.showError(info)
     }
 
     private fun showQuiz() {
+        aiErrorHelper?.hide()
         layoutLoading.visibility = View.GONE
         layoutQuiz.visibility = View.VISIBLE
         layoutResult.visibility = View.GONE
+    }
+
+    override fun onDestroy() {
+        aiErrorHelper?.cancelCooldown()
+        aiErrorHelper = null
+        super.onDestroy()
     }
 
 
