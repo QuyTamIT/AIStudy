@@ -85,7 +85,7 @@
                         android:textColor="@color/answer_foreground"
                         android:textSize="14sp"
                         android:textStyle="bold"
-                        tools:text="Học giả AIStudy" />
+                        tools:text="AIStudy learner" />
 
                     <TextView
                         android:id="@+id/tv_xp_total"
@@ -93,7 +93,7 @@
                         android:layout_height="wrap_content"
                         android:textColor="@color/answer_foreground_secondary"
                         android:textSize="12sp"
-                        tools:text="Tổng tích lũy: 350 XP" />
+                        tools:text="Total earned: 350 XP" />
                 </LinearLayout>
 
                 <TextView
@@ -106,7 +106,7 @@
                     android:textColor="@color/streak"
                     android:textSize="13sp"
                     android:textStyle="bold"
-                    tools:text="3 ngày" />
+                    tools:text="3 days" />
             </LinearLayout>
 
             <!-- Hero Banner: Học Vui · Nhớ Lâu -->
@@ -151,7 +151,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/answer_space_6"
-                android:text="CÁC TRÒ CHƠI HỌC TẬP"
+                android:text="LEARNING GAMES"
                 android:textAllCaps="true"
                 android:textColor="@color/answer_foreground_secondary"
                 android:textSize="11sp"
@@ -211,7 +211,7 @@
                         android:background="@drawable/bg_history_chip"
                         android:paddingHorizontal="10dp"
                         android:paddingVertical="4dp"
-                        android:text="Kỷ lục: 0"
+                        android:text="Best: 0"
                         android:textColor="@color/answer_foreground_secondary"
                         android:textSize="11sp"
                         android:textStyle="bold" />
@@ -290,7 +290,7 @@
                         android:background="@drawable/bg_history_chip"
                         android:paddingHorizontal="10dp"
                         android:paddingVertical="4dp"
-                        android:text="Kỷ lục: —"
+                        android:text="Best: —"
                         android:textColor="@color/answer_foreground_secondary"
                         android:textSize="11sp"
                         android:textStyle="bold" />

@@ -45,7 +45,7 @@
             android:background="@drawable/bg_history_chip"
             android:paddingHorizontal="12dp"
             android:paddingVertical="4dp"
-            android:text="0 điểm"
+            android:text="0 points"
             android:textColor="@color/answer_primary"
             android:textSize="13sp"
             android:textStyle="bold" />
@@ -118,7 +118,7 @@
                     android:textColor="@color/answer_primary"
                     android:textSize="11sp"
                     android:textStyle="bold"
-                    tools:text="Thứ tự phép tính" />
+                    tools:text="Order of operations" />
 
                 <TextView
                     android:id="@+id/tv_question"
@@ -138,7 +138,7 @@
                     android:textColor="@color/answer_foreground_secondary"
                     android:textSize="13sp"
                     android:visibility="invisible"
-                    tools:text="+10 điểm"
+                    tools:text="+10 points"
                     tools:visibility="visible" />
             </LinearLayout>
 
@@ -251,7 +251,7 @@
                 android:textColor="@color/answer_foreground_secondary"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                tools:text="Thời gian còn lại: 45s" />
+                tools:text="Time left: 45s" />
 
         </LinearLayout>
     </ScrollView>
@@ -320,7 +320,7 @@
                     android:id="@+id/tv_result_score"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Tổng điểm: 180"
+                    android:text="Total score: 180"
                     android:textAppearance="@style/TextAppearance.AIStudy.Answer.Body" />
 
                 <TextView
@@ -328,7 +328,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Số câu đúng: 12 / 14"
+                    android:text="Correct answers: 12 / 14"
                     android:textAppearance="@style/TextAppearance.AIStudy.Answer.Body" />
 
                 <TextView
@@ -336,7 +336,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Chuỗi combo cao nhất: x6"
+                    android:text="Best combo: x6"
                     android:textAppearance="@style/TextAppearance.AIStudy.Answer.Body" />
             </LinearLayout>
 

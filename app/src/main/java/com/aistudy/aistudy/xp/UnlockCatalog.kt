@@ -67,9 +67,9 @@ object UnlockCatalog {
 
     fun labelForTheme(themeId: String?): String {
         return when (themeId) {
-            THEME_NIGHT -> "Ban đêm"
+            THEME_NIGHT -> "Night"
             THEME_PASTEL -> "Pastel"
-            else -> "Mặc định"
+            else -> "Default"
         }
     }
 

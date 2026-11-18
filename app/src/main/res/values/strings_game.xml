@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="game_title">60-second challenge</string>
+    <string name="game_home_body">A little play. A little progress. Build a combo and test what you know.</string>
+    <string name="game_open">Play a challenge</string>
+    <string name="game_intro">Make every answer count.</string>
+    <string name="game_rules">Answer up to 10 questions. Earn 100 points for each correct answer, plus a combo bonus of up to 100. A mistake resets your combo. Each correct answer earns 10 XP.</string>
+    <string name="game_subject">Choose a subject</string>
+    <string name="game_mode">Choose your pace</string>
+    <string name="game_timed">60 seconds</string>
+    <string name="game_untimed">No time limit</string>
+    <string name="game_offline">Ready offline · 10 questions per round</string>
+    <string name="game_timer_note">The clock keeps running when you leave the app. Your score and XP are saved when you finish the round.</string>
+    <string name="game_start">Start playing</string>
+    <string name="game_progress">Question %1$d of %2$d</string>
+    <string name="game_score_combo">%1$d points · Combo %2$d</string>
+    <string name="game_seconds">%1$d s left</string>
+    <string name="game_correct">Correct! +%1$d points</string>
+    <string name="game_feedback_details">%1$s\n%2$s\n\n%3$s</string>
+    <string name="game_wrong">Incorrect — your combo resets. Try the next question.</string>
+    <string name="game_result">Round complete</string>
+    <string name="game_time_up">Time is up!</string>
+    <string name="game_result_score">%1$d points</string>
+    <string name="game_result_summary">%1$d correct / %2$d answered · Best combo %3$d</string>
+    <string name="game_best">Personal best: %1$d points</string>
+    <string name="game_xp">+%1$d XP saved to your profile</string>
+    <string name="game_saving">Saving your result…</string>
+    <string name="game_save_error">Could not save your result. Retry to save your score and XP.</string>
+    <string name="game_retry">Retry saving</string>
+    <string name="game_replay">Play again</string>
+    <string name="game_review">Review your answers</string>
+    <string name="game_no_answers">No answers this round. Pick a subject and try again at your own pace.</string>
+    <string name="game_review_correct">%1$d. Correct · %2$s</string>
+    <string name="game_review_wrong">%1$d. Incorrect · %2$s</string>
+    <string name="game_your_answer">Your answer: %1$s</string>
+    <string name="game_answer">Correct answer: %1$s</string>
+    <string name="game_exit_title">Leave this round?</string>
+    <string name="game_exit_body">This round will end without saving points or XP.</string>
+    <string name="game_exit">Leave round</string>
+    <string name="game_stay">Keep playing</string>
+    <style name="Theme.AIStudy.Game" parent="Theme.AIStudy.Study">
+        <item name="colorSecondaryContainer">@color/answer_result_surface</item>
+        <item name="colorOnSecondaryContainer">@color/answer_primary</item>
+    </style>
+    <style name="Widget.AIStudy.Game.Option" parent="Widget.AIStudy.Study.Link">
+        <item name="android:textAppearance">@style/TextAppearance.AIStudy.Answer.Body</item>
+        <item name="android:gravity">start|center_vertical</item>
+        <item name="android:padding">16dp</item>
+        <item name="android:minHeight">56dp</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="strokeColor">@color/answer_outline</item>
+        <item name="cornerRadius">12dp</item>
+    </style>
+</resources>

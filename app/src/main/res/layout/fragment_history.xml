@@ -199,7 +199,19 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_practice"
-            style="@style/Widget.AIStudy.Study.Primary"
+
+style="@style/Widget.AIStudy.Study.Primary"
+app:icon="@drawable/ic_study_practice"
+app:iconSize="20dp"
+app:iconGravity="textStart"
+android:layout_width="match_parent"
+android:layout_height="52dp"
+android:minHeight="52dp"
+android:layout_marginTop="12dp"
+android:text="@string/quiz_practice"
+android:visibility="gone"
+app:cornerRadius="14dp" />
+
             android:layout_width="match_parent"
             android:layout_height="52dp"
             android:minHeight="52dp"

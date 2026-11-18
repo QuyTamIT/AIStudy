@@ -302,67 +302,78 @@
                     app:cornerRadius="12dp" />
             </LinearLayout>
 
-            <!-- Playground Banner (Educational Mini-Games) -->
             <LinearLayout
                 android:id="@+id/card_home_playground"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/answer_space_6"
-                android:background="@drawable/bg_playground_hero"
+                android:background="@drawable/bg_home_card"
+                android:foreground="?attr/selectableItemBackground"
                 android:clickable="true"
                 android:focusable="true"
-                android:foreground="?attr/selectableItemBackground"
                 android:orientation="vertical"
                 android:padding="@dimen/answer_space_6">
 
-                <LinearLayout
+                <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/home_playground_banner_tag"
-                        android:textAllCaps="true"
-                        android:textColor="@color/answer_primary"
-                        android:textSize="11sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🎮"
-                        android:textSize="18sp" />
-                </LinearLayout>
+                    android:text="@string/home_playground_banner_tag"
+                    android:textAppearance="@style/TextAppearance.AIStudy.Answer.Label" />
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="@dimen/answer_space_3"
+                    android:accessibilityHeading="true"
                     android:text="@string/home_playground_banner_title"
-                    android:textAppearance="@style/TextAppearance.AIStudy.Answer.StepTitle"
-                    android:textSize="18sp" />
+                    android:textAppearance="@style/TextAppearance.AIStudy.Answer.StepTitle" />
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="@dimen/answer_space_2"
                     android:text="@string/home_playground_banner_sub"
-                    android:textAppearance="@style/TextAppearance.AIStudy.Study.Support"
-                    android:textSize="13sp" />
+                    android:textAppearance="@style/TextAppearance.AIStudy.Answer.Body" />
 
                 <TextView
-                    android:id="@+id/tv_home_playground_cta"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="@dimen/answer_space_4"
                     android:text="@string/home_playground_banner_cta"
-                    android:textColor="@color/answer_primary"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
+                    android:textAppearance="@style/TextAppearance.AIStudy.Answer.Subject" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/answer_space_3"
+                android:background="@drawable/bg_home_card"
+                android:orientation="vertical"
+                android:padding="@dimen/answer_space_6">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:accessibilityHeading="true"
+                    android:text="@string/game_title"
+                    android:textAppearance="@style/TextAppearance.AIStudy.Answer.StepTitle" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/answer_space_2"
+                    android:text="@string/game_home_body"
+                    android:textAppearance="@style/TextAppearance.AIStudy.Answer.Body" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_game"
+                    style="@style/Widget.AIStudy.Study.Primary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/answer_space_4"
+                    android:text="@string/game_open"
+                    app:icon="@drawable/ic_study_game"
+                    app:iconGravity="textStart" />
             </LinearLayout>
 
             <!-- Topic Review Suggestion (Phase 12) -->

@@ -67,6 +67,9 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_remove_image"
+                    app:icon="@drawable/ic_study_close"
+                    app:iconSize="20dp"
+                    app:iconGravity="textStart"
                     style="@style/Widget.Material3.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

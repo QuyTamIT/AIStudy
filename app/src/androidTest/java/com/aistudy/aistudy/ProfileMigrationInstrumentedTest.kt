@@ -4,6 +4,7 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import androidx.room.Room
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -63,13 +64,13 @@ class ProfileMigrationInstrumentedTest {
         val name = "missing-migration-${UUID.randomUUID()}.db"
         context.openOrCreateDatabase(name, Context.MODE_PRIVATE, null).use { sql ->
             createUsers(sql)
-            sql.version = 9
+            sql.version = 10
         }
-        val db = AppDatabase.create(context, name)
+        val db = openDatabase(name)
         try {
             check(db)
             SQLiteDatabase.openDatabase(context.getDatabasePath(name).path, null, SQLiteDatabase.OPEN_READONLY).use { sql ->
-                assertEquals(9, sql.version)
+                assertEquals(10, sql.version)
                 sql.rawQuery("SELECT password FROM users WHERE id = 42", null).use {
                     assertTrue(it.moveToFirst())
                     assertEquals("LegacyPass123", it.getString(0))
@@ -90,7 +91,7 @@ class ProfileMigrationInstrumentedTest {
         var database: AppDatabase? = null
         try {
             createFixture(name, version, image.path)
-            database = AppDatabase.create(context, name)
+            database = openDatabase(name)
             val db = database
             val user = requireNotNull(db.userDao().findByEmail("legacy@example.com"))
             assertEquals(42L, user.id)
@@ -136,16 +137,26 @@ class ProfileMigrationInstrumentedTest {
             } else assertTrue(db.quizSessionDao().getAllByUserId(42L).isEmpty())
             assertTrue(image.exists())
             db.close()
-            database = AppDatabase.create(context, name)
+            database = openDatabase(name)
             assertEquals("LegacyPass123", database.userDao().getById(42L)?.password)
             assertEquals(if (version == 1) 0 else 123, database.profileDao().getByUserId(42L)?.xp)
-            assertEquals(8, database.openHelper.readableDatabase.version)
+            assertEquals(9, database.openHelper.readableDatabase.version)
         } finally {
             database?.close()
             context.deleteDatabase(name)
             image.delete()
         }
     }
+
+    private fun openDatabase(name: String): AppDatabase =
+        Room.databaseBuilder(context, AppDatabase::class.java, name)
+            .addMigrations(
+                AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3,
+                AppDatabase.MIGRATION_3_4, AppDatabase.MIGRATION_4_5,
+                AppDatabase.MIGRATION_5_6, AppDatabase.MIGRATION_6_7,
+                AppDatabase.MIGRATION_7_8, AppDatabase.MIGRATION_8_9
+            )
+            .build()
 
     private fun createUsers(sql: SQLiteDatabase) {
         sql.execSQL("CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, fullName TEXT, email TEXT, password TEXT)")
