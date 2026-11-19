@@ -60,6 +60,20 @@ class GeminiClientTest {
         GeminiClient.execute(canary, prompt, schema, "trusted fixture instruction", trace, image, "image/png",
             connectionFactory = { connection }, wait = { fail("Unexpected retry") }, errorJson = { JSONObject(it) })
 
+    @Test fun defaultsToGemini36OnGoogleRestApi() {
+        val trace = AiRequestTrace(AiRequestTrace.Feature.ASK_TEXT, sink = { })
+        val connection = Connection(200, response())
+        GeminiClient.execute(canary, "{}", schema, "trusted fixture instruction", trace,
+            connectionFactory = { url ->
+                assertEquals(
+                    "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
+                    url.toExternalForm()
+                )
+                connection
+            })
+        assertEquals(canary, connection.getRequestProperty("x-goog-api-key"))
+    }
+
     @Test fun payloadSeparatesUntrustedDataFromSystemAndDoesNotLeakIntoEvents() {
         val events = mutableListOf<JSONObject>()
         val trace = AiRequestTrace(AiRequestTrace.Feature.ASK_IMAGE, sink = { events.add(it) })

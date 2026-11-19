@@ -24,5 +24,5 @@ data class StudentProfileData(
     val quizAccuracy: Int,
     val subjectCounts: Map<String, Int>,
     val recentQuestions: List<QuestionAnswer>,
-    val isCloudSynced: Boolean = true
+    val isCloudSynced: Boolean = false
 )

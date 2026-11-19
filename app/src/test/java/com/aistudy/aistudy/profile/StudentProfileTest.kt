@@ -59,6 +59,7 @@ class StudentProfileTest {
             recentQuestions = emptyList()
         )
 
+        assertFalse("Local profile should not be marked as cloud-synced", profile.isCloudSynced)
         val payload = FirebaseStudentSync.createFirestorePayload(profile)
 
         assertEquals("42", payload["studentId"])

@@ -36,7 +36,7 @@ object NotificationHelper {
         body: String?,
         openTab: String?,
         qaId: Long
-    ) {
+    ): Boolean {
         ensureChannel(context)
 
         val intent = Intent(context, MainActivity::class.java)
@@ -64,10 +64,12 @@ object NotificationHelper {
             .setContentIntent(pendingIntent)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
 
-        try {
+        if (!NotificationScheduler.isEnabled(context)) return false
+        return try {
             NotificationManagerCompat.from(context).notify(notificationId, builder.build())
+            true
         } catch (_: SecurityException) {
-            // Permission POST_NOTIFICATIONS revoked
+            false
         }
     }
 }

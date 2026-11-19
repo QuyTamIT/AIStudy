@@ -18,10 +18,10 @@ import org.json.JSONObject
 
 object GeminiClient {
     val CANDIDATE_MODELS = listOf(
+        "gemini-3.6-flash",
         "gemini-3.5-flash-lite",
         "gemini-flash-lite-latest",
-        "gemini-3.1-flash-lite",
-        "gemini-3.6-flash"
+        "gemini-3.1-flash-lite"
     )
     private const val MAX_RETRIES = 2
     private const val INITIAL_BACKOFF_MS = 1_000L
@@ -242,15 +242,7 @@ object GeminiClient {
         if (code == 403 && (errorMessage.contains("billing", ignoreCase = true) || errorMessage.contains("paid tier", ignoreCase = true))) {
             return RequestException(code, ErrorReason.BILLING_DISABLED, retryAfterMillis)
         }
-        val reason = if (code == 429) {
-            val specific = quotaReason(details)
-            if (specific != ErrorReason.UNKNOWN) specific
-            else if (errorMessage.contains("daily", ignoreCase = true) ||
-                errorMessage.contains("day", ignoreCase = true) ||
-                errorMessage.contains("exhausted", ignoreCase = true)
-            ) ErrorReason.QUOTA_EXHAUSTED
-            else ErrorReason.UNKNOWN
-        } else ErrorReason.UNKNOWN
+        val reason = if (code == 429) quotaReason(details) else ErrorReason.UNKNOWN
         return RequestException(code, reason, retryAfterMillis)
     }
 
