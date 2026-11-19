@@ -152,6 +152,7 @@ class CurvedAnimatedBottomNav @JvmOverloads constructor(
 
     private fun createTabView(index: Int, tab: TabDefinition): TabItemView {
         val root = FrameLayout(context).apply {
+            id = tab.id
             layoutParams = LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT, 1f)
             setBackgroundResource(android.R.drawable.list_selector_background)
             isClickable = true

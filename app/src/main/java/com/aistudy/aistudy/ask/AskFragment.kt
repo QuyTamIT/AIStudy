@@ -16,7 +16,6 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -56,7 +55,6 @@ class AskFragment : Fragment() {
     private lateinit var imgPreview: ImageView
     private var btnRemoveImage: View? = null
     private lateinit var progressLoading: View
-    private lateinit var textError: TextView
     private var aiErrorHelper: AiErrorUiHelper? = null
 
     private var suggestionButtons = emptyList<MaterialButton>()
@@ -140,16 +138,14 @@ class AskFragment : Fragment() {
         imgPreview = view.findViewById(R.id.img_preview)
         btnRemoveImage = view.findViewById(R.id.btn_remove_image)
         progressLoading = view.findViewById(R.id.progress_loading)
-        textError = view.findViewById(R.id.tv_ask_error)
         aiErrorHelper = AiErrorUiHelper(
-            root = view,
+            root = view.findViewById(R.id.layout_ask_ai_error),
             onRetry = { submit() },
             onGoHome = { (activity as? com.aistudy.aistudy.MainActivity)?.selectTab(R.id.nav_home) }
         )
 
         editQuestion.doAfterTextChanged {
             view.findViewById<TextInputLayout>(R.id.input_question).error = null
-            textError.visibility = View.GONE
             aiErrorHelper?.hide()
         }
 
@@ -180,7 +176,6 @@ class AskFragment : Fragment() {
                 editQuestion.setText(suggestions[index])
                 editQuestion.setSelection(editQuestion.text.length)
                 editQuestion.requestFocus()
-                textError.visibility = View.GONE
                 WindowCompat.getInsetsController(requireActivity().window, editQuestion).show(WindowInsetsCompat.Type.ime())
             }
         }
@@ -348,7 +343,6 @@ class AskFragment : Fragment() {
                 isQuotaError = false
             )
             aiErrorHelper?.showError(info)
-            showError(R.string.ask_error_key_missing)
             return
         }
         val host = activity ?: return
@@ -364,7 +358,6 @@ class AskFragment : Fragment() {
             return
         }
         val database = AppDatabase.getInstance(host.applicationContext)
-        textError.visibility = View.GONE
         aiErrorHelper?.hide()
         view?.findViewById<TextInputLayout>(R.id.input_question)?.error = null
         setLoading(true)
@@ -447,9 +440,8 @@ class AskFragment : Fragment() {
                 postToView(host, requestView) {
                     setLoading(false)
                     // Do NOT clear the user's question or attached image on error so they can retry
-                    val info = AiErrorMessages.getErrorInfo(error, R.string.ask_error_save)
+                    val info = AiErrorMessages.getErrorInfo(error, errorFallback(error))
                     aiErrorHelper?.showError(info)
-                    showError(errorMessage(error))
                 }
             }
             finally {
@@ -490,15 +482,10 @@ class AskFragment : Fragment() {
         buttonSend.setIconResource(if (value) 0 else R.drawable.ic_study_arrow)
     }
 
-    private fun showError(message: Int) {
-        textError.setText(message)
-        textError.visibility = View.VISIBLE
-    }
-
-    private fun errorMessage(error: Exception): Int = when (error) {
+    private fun errorFallback(error: Exception): Int = when (error) {
         is SessionChangedException -> R.string.ask_error_session
         is IllegalArgumentException -> R.string.ask_error_response
-        else -> AiErrorMessages.message(error, R.string.ask_error_save)
+        else -> R.string.ask_error_save
     }
 
     private class SessionChangedException : IllegalStateException()

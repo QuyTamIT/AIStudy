@@ -75,13 +75,6 @@
                     android:textColor="@color/answer_foreground_secondary" />
             </LinearLayout>
 
-            <TextView android:id="@+id/tv_ask_error" android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/answer_space_3" android:background="@drawable/bg_answer_error"
-                android:padding="@dimen/answer_space_4" android:drawableStart="@drawable/ic_study_error"
-                android:drawablePadding="@dimen/answer_space_3" android:gravity="center_vertical"
-                android:accessibilityLiveRegion="polite" android:visibility="gone"
-                android:textAppearance="@style/TextAppearance.AIStudy.Study.Error" tools:text="@string/ask_error_network" />
-
             <include
                 android:id="@+id/layout_ask_ai_error"
                 layout="@layout/view_ai_error_state"
