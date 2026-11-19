@@ -13,7 +13,6 @@ internal class AiErrorUiHelper(
     private val onRetry: () -> Unit,
     private val onGoHome: () -> Unit
 ) {
-    private val container: View? = root.findViewById(R.id.card_ai_error)
     private val ivIcon: ImageView? = root.findViewById(R.id.iv_error_icon)
     private val tvTitle: TextView? = root.findViewById(R.id.tv_error_title)
     private val tvMessage: TextView? = root.findViewById(R.id.tv_error_message)
@@ -39,6 +38,7 @@ internal class AiErrorUiHelper(
         cancelCooldown()
         val context = root.context ?: return
 
+        root.visibility = View.VISIBLE
         tvTitle?.setText(info.titleRes)
         tvMessage?.setText(info.messageRes)
 
@@ -68,8 +68,6 @@ internal class AiErrorUiHelper(
         } else {
             btnRetry?.visibility = View.GONE
         }
-
-        container?.visibility = View.VISIBLE
     }
 
     private fun startCooldown(seconds: Int) {
@@ -94,7 +92,7 @@ internal class AiErrorUiHelper(
 
     fun hide() {
         cancelCooldown()
-        container?.visibility = View.GONE
+        root.visibility = View.GONE
     }
 
     fun cancelCooldown() {

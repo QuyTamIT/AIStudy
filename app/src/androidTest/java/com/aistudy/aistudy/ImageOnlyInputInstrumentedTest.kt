@@ -44,7 +44,9 @@ class ImageOnlyInputInstrumentedTest {
         assertTrue(preferences.edit().remove(LoginActivity.KEY_USER_ID).commit())
         onView(withId(R.id.btn_send)).perform(scrollTo(), click())
         if (BuildConfig.GEMINI_API_KEY.isBlank() || BuildConfig.GEMINI_API_KEY.startsWith("YOUR_", ignoreCase = true)) {
-            onView(withId(R.id.tv_ask_error)).check(matches(withText(R.string.ask_error_key_missing)))
+            onView(withId(R.id.tv_error_message)).perform(scrollTo())
+                .check(matches(withText(R.string.ask_error_key_missing)))
+                .check(matches(isDisplayed()))
             onView(withId(R.id.btn_remove_image)).perform(scrollTo(), click())
             assertFalse(draft.exists())
         } else {

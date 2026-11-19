@@ -133,10 +133,7 @@
     <string name="profile_error_name_empty">Họ và tên không được để trống.</string>
     <string name="profile_error_load">Không thể tải thông tin hồ sơ.</string>
     <string name="profile_error_save">Không thể lưu thông tin hồ sơ. Vui lòng thử lại.</string>
-    <string name="profile_cloud_sync_title">Đồng bộ đám mây (Firebase)</string>
-    <string name="profile_cloud_sync_desc">Dữ liệu được bảo mật và đồng bộ hóa qua Firebase Authentication &amp; Firestore.</string>
-    <string name="profile_cloud_synced">Đã đồng bộ</string>
-    <string name="profile_cloud_sync_now">Đồng bộ ngay</string>
+    <string name="profile_storage_local">Hồ sơ được lưu trên thiết bị này.</string>
     <string name="profile_change_password">Đổi mật khẩu</string>
     <string name="profile_dialog_password_title">Đổi mật khẩu tài khoản</string>
     <string name="profile_old_password">Mật khẩu hiện tại</string>

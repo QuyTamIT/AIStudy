@@ -15,8 +15,7 @@ data class ProfileUiState(
     val profile: StudentProfileData? = null,
     val errorMessage: String? = null,
     val successMessage: String? = null,
-    val isSaving: Boolean = false,
-    val isSyncing: Boolean = false
+    val isSaving: Boolean = false
 )
 
 class ProfileViewModel(application: Application) : AndroidViewModel(application) {
@@ -147,21 +146,6 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                 val msg = result.exceptionOrNull()?.localizedMessage ?: "Không thể đổi mật khẩu"
                 onResult(false, msg)
             }
-        }
-    }
-
-    fun syncFirebase(userId: Long) {
-        val current = _uiState.value ?: return
-        _uiState.value = current.copy(isSyncing = true)
-        viewModelScope.launch {
-            val syncResult = withContext(Dispatchers.IO) {
-                repository.syncFirebase(userId)
-            }
-            _uiState.value = current.copy(
-                isSyncing = false,
-                successMessage = if (syncResult.isSuccess) syncResult.message else null,
-                errorMessage = if (!syncResult.isSuccess) syncResult.message else null
-            )
         }
     }
 

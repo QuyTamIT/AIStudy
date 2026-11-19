@@ -19,6 +19,8 @@ class DailyLearningWorker(context: Context, params: WorkerParameters) : Worker(c
 
     override fun doWork(): Result {
         val context = applicationContext
+        if (!NotificationScheduler.isEnabled(context)) return Result.success()
+
         val userId = context.getSharedPreferences(LoginActivity.PREFS_AUTH, Context.MODE_PRIVATE)
             .getLong(LoginActivity.KEY_USER_ID, -1L)
         if (userId == -1L) {
@@ -45,7 +47,7 @@ class DailyLearningWorker(context: Context, params: WorkerParameters) : Worker(c
         }
         val beforeMs = System.currentTimeMillis() - HOURS_48_MS
         val qa = qaDao.getOldestUnreviewedStarred(userId, beforeMs) ?: return
-        NotificationHelper.show(
+        val sent = NotificationHelper.show(
             context,
             NotificationHelper.ID_BOOKMARK,
             context.getString(R.string.notify_bookmark_title),
@@ -53,7 +55,7 @@ class DailyLearningWorker(context: Context, params: WorkerParameters) : Worker(c
             MainActivity.TAB_HISTORY,
             qa.id
         )
-        markSentToday(context, userId, "bookmark")
+        if (sent) markSentToday(context, userId, "bookmark")
     }
 
     private fun maybeMistakes(context: Context, quizItemDao: QuizItemDao, userId: Long) {
@@ -65,7 +67,7 @@ class DailyLearningWorker(context: Context, params: WorkerParameters) : Worker(c
         if (subject.isNullOrEmpty()) {
             return
         }
-        NotificationHelper.show(
+        val sent = NotificationHelper.show(
             context,
             NotificationHelper.ID_MISTAKES,
             context.getString(R.string.notify_mistakes_title),
@@ -73,7 +75,7 @@ class DailyLearningWorker(context: Context, params: WorkerParameters) : Worker(c
             MainActivity.TAB_PROGRESS,
             -1
         )
-        markSentToday(context, userId, "mistakes")
+        if (sent) markSentToday(context, userId, "mistakes")
     }
 
     private fun maybeMotivational(context: Context, profile: Profile, userId: Long) {
@@ -95,7 +97,7 @@ class DailyLearningWorker(context: Context, params: WorkerParameters) : Worker(c
                 XpRules.levelFromXp(profile.xp) + 1
             )
         }
-        NotificationHelper.show(
+        val sent = NotificationHelper.show(
             context,
             NotificationHelper.ID_MOTIVATIONAL,
             context.getString(R.string.notify_motivational_title),
@@ -103,7 +105,7 @@ class DailyLearningWorker(context: Context, params: WorkerParameters) : Worker(c
             MainActivity.TAB_HOME,
             -1
         )
-        markSentToday(context, userId, "motivational")
+        if (sent) markSentToday(context, userId, "motivational")
     }
 
     private fun maybeSummary(
@@ -149,7 +151,7 @@ class DailyLearningWorker(context: Context, params: WorkerParameters) : Worker(c
             profile.weeklyXp
         )
 
-        NotificationHelper.show(
+        val sent = NotificationHelper.show(
             context,
             NotificationHelper.ID_SUMMARY,
             title,
@@ -157,7 +159,7 @@ class DailyLearningWorker(context: Context, params: WorkerParameters) : Worker(c
             MainActivity.TAB_PROGRESS,
             -1
         )
-        markSentToday(context, userId, "summary_$kind")
+        if (sent) markSentToday(context, userId, "summary_$kind")
     }
 
     private fun alreadySentToday(context: Context, userId: Long, type: String): Boolean {

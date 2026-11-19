@@ -114,7 +114,6 @@ class QuizActivity : AppCompatActivity() {
         tvQuizTitle.text = getString(R.string.quiz_practice_on, subjectLabel(subject))
         btnBack.setOnClickListener { finish() }
         btnDone.setOnClickListener { finish() }
-        findViewById<View>(R.id.btn_quiz_load_back).setOnClickListener { finish() }
         btnPrimary.setOnClickListener { onPrimaryClick() }
 
         if (savedInstanceState != null && savedInstanceState.getLong("ownerId", userId) != userId) {
@@ -126,8 +125,13 @@ class QuizActivity : AppCompatActivity() {
         currentIndex = savedInstanceState?.getInt("currentIndex", 0) ?: 0
         restoredDraft = savedInstanceState?.getString("draftAnswer")
 
+        val errorCard = findViewById<View>(R.id.layout_quiz_ai_error)
+        errorCard.findViewById<MaterialButton>(R.id.btn_error_home).apply {
+            setText(R.string.quiz_back)
+            setIconResource(R.drawable.ic_answer_back)
+        }
         aiErrorHelper = com.aistudy.aistudy.ask.AiErrorUiHelper(
-            root = layoutLoading,
+            root = errorCard,
             onRetry = {
                 showLoading()
                 model.retry(userId, subject)
@@ -327,7 +331,6 @@ class QuizActivity : AppCompatActivity() {
             visibility = View.VISIBLE
             setText(R.string.quiz_loading)
         }
-        findViewById<View>(R.id.btn_quiz_load_back).visibility = View.GONE
         aiErrorHelper?.hide()
         layoutQuiz.visibility = View.GONE
         layoutResult.visibility = View.GONE
@@ -336,7 +339,6 @@ class QuizActivity : AppCompatActivity() {
     private fun showGenerationError(@StringRes message: Int, errorInfo: com.aistudy.aistudy.ask.AiErrorMessages.AiErrorInfo? = null) {
         findViewById<View>(R.id.progress_quiz_loading).visibility = View.GONE
         findViewById<View>(R.id.tv_quiz_status).visibility = View.GONE
-        findViewById<View>(R.id.btn_quiz_load_back).visibility = View.GONE
         val info = errorInfo ?: com.aistudy.aistudy.ask.AiErrorMessages.AiErrorInfo(
             titleRes = R.string.ai_error_title_general,
             messageRes = message,

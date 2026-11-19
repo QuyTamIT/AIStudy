@@ -124,13 +124,14 @@ class AnswerActivity : AppCompatActivity() {
 
         model = ViewModelProvider(this)[AnswerViewModel::class.java]
         findViewById<View>(R.id.btn_more_topics).setOnClickListener { model.showMore() }
+        val errorCard = findViewById<View>(R.id.layout_answer_ai_error)
+        errorCard.findViewById<MaterialButton>(R.id.btn_error_home).apply {
+            setText(R.string.answer_back)
+            setIconResource(R.drawable.ic_answer_back)
+        }
         aiErrorHelper = com.aistudy.aistudy.ask.AiErrorUiHelper(
-            root = findViewById(R.id.layout_answer_ai_error),
-            onRetry = {
-                findViewById<View>(R.id.progress_answer_loading).visibility = View.VISIBLE
-                aiErrorHelper?.hide()
-                model.start(answerRepository)
-            },
+            root = errorCard,
+            onRetry = { },
             onGoHome = {
                 finish()
             }
@@ -527,15 +528,21 @@ class AnswerActivity : AppCompatActivity() {
     }
 
     private fun showLoadError() {
+        val helper = aiErrorHelper
+        if (helper == null) {
+            Toast.makeText(this, R.string.answer_error_load, Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
         findViewById<View>(R.id.progress_answer_loading).visibility = View.GONE
         findViewById<View>(R.id.answer_content).visibility = View.GONE
         val info = com.aistudy.aistudy.ask.AiErrorMessages.AiErrorInfo(
             titleRes = R.string.ai_error_title_general,
             messageRes = R.string.answer_error_load,
-            canRetry = true,
+            canRetry = false,
             isQuotaError = false
         )
-        aiErrorHelper?.showError(info)
+        helper.showError(info)
     }
 
     private fun flushReviewSeconds() {

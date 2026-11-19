@@ -82,14 +82,10 @@ class ProfileActivity : AppCompatActivity() {
     private fun saveAndSetCustomAvatar(uri: Uri) {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val avatarsDir = File(filesDir, "avatars")
-                if (!avatarsDir.exists()) {
-                    avatarsDir.mkdirs()
+                val avatarFile = File(filesDir, "avatars/avatar_${userId}.jpg")
+                replaceCustomAvatar(avatarFile) {
+                    contentResolver.openInputStream(uri) ?: throw IOException("Không thể đọc tệp ảnh đã chọn")
                 }
-                val avatarFile = File(avatarsDir, "avatar_${userId}.jpg")
-                contentResolver.openInputStream(uri)?.use { input ->
-                    ImagePreparation.copyBounded(input, avatarFile, ImagePreparation.MAX_INPUT_BYTES)
-                } ?: throw IOException("Không thể đọc tệp ảnh đã chọn")
 
                 val customAvatarId = "custom:" + avatarFile.absolutePath
                 withContext(Dispatchers.Main) {
@@ -124,8 +120,6 @@ class ProfileActivity : AppCompatActivity() {
     private lateinit var btnHistoryAll: TextView
 
     // Settings
-    private lateinit var tvSyncStatus: TextView
-    private lateinit var btnSyncFirebase: MaterialButton
     private lateinit var rowChangePassword: View
     private lateinit var switchNotifications: SwitchMaterial
     private lateinit var btnLogout: MaterialButton
@@ -197,8 +191,6 @@ class ProfileActivity : AppCompatActivity() {
         tvHistoryEmpty = findViewById(R.id.tv_profile_history_empty)
         btnHistoryAll = findViewById(R.id.btn_profile_history_all)
 
-        tvSyncStatus = findViewById(R.id.tv_sync_status)
-        btnSyncFirebase = findViewById(R.id.btn_sync_firebase)
         rowChangePassword = findViewById(R.id.row_change_password)
         switchNotifications = findViewById(R.id.switch_notifications)
         btnLogout = findViewById(R.id.btn_profile_logout)
@@ -217,10 +209,6 @@ class ProfileActivity : AppCompatActivity() {
             }
             startActivity(intent)
             finish()
-        }
-
-        btnSyncFirebase.setOnClickListener {
-            viewModel.syncFirebase(userId)
         }
 
         rowChangePassword.setOnClickListener {
@@ -280,9 +268,6 @@ class ProfileActivity : AppCompatActivity() {
             Toast.makeText(this, state.errorMessage, Toast.LENGTH_LONG).show()
             viewModel.clearMessages()
         }
-
-        btnSyncFirebase.isEnabled = !state.isSyncing
-        btnSyncFirebase.setText(if (state.isSyncing) R.string.profile_cloud_synced else R.string.profile_cloud_sync_now)
     }
 
     private fun bindProfileData(data: StudentProfileData) {
@@ -290,7 +275,7 @@ class ProfileActivity : AppCompatActivity() {
             val path = UnlockCatalog.getCustomAvatarPath(data.avatarId)
             val file = if (path != null) File(path) else null
             if (file != null && file.exists()) {
-                val bitmap = ImagePreparation.decodeSampledBitmap(file.absolutePath, 168, 168)
+                val bitmap = ImagePreparation.decodeSampledBitmap(file.absolutePath, PROFILE_AVATAR_SIZE_PX, PROFILE_AVATAR_SIZE_PX)
                 if (bitmap != null) {
                     ivProfileAvatarCustom.setImageBitmap(bitmap)
                     ivProfileAvatarCustom.visibility = View.VISIBLE

@@ -8,7 +8,7 @@ import com.aistudy.aistudy.xp.UnlockCatalog
 import com.aistudy.aistudy.xp.XpRules
 
 class StudentProfileRepository(
-    private val context: Context,
+    context: Context,
     private val database: AppDatabase = AppDatabase.getInstance(context)
 ) {
     private val userDao = database.userDao()
@@ -81,8 +81,7 @@ class StudentProfileRepository(
             totalReviewSeconds = totalReviewSeconds,
             quizAccuracy = quizAccuracy,
             subjectCounts = subjectCounts,
-            recentQuestions = recentQuestions,
-            isCloudSynced = true
+            recentQuestions = recentQuestions
         )
     }
 
@@ -165,11 +164,5 @@ class StudentProfileRepository(
         } else {
             Result.failure(IllegalStateException("Không thể đổi mật khẩu, vui lòng thử lại sau"))
         }
-    }
-
-    fun syncFirebase(currentUserId: Long): FirebaseStudentSync.SyncResult {
-        FirebaseStudentSync.validateUserOwnership(currentUserId, currentUserId)
-        val data = getProfile(currentUserId)
-        return FirebaseStudentSync.sync(context, currentUserId, data)
     }
 }

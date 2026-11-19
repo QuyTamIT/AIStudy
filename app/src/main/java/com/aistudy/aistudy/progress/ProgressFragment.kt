@@ -180,8 +180,10 @@ class ProgressFragment : Fragment() {
 
         btnLogout.setOnClickListener { showLogoutConfirmation() }
         view.findViewById<View>(R.id.tv_progress_title).setOnLongClickListener {
-            NotificationScheduler.enqueueNow(requireContext())
-            Toast.makeText(requireContext(), R.string.progress_force_notify, Toast.LENGTH_SHORT).show()
+            val ctx = requireContext()
+            if (NotificationScheduler.enqueueNow(ctx)) {
+                Toast.makeText(ctx, R.string.progress_force_notify, Toast.LENGTH_SHORT).show()
+            }
             true
         }
         cardReviewSuggest.setOnClickListener {
@@ -239,7 +241,7 @@ class ProgressFragment : Fragment() {
                     if (profile.avatarId.isNullOrEmpty()) {
                         profile.avatarId = UnlockCatalog.AVATAR_FOX
                     }
-                    if (profile.themeId.isNullOrEmpty() || profile.themeId == UnlockCatalog.THEME_NIGHT) {
+                    if (profile.themeId.isNullOrEmpty()) {
                         profile.themeId = UnlockCatalog.THEME_DEFAULT
                     }
                     profileDao.update(profile)
@@ -491,12 +493,7 @@ class ProgressFragment : Fragment() {
             return
         }
         val themeId = UnlockCatalog.normalizeThemeId(profile.themeId)
-        val colorRes = if (themeId == UnlockCatalog.THEME_NIGHT) {
-            R.color.theme_default_bg
-        } else {
-            UnlockCatalog.backgroundColorRes(themeId)
-        }
-        root.setBackgroundResource(colorRes)
+        root.setBackgroundResource(UnlockCatalog.backgroundColorRes(themeId))
     }
 
     private fun bindLeaderboard(fullName: String?, weeklyXp: Int, friends: List<Friend>) {

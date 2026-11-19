@@ -16,7 +16,16 @@ object NotificationScheduler {
     const val PREFS_NOTIF = "notify_settings"
     const val KEY_NOTIF_ENABLED = "daily_notif_enabled"
 
+    fun isEnabled(context: Context): Boolean =
+        context.getSharedPreferences(PREFS_NOTIF, Context.MODE_PRIVATE)
+            .getBoolean(KEY_NOTIF_ENABLED, true)
+
     fun schedule(context: Context) {
+        if (!isEnabled(context)) {
+            cancel(context)
+            return
+        }
+
         NotificationHelper.ensureChannel(context)
 
         val delayMs = millisUntilHour(20)
@@ -35,7 +44,9 @@ object NotificationScheduler {
         )
     }
 
-    fun enqueueNow(context: Context) {
+    fun enqueueNow(context: Context): Boolean {
+        if (!isEnabled(context)) return false
+
         NotificationHelper.ensureChannel(context)
         context.getSharedPreferences("notify_state", Context.MODE_PRIVATE)
             .edit()
@@ -47,6 +58,7 @@ object NotificationScheduler {
             ExistingWorkPolicy.REPLACE,
             once
         )
+        return true
     }
 
     private fun millisUntilHour(hourOfDay: Int): Long {
@@ -63,7 +75,9 @@ object NotificationScheduler {
     }
 
     fun cancel(context: Context) {
-        WorkManager.getInstance(context).cancelUniqueWork(UNIQUE_DAILY)
+        val workManager = WorkManager.getInstance(context)
+        workManager.cancelUniqueWork(UNIQUE_DAILY)
+        workManager.cancelUniqueWork(UNIQUE_FORCE)
     }
 }
 
