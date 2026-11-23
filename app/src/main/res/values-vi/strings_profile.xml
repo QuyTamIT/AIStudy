@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="profile_language">Ngôn ngữ</string>
+    <string name="profile_language_desc">Chọn ngôn ngữ ứng dụng</string>
+    <string name="profile_language_title">Ngôn ngữ ứng dụng</string>
+    <string name="profile_language_vietnamese">Tiếng Việt</string>
+    <string name="profile_language_english">English</string>
+    <string name="profile_notifications_enabled">Đã bật nhắc nhở học tập</string>
+    <string name="profile_notifications_disabled">Đã tắt nhắc nhở học tập</string>
+    <string name="profile_photo_error">Không thể tải ảnh. Vui lòng chọn ảnh khác và thử lại.</string>
+    <string name="profile_avatar_custom_selected">Đang sử dụng ảnh cá nhân ✓</string>
+    <string name="profile_avatar_custom_reuse">Nhấn để dùng lại hoặc tải ảnh mới</string>
+    <string name="profile_avatar_custom_choose">Chọn ảnh từ thư viện của bạn</string>
+    <string name="profile_avatar_dialog_hint">Tải ảnh riêng từ thiết bị hoặc chọn linh vật học tập</string>
+    <string name="profile_avatar_custom_title">Ảnh từ thiết bị của bạn</string>
+    <string name="profile_avatar_upload">Tải ảnh</string>
+    <string name="profile_avatar_level_hint">Hoặc chọn linh vật theo cấp độ:</string>
+    <string name="profile_avatar_fox_name">Cáo Thông Thái</string>
+    <string name="profile_avatar_owl_name">Cú Tri Thức</string>
+    <string name="profile_avatar_locked_level_2">Mở khóa Cấp 2</string>
+    <string name="profile_avatar_cat_name">Mèo Siêu Phàm</string>
+    <string name="profile_avatar_locked_level_3">Mở khóa Cấp 3</string>
+    <string name="profile_avatar_rocket_name">Tên Lửa Khám Phá</string>
+    <string name="profile_avatar_locked_level_4">Mở khóa Cấp 4</string>
+    <string name="profile_name_saved_success">Cập nhật họ và tên thành công!</string>
+    <string name="profile_name_save_error">Lỗi khi cập nhật họ và tên</string>
+    <string name="profile_avatar_device_saved">Đã cập nhật ảnh đại diện từ thiết bị!</string>
+    <string name="profile_avatar_saved">Đã đổi ảnh đại diện linh vật!</string>
+    <string name="profile_avatar_save_error">Lỗi khi cập nhật ảnh đại diện</string>
+    <string name="profile_preferences_saved">Đã lưu tùy chọn học tập!</string>
+    <string name="profile_preferences_save_error">Lỗi khi lưu tùy chọn</string>
+    <string name="profile_password_change_error">Không thể đổi mật khẩu, vui lòng thử lại sau</string>
+    <string name="profile_error_user_profile_not_found">Không tìm thấy thông tin người dùng</string>
+    <string name="profile_default_student_name">Học sinh AIStudy</string>
+    <string name="profile_error_user_not_found">Không tìm thấy người dùng</string>
+</resources>

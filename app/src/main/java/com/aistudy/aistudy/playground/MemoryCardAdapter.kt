@@ -4,7 +4,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.aistudy.aistudy.R
 
@@ -38,10 +37,14 @@ class MemoryCardAdapter(
         private val tvCheck: TextView = itemView.findViewById(R.id.tv_matched_check)
 
         fun bind(card: ConceptCard, position: Int) {
-            tvSubject.text = card.subject
-            tvText.text = card.text
-
             val ctx = itemView.context
+            tvSubject.text = ctx.getString(card.subjectResId)
+            tvText.text = ctx.getString(card.textResId)
+            itemView.contentDescription = if (card.isMatched || card.isFlipped) {
+                ctx.getString(R.string.memory_card_revealed_description, tvSubject.text, tvText.text)
+            } else {
+                ctx.getString(R.string.memory_card_hidden_description)
+            }
             if (card.isMatched) {
                 layoutBack.visibility = View.GONE
                 layoutFront.visibility = View.VISIBLE

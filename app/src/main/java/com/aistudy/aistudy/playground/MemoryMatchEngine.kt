@@ -1,19 +1,21 @@
 package com.aistudy.aistudy.playground
 
+import androidx.annotation.StringRes
+import com.aistudy.aistudy.R
 import java.util.Random
 
 data class ConceptPair(
     val pairId: Int,
-    val subject: String,
-    val term: String,
-    val definition: String
+    @param:StringRes val subjectResId: Int,
+    @param:StringRes val termResId: Int,
+    @param:StringRes val definitionResId: Int
 )
 
 data class ConceptCard(
     val id: Int,
     val pairId: Int,
-    val text: String,
-    val subject: String,
+    @param:StringRes val textResId: Int,
+    @param:StringRes val subjectResId: Int,
     val isPrompt: Boolean,
     var isFlipped: Boolean = false,
     var isMatched: Boolean = false
@@ -35,37 +37,37 @@ class MemoryMatchEngine(private val random: Random = Random()) {
 
         val CONCEPT_CATALOG: List<ConceptPair> = listOf(
             // Math
-            ConceptPair(1, "Toán học", "Định lý Pythagoras", "a² + b² = c²"),
-            ConceptPair(2, "Toán học", "Số Pi (π)", "≈ 3.14159"),
-            ConceptPair(3, "Toán học", "Đạo hàm của x²", "2x"),
-            ConceptPair(4, "Toán học", "Diện tích hình tròn", "S = π · r²"),
-            ConceptPair(5, "Toán học", "Định lý Thales", "Tỉ lệ song song"),
+            ConceptPair(1, R.string.memory_subject_math, R.string.memory_term_pythagorean, R.string.memory_definition_pythagorean),
+            ConceptPair(2, R.string.memory_subject_math, R.string.memory_term_pi, R.string.memory_definition_pi),
+            ConceptPair(3, R.string.memory_subject_math, R.string.memory_term_derivative, R.string.memory_definition_derivative),
+            ConceptPair(4, R.string.memory_subject_math, R.string.memory_term_circle_area, R.string.memory_definition_circle_area),
+            ConceptPair(5, R.string.memory_subject_math, R.string.memory_term_thales, R.string.memory_definition_thales),
 
             // Science
-            ConceptPair(6, "Khoa học", "Công thức Nước", "H₂O"),
-            ConceptPair(7, "Khoa học", "Khí Carbonic", "CO₂"),
-            ConceptPair(8, "Khoa học", "Thuyết tương đối", "E = m · c²"),
-            ConceptPair(9, "Khoa học", "Định luật II Newton", "F = m · a"),
-            ConceptPair(10, "Khoa học", "Vận tốc ánh sáng", "≈ 300.000 km/s"),
-            ConceptPair(11, "Khoa học", "Muối ăn", "NaCl"),
+            ConceptPair(6, R.string.memory_subject_science, R.string.memory_term_water_formula, R.string.memory_definition_water_formula),
+            ConceptPair(7, R.string.memory_subject_science, R.string.memory_term_carbon_dioxide, R.string.memory_definition_carbon_dioxide),
+            ConceptPair(8, R.string.memory_subject_science, R.string.memory_term_relativity, R.string.memory_definition_relativity),
+            ConceptPair(9, R.string.memory_subject_science, R.string.memory_term_newton_second_law, R.string.memory_definition_newton_second_law),
+            ConceptPair(10, R.string.memory_subject_science, R.string.memory_term_light_speed, R.string.memory_definition_light_speed),
+            ConceptPair(11, R.string.memory_subject_science, R.string.memory_term_table_salt, R.string.memory_definition_table_salt),
 
             // Code
-            ConceptPair(12, "Lập trình", "Độ phức tạp O(1)", "Thời gian hằng số"),
-            ConceptPair(13, "Lập trình", "Binary Search", "Độ phức tạp O(log n)"),
-            ConceptPair(14, "Lập trình", "Ngôn ngữ SQL", "Truy vấn dữ liệu"),
-            ConceptPair(15, "Lập trình", "Cấu trúc FIFO", "Queue (Hàng đợi)"),
-            ConceptPair(16, "Lập trình", "Cấu trúc LIFO", "Stack (Ngăn xếp)"),
-            ConceptPair(17, "Lập trình", "HTTP 404", "Not Found"),
+            ConceptPair(12, R.string.memory_subject_programming, R.string.memory_term_constant_complexity, R.string.memory_definition_constant_complexity),
+            ConceptPair(13, R.string.memory_subject_programming, R.string.memory_term_binary_search, R.string.memory_definition_binary_search),
+            ConceptPair(14, R.string.memory_subject_programming, R.string.memory_term_sql, R.string.memory_definition_sql),
+            ConceptPair(15, R.string.memory_subject_programming, R.string.memory_term_fifo, R.string.memory_definition_fifo),
+            ConceptPair(16, R.string.memory_subject_programming, R.string.memory_term_lifo, R.string.memory_definition_lifo),
+            ConceptPair(17, R.string.memory_subject_programming, R.string.memory_term_http_404, R.string.memory_definition_http_404),
 
             // History
-            ConceptPair(18, "Lịch sử", "Năm 1945", "CM Tháng 8 & Độc lập"),
-            ConceptPair(19, "Lịch sử", "Năm 1975", "Thống nhất đất nước"),
-            ConceptPair(20, "Lịch sử", "Năm 1911", "Bác Hồ ra đi tìm đường"),
+            ConceptPair(18, R.string.memory_subject_history, R.string.memory_term_year_1945, R.string.memory_definition_year_1945),
+            ConceptPair(19, R.string.memory_subject_history, R.string.memory_term_year_1975, R.string.memory_definition_year_1975),
+            ConceptPair(20, R.string.memory_subject_history, R.string.memory_term_year_1911, R.string.memory_definition_year_1911),
 
             // Language
-            ConceptPair(21, "Ngoại ngữ", "Synonym", "Từ đồng nghĩa"),
-            ConceptPair(22, "Ngoại ngữ", "Antonym", "Từ trái nghĩa"),
-            ConceptPair(23, "Ngoại ngữ", "Metaphor", "Phép ẩn dụ")
+            ConceptPair(21, R.string.memory_subject_language, R.string.memory_term_synonym, R.string.memory_definition_synonym),
+            ConceptPair(22, R.string.memory_subject_language, R.string.memory_term_antonym, R.string.memory_definition_antonym),
+            ConceptPair(23, R.string.memory_subject_language, R.string.memory_term_metaphor, R.string.memory_definition_metaphor)
         )
     }
 
@@ -89,8 +91,8 @@ class MemoryMatchEngine(private val random: Random = Random()) {
                 ConceptCard(
                     id = cardId++,
                     pairId = pair.pairId,
-                    text = pair.term,
-                    subject = pair.subject,
+                    textResId = pair.termResId,
+                    subjectResId = pair.subjectResId,
                     isPrompt = true
                 )
             )
@@ -99,8 +101,8 @@ class MemoryMatchEngine(private val random: Random = Random()) {
                 ConceptCard(
                     id = cardId++,
                     pairId = pair.pairId,
-                    text = pair.definition,
-                    subject = pair.subject,
+                    textResId = pair.definitionResId,
+                    subjectResId = pair.subjectResId,
                     isPrompt = false
                 )
             )

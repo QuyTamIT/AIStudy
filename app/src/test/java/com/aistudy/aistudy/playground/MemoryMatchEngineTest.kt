@@ -2,7 +2,6 @@ package com.aistudy.aistudy.playground
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -33,9 +32,9 @@ class MemoryMatchEngineTest {
             // One prompt and one definition
             assertTrue(pairCards.any { it.isPrompt })
             assertTrue(pairCards.any { !it.isPrompt })
-            assertNotNull(pairCards[0].subject)
-            assertTrue(pairCards[0].text.isNotEmpty())
-            assertTrue(pairCards[1].text.isNotEmpty())
+            assertTrue(pairCards[0].subjectResId != 0)
+            assertTrue(pairCards[0].textResId != 0)
+            assertTrue(pairCards[1].textResId != 0)
         }
     }
 

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="study_ask_loading_detail">Đang chuẩn bị câu trả lời của bạn…</string>
+    <string name="study_login_password_hint">Nhập mật khẩu của bạn</string>
+</resources>

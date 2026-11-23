@@ -22,6 +22,7 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.aistudy.aistudy.R
@@ -44,16 +45,16 @@ class CurvedAnimatedBottomNav @JvmOverloads constructor(
     data class TabDefinition(
         val id: Int,
         val iconRes: Int,
-        val label: String
+        @param:StringRes val labelRes: Int
     )
 
     companion object {
         val TABS = listOf(
-            TabDefinition(R.id.nav_home, R.drawable.ic_nav_home, "Trang chủ"),
-            TabDefinition(R.id.nav_ask, R.drawable.ic_nav_ask, "Hỏi đáp"),
-            TabDefinition(R.id.nav_playground, R.drawable.ic_nav_playground, "Sân chơi"),
-            TabDefinition(R.id.nav_history, R.drawable.ic_nav_history, "Lịch sử"),
-            TabDefinition(R.id.nav_progress, R.drawable.ic_nav_progress, "Tiến độ")
+            TabDefinition(R.id.nav_home, R.drawable.ic_nav_home, R.string.nav_home),
+            TabDefinition(R.id.nav_ask, R.drawable.ic_nav_ask, R.string.nav_ask),
+            TabDefinition(R.id.nav_playground, R.drawable.ic_nav_playground, R.string.nav_playground),
+            TabDefinition(R.id.nav_history, R.drawable.ic_nav_history, R.string.nav_history),
+            TabDefinition(R.id.nav_progress, R.drawable.ic_nav_progress, R.string.nav_progress)
         )
     }
 
@@ -183,7 +184,7 @@ class CurvedAnimatedBottomNav @JvmOverloads constructor(
                 topMargin = dpInt(2f)
                 gravity = Gravity.CENTER_HORIZONTAL
             }
-            text = tab.label
+            setText(tab.labelRes)
             textSize = 11f
             setTextColor(ContextCompat.getColor(context, R.color.answer_foreground_secondary))
             typeface = Typeface.DEFAULT
@@ -315,8 +316,8 @@ class CurvedAnimatedBottomNav @JvmOverloads constructor(
         currentTabIndex = targetIndex
 
         if (notifyListener) {
-            val menuItem = CurvedMenuItem(TABS[targetIndex].id, TABS[targetIndex].label)
-            val handled = onItemSelectedListener?.invoke(menuItem) ?: true
+            val tab = TABS[targetIndex]
+            val handled = onItemSelectedListener?.invoke(CurvedMenuItem(tab.id, context.getText(tab.labelRes))) ?: true
             if (!handled) {
                 currentTabIndex = previousIndex
                 return

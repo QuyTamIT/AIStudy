@@ -43,6 +43,7 @@ class MainActivity : AppCompatActivity() {
         const val TAB_PLAYGROUND = "playground"
         const val TAB_HISTORY = "history"
         const val TAB_PROGRESS = "progress"
+        private const val STATE_SELECTED_TAB = "selected_tab"
         private const val PREFS_NOTIFICATION_PERMISSION = "notification_permission"
         private const val KEY_PERMISSION_REQUESTED = "requested"
     }
@@ -107,6 +108,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         bottomNav = findViewById(R.id.bottom_nav)
+        savedInstanceState?.let {
+            bottomNav.selectedItemId = it.getInt(STATE_SELECTED_TAB, R.id.nav_home)
+        }
         bottomNav.setOnItemSelectedListener { item ->
             val fragment: Fragment = when (item.itemId) {
                 R.id.nav_home -> HomeFragment()
@@ -129,6 +133,13 @@ class MainActivity : AppCompatActivity() {
 
         requestNotificationPermissionIfNeeded()
         NotificationScheduler.schedule(this)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        if (::bottomNav.isInitialized) {
+            outState.putInt(STATE_SELECTED_TAB, bottomNav.selectedItemId)
+        }
     }
 
     override fun onNewIntent(intent: Intent) {

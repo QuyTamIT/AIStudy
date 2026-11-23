@@ -1,66 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="home_brand">AIStudy</string>
-    <string name="home_level_label">Cấp độ hiện tại</string>
-    <string name="home_scholar">Học giả</string>
-    <string name="home_streak_days">%d ngày</string>
+    <string name="home_level_label">Current level</string>
+    <string name="home_scholar">Scholar</string>
+    <string name="home_streak_days">%d days</string>
     <string name="home_xp_progress">%1$d / %2$d XP</string>
     <string name="home_xp_percent">%d%%</string>
-    <string name="home_greeting">Xin chào, %1$s</string>
-    <string name="home_morning">Chào buổi sáng</string>
-    <string name="home_afternoon">Chào buổi chiều</string>
-    <string name="home_evening">Chào buổi tối</string>
+    <string name="home_greeting">Hello, %1$s</string>
+    <string name="home_morning">Good morning</string>
+    <string name="home_afternoon">Good afternoon</string>
+    <string name="home_evening">Good evening</string>
     <string name="home_greeting_named">%1$s, %2$s.</string>
     <string name="home_greeting_generic">%1$s.</string>
-    <string name="home_welcome">Khơi dậy niềm đam mê học hỏi mỗi ngày.</string>
-    <string name="home_subtitle">Hôm nay chúng ta sẽ khám phá điều gì?</string>
-    <string name="home_hero_title">Ý tưởng lớn bắt đầu từ một câu hỏi.</string>
-    <string name="home_hero_body">Mở rộng góc nhìn kiến thức qua từng bài giải chi tiết.</string>
-    <string name="home_ask">Đặt câu hỏi mới</string>
-    <string name="home_ask_cta">Đặt câu hỏi mới</string>
+    <string name="home_welcome">Fuel your passion for learning every day.</string>
+    <string name="home_subtitle">What will we explore today?</string>
+    <string name="home_hero_title">Big ideas start with a question.</string>
+    <string name="home_hero_body">Broaden your perspective with detailed answers.</string>
+    <string name="home_ask">Ask a new question</string>
+    <string name="home_ask_cta">Ask a new question</string>
     <string name="home_profile_context">%1$s · %2$s</string>
     <string name="home_subject_separator">,\u0020</string>
-    <string name="home_interests">Môn học quan tâm: %1$s</string>
-    <string name="home_loading">Đang tải không gian học tập…</string>
-    <string name="home_error">Không thể tải không gian học tập. Thử lại để xem tiến trình đã lưu.</string>
-    <string name="home_retry">Thử lại</string>
-    <string name="home_journey">Hành trình học tập</string>
-    <string name="home_journey_body">Mỗi câu hỏi là một bước tiến trên con đường tri thức.</string>
-    <string name="home_journey_empty">Hành trình của bạn bắt đầu từ sự tò mò đầu tiên.</string>
-    <string name="home_questions">Câu hỏi đã hỏi</string>
-    <string name="home_xp">XP tích lũy</string>
-    <string name="home_value_unavailable">Chưa có dữ liệu</string>
-    <string name="home_continue">Tiếp tục học</string>
-    <string name="home_continue_body">Ôn lại câu hỏi gần nhất của bạn.</string>
-    <string name="home_revisit">Xem lại lời giải</string>
-    <string name="home_open_question">Mở câu trả lời: %1$s</string>
-    <string name="home_saved_question">Câu hỏi đã lưu</string>
-    <string name="home_saved_date">Đã lưu %1$s</string>
-    <string name="home_empty_title">Trang học tập mới dành cho bạn.</string>
-    <string name="home_empty_body">Hãy hỏi bất kỳ điều gì bạn tò mò. Lời giải chi tiết từ AI sẽ sẵn sàng tại đây.</string>
-    <string name="home_empty_action">Đặt câu hỏi đầu tiên</string>
+    <string name="home_interests">Subjects of interest: %1$s</string>
+    <string name="home_loading">Loading your study space…</string>
+    <string name="home_error">Couldn\'t load your study space. Try again to see your saved progress.</string>
+    <string name="home_retry">Try again</string>
+    <string name="home_journey">Learning journey</string>
+    <string name="home_journey_body">Every question is a step on the path to knowledge.</string>
+    <string name="home_journey_empty">Your journey starts with your first moment of curiosity.</string>
+    <string name="home_questions">Questions asked</string>
+    <string name="home_xp">XP earned</string>
+    <string name="home_value_unavailable">No data yet</string>
+    <string name="home_continue">Continue learning</string>
+    <string name="home_continue_body">Review your most recent question.</string>
+    <string name="home_revisit">Review answer</string>
+    <string name="home_open_question">Open answer: %1$s</string>
+    <string name="home_saved_question">Saved question</string>
+    <string name="home_saved_date">Saved %1$s</string>
+    <string name="home_empty_title">A new learning space for you.</string>
+    <string name="home_empty_body">Ask anything you\'re curious about. A detailed AI answer will be ready here.</string>
+    <string name="home_empty_action">Ask your first question</string>
 
-    <!-- Phase 6: Home v2 (Recent Question & Subject Stats) -->
-    <string name="home_recent_title">Câu hỏi gần đây</string>
-    <string name="home_view_all">Xem tất cả</string>
-    <string name="home_subjects_title">Môn học</string>
-    <string name="home_subject_count">%d câu hỏi</string>
+    <!-- Phase 6: Home v2 (Recent Question &amp; Subject Stats) -->
+    <string name="home_recent_title">Recent question</string>
+    <string name="home_view_all">View all</string>
+    <string name="home_subjects_title">Subjects</string>
+    <string name="home_subject_count">%d questions</string>
     <string name="home_subject_math_icon">∑</string>
     <string name="home_subject_science_icon">🔬</string>
     <string name="home_subject_code_icon">{ }</string>
     <string name="home_subject_history_icon">⌛</string>
     <string name="home_subject_language_icon">あ</string>
 
-    <!-- Subject Labels (matching Phase 6 step-by-step & AnswerActivity) -->
-    <string name="subject_math">Toán học</string>
-    <string name="subject_science">Khoa học</string>
-    <string name="subject_code">Lập trình</string>
-    <string name="subject_history">Lịch sử</string>
-    <string name="subject_language">Ngoại ngữ</string>
-    <string name="subject_other">Khác</string>
+    <!-- Subject Labels (matching Phase 6 step-by-step &amp; AnswerActivity) -->
+    <string name="subject_math">Math</string>
+    <string name="subject_science">Science</string>
+    <string name="subject_code">Programming</string>
+    <string name="subject_history">History</string>
+    <string name="subject_language">Language</string>
+    <string name="subject_other">Other</string>
 
     <!-- Phase 12: Topic Review Suggestions -->
-    <string name="home_review_title">Đề xuất ôn tập</string>
-    <string name="home_review_subtitle">Ôn tập: %1$s</string>
-    <string name="home_review_cta">Luyện tập ngay</string>
+    <string name="home_review_title">Review suggestions</string>
+    <string name="home_review_subtitle">Review: %1$s</string>
+    <string name="home_review_cta">Practice now</string>
 </resources>

@@ -1,31 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="answer_screen_title">Lời giải</string>
-    <string name="answer_more_heading">Khám phá sâu hơn</string>
+    <string name="answer_screen_title">Answer</string>
+    <string name="answer_more_heading">Explore further</string>
     <string name="answer_step_index">%1$02d</string>
     <plurals name="answer_step_count">
-        <item quantity="one">%1$d bước</item>
-        <item quantity="other">%1$d bước</item>
+        <item quantity="one">%1$d step</item>
+        <item quantity="other">%1$d steps</item>
     </plurals>
 
     <!-- Adaptive AI Response Headings -->
-    <string name="answer_heading_solution">Lời giải từng bước</string>
-    <string name="answer_heading_direct">Giải thích chi tiết</string>
-    <string name="answer_heading_creative">Tác phẩm sáng tạo</string>
-    <string name="answer_heading_clarification">Cần thêm thông tin</string>
-    <string name="answer_heading_limitation">Lưu ý &amp; Hướng dẫn</string>
+    <string name="answer_heading_solution">Step-by-step solution</string>
+    <string name="answer_heading_direct">Detailed explanation</string>
+    <string name="answer_heading_creative">Creative work</string>
+    <string name="answer_heading_clarification">More information needed</string>
+    <string name="answer_heading_limitation">Notes &amp; Guidance</string>
 
     <!-- Adaptive AI Notice & Disclaimers -->
-    <string name="answer_badge_creative">Sáng tạo nguyên bản bởi AI</string>
-    <string name="answer_disclaimer_creative">Nội dung này được sáng tạo độc lập bởi AIStudy, không phải là trích dẫn từ tài liệu xuất bản sẵn có.</string>
-    <string name="answer_notice_clarification_title">Cần bổ sung chi tiết</string>
-    <string name="answer_notice_clarification_msg">Yêu cầu này còn chưa rõ ràng. Vui lòng cung cấp thêm ngữ cảnh (như tác giả, ngữ cảnh cụ thể hoặc môn học) để nhận lời giải chính xác nhất.</string>
-    <string name="answer_notice_limitation_title">Thông báo giáo dục</string>
-    <string name="answer_notice_limitation_msg">AIStudy tôn trọng sở hữu trí tuệ và giới hạn tri thức đáng tin cậy. Dưới đây là phần tóm tắt giáo dục, phân tích và hướng dẫn học tập.</string>
-    <string name="answer_notice_uncertainty_title">Mức độ tin cậy thông tin</string>
-    <string name="answer_notice_uncertainty_msg">AIStudy chưa có đủ dữ liệu kiểm chứng chính xác cho chủ đề cụ thể này. Để tránh thông tin sai lệch, dưới đây là những kiến thức đã được xác thực và cách tìm nguồn tài liệu uy tín.</string>
+    <string name="answer_badge_creative">Original AI creation</string>
+    <string name="answer_disclaimer_creative">This content was independently created by AIStudy and is not a quotation from pre-existing published material.</string>
+    <string name="answer_notice_clarification_title">More details needed</string>
+    <string name="answer_notice_clarification_msg">This request is unclear. Please provide more context (such as the author, specific context, or subject) for the most accurate answer.</string>
+    <string name="answer_notice_limitation_title">Educational notice</string>
+    <string name="answer_notice_limitation_msg">AIStudy respects intellectual property and the limits of reliable knowledge. The following is an educational summary, analysis, and study guidance.</string>
+    <string name="answer_notice_uncertainty_title">Information confidence</string>
+    <string name="answer_notice_uncertainty_msg">AIStudy does not have enough verified data for this specific topic. To avoid misinformation, the following includes verified knowledge and ways to find reliable sources.</string>
 
     <!-- Adaptive Final Answer Labels -->
-    <string name="answer_final_label_takeaway">Điểm cốt lõi cần nhớ</string>
-    <string name="answer_final_label_next_step">Gợi ý bước tiếp theo</string>
+    <string name="answer_final_label_takeaway">Key takeaway</string>
+    <string name="answer_final_label_next_step">Next step</string>
 </resources>

@@ -45,7 +45,7 @@
             android:background="@drawable/bg_history_chip"
             android:paddingHorizontal="12dp"
             android:paddingVertical="4dp"
-            android:text="0 điểm"
+            android:text="@string/game_speed_math_score_zero"
             android:textColor="@color/answer_primary"
             android:textSize="13sp"
             android:textStyle="bold" />
@@ -57,7 +57,7 @@
             android:background="@drawable/bg_combo_badge"
             android:paddingHorizontal="10dp"
             android:paddingVertical="4dp"
-            android:text="x1"
+            tools:text="@string/game_speed_math_combo"
             android:textColor="@color/streak"
             android:textSize="12sp"
             android:textStyle="bold"
@@ -118,7 +118,7 @@
                     android:textColor="@color/answer_primary"
                     android:textSize="11sp"
                     android:textStyle="bold"
-                    tools:text="Thứ tự phép tính" />
+                    tools:text="@string/playground_math_category_order" />
 
                 <TextView
                     android:id="@+id/tv_question"
@@ -138,7 +138,7 @@
                     android:textColor="@color/answer_foreground_secondary"
                     android:textSize="13sp"
                     android:visibility="invisible"
-                    tools:text="+10 điểm"
+                    tools:text="+10"
                     tools:visibility="visible" />
             </LinearLayout>
 
@@ -251,7 +251,7 @@
                 android:textColor="@color/answer_foreground_secondary"
                 android:textSize="14sp"
                 android:textStyle="bold"
-                tools:text="Thời gian còn lại: 45s" />
+                tools:text="@string/game_speed_math_time_left" />
 
         </LinearLayout>
     </ScrollView>
@@ -305,7 +305,7 @@
                 android:background="@drawable/bg_history_chip_active"
                 android:paddingHorizontal="16dp"
                 android:paddingVertical="6dp"
-                android:text="+45 XP"
+                tools:text="@string/game_result_xp_earned"
                 android:textColor="@color/answer_on_primary"
                 android:textSize="16sp"
                 android:textStyle="bold" />
@@ -320,7 +320,7 @@
                     android:id="@+id/tv_result_score"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Tổng điểm: 180"
+                    tools:text="@string/game_result_score_label"
                     android:textAppearance="@style/TextAppearance.AIStudy.Answer.Body" />
 
                 <TextView
@@ -328,7 +328,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Số câu đúng: 12 / 14"
+                    tools:text="@string/game_result_correct_label"
                     android:textAppearance="@style/TextAppearance.AIStudy.Answer.Body" />
 
                 <TextView
@@ -336,7 +336,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Chuỗi combo cao nhất: x6"
+                    tools:text="@string/game_result_max_combo"
                     android:textAppearance="@style/TextAppearance.AIStudy.Answer.Body" />
             </LinearLayout>
 

@@ -18,7 +18,7 @@ internal fun replaceCustomAvatar(target: File, openInput: () -> InputStream) {
             staged.path,
             PROFILE_AVATAR_SIZE_PX,
             PROFILE_AVATAR_SIZE_PX
-        ) ?: throw IOException("Tệp đã chọn không phải ảnh hợp lệ")
+        ) ?: throw IOException()
         bitmap.recycle()
         Os.rename(staged.absolutePath, target.absolutePath)
     } finally {

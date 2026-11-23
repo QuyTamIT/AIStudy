@@ -1,13 +1,17 @@
 package com.aistudy.aistudy.playground
 
+import androidx.annotation.StringRes
+import com.aistudy.aistudy.R
 import java.util.Random
 
 data class MathQuestion(
     val prompt: String,
     val options: List<String>,
     val correctIndex: Int,
-    val category: String,
-    val explanation: String
+    @param:StringRes val categoryResId: Int,
+    @param:StringRes val explanationResId: Int,
+    val explanationArgs: List<Any>,
+    @param:StringRes val promptSuffixResId: Int? = null
 )
 
 data class GameResult(
@@ -57,28 +61,28 @@ class SpeedMathEngine(private val random: Random = Random()) {
                 val b = random.nextInt(60) + 15
                 val ans = a + b
                 val prompt = "$a + $b = ?"
-                createQuestion(prompt, ans, "Phép cộng", "$a + $b = $ans")
+                createQuestion(prompt, ans, R.string.playground_math_category_addition, R.string.playground_math_explanation_addition, listOf(a, b, ans))
             }
             1 -> {
                 val a = random.nextInt(70) + 30
                 val b = random.nextInt(a - 15) + 10
                 val ans = a - b
                 val prompt = "$a − $b = ?"
-                createQuestion(prompt, ans, "Phép trừ", "$a − $b = $ans")
+                createQuestion(prompt, ans, R.string.playground_math_category_subtraction, R.string.playground_math_explanation_subtraction, listOf(a, b, ans))
             }
             2 -> {
                 val a = random.nextInt(9) + 6 // 6..14
                 val b = random.nextInt(8) + 4 // 4..11
                 val ans = a * b
                 val prompt = "$a × $b = ?"
-                createQuestion(prompt, ans, "Phép nhân", "$a × $b = $ans")
+                createQuestion(prompt, ans, R.string.playground_math_category_multiplication, R.string.playground_math_explanation_multiplication, listOf(a, b, ans))
             }
             else -> {
                 val b = random.nextInt(8) + 3 // 3..10
                 val ans = random.nextInt(12) + 4 // 4..15
                 val a = b * ans
                 val prompt = "$a ÷ $b = ?"
-                createQuestion(prompt, ans, "Phép chia", "$a ÷ $b = $ans")
+                createQuestion(prompt, ans, R.string.playground_math_category_division, R.string.playground_math_explanation_division, listOf(a, b, ans))
             }
         }
     }
@@ -92,7 +96,7 @@ class SpeedMathEngine(private val random: Random = Random()) {
                 val c = random.nextInt(25) + 5
                 val ans = a * b + c
                 val prompt = "$a × $b + $c = ?"
-                createQuestion(prompt, ans, "Thứ tự phép tính", "($a × $b) + $c = ${a * b} + $c = $ans")
+                createQuestion(prompt, ans, R.string.playground_math_category_order, R.string.playground_math_explanation_order_multiply_add, listOf(a, b, c, a * b, ans))
             }
             1 -> {
                 val a = random.nextInt(40) + 50
@@ -100,7 +104,7 @@ class SpeedMathEngine(private val random: Random = Random()) {
                 val c = random.nextInt(6) + 3
                 val ans = a - b * c
                 val prompt = "$a − $b × $c = ?"
-                createQuestion(prompt, ans, "Thứ tự phép tính", "$a − ($b × $c) = $a − ${b * c} = $ans")
+                createQuestion(prompt, ans, R.string.playground_math_category_order, R.string.playground_math_explanation_order_subtract_multiply, listOf(a, b, c, b * c, ans))
             }
             else -> {
                 val a = random.nextInt(10) + 5
@@ -108,7 +112,7 @@ class SpeedMathEngine(private val random: Random = Random()) {
                 val c = random.nextInt(5) + 2
                 val ans = (a + b) * c
                 val prompt = "($a + $b) × $c = ?"
-                createQuestion(prompt, ans, "Dấu ngoặc", "($a + $b) × $c = ${a + b} × $c = $ans")
+                createQuestion(prompt, ans, R.string.playground_math_category_parentheses, R.string.playground_math_explanation_parentheses, listOf(a, b, c, a + b, ans))
             }
         }
     }
@@ -123,7 +127,7 @@ class SpeedMathEngine(private val random: Random = Random()) {
                 val offset = random.nextInt(15) + 5
                 val ans = power - offset
                 val prompt = "2^$exp − $offset = ?"
-                createQuestion(prompt, ans, "Lũy thừa", "2^$exp = $power, $power − $offset = $ans")
+                createQuestion(prompt, ans, R.string.playground_math_category_power, R.string.playground_math_explanation_power_subtract, listOf(exp, power, offset, ans))
             }
             1 -> {
                 val base = 3
@@ -133,7 +137,7 @@ class SpeedMathEngine(private val random: Random = Random()) {
                 val offset = random.nextInt(15) + 5
                 val ans = power + offset
                 val prompt = "3^$exp + $offset = ?"
-                createQuestion(prompt, ans, "Lũy thừa", "3^$exp = $power, $power + $offset = $ans")
+                createQuestion(prompt, ans, R.string.playground_math_category_power, R.string.playground_math_explanation_power_add, listOf(exp, power, offset, ans))
             }
             else -> {
                 val roots = intArrayOf(4, 5, 6, 7, 8, 9, 10, 11, 12)
@@ -142,7 +146,7 @@ class SpeedMathEngine(private val random: Random = Random()) {
                 val offset = random.nextInt(15) + 5
                 val ans = r + offset
                 val prompt = "√$square + $offset = ?"
-                createQuestion(prompt, ans, "Căn bậc hai", "√$square = $r, $r + $offset = $ans")
+                createQuestion(prompt, ans, R.string.playground_math_category_square_root, R.string.playground_math_explanation_square_root, listOf(square, r, offset, ans))
             }
         }
     }
@@ -153,7 +157,7 @@ class SpeedMathEngine(private val random: Random = Random()) {
         val b = random.nextInt(20) + 5
         val c = a * x + b
         val prompt = "$a·x + $b = $c   (x = ?)"
-        return createQuestion(prompt, x, "Phương trình", "$a·x = $c − $b = ${a * x} ⇒ x = $x")
+        return createQuestion(prompt, x, R.string.playground_math_category_equation, R.string.playground_math_explanation_equation, listOf(a, c, b, a * x, x))
     }
 
     private fun generateCodeLogic(): MathQuestion {
@@ -163,19 +167,27 @@ class SpeedMathEngine(private val random: Random = Random()) {
                 val a = random.nextInt(35) + 15
                 val b = random.nextInt(6) + 3 // 3..8
                 val ans = a % b
-                val prompt = "$a % $b = ? (chia lấy dư)"
-                createQuestion(prompt, ans, "Toán tử Modulo", "$a = $b × ${a / b} + $ans ⇒ số dư là $ans")
+                val prompt = "$a % $b = ?"
+                createQuestion(prompt, ans, R.string.playground_math_category_modulo, R.string.playground_math_explanation_modulo, listOf(a, b, a / b, ans), R.string.playground_math_prompt_modulo)
             }
             else -> {
                 val shift = random.nextInt(4) + 1 // 1..4
                 val ans = 1 shl shift
-                val prompt = "1 shl $shift (dịch bit trái 1 << $shift) = ?"
-                createQuestion(prompt, ans, "Phép toán Bit", "1 << $shift = 2^$shift = $ans")
+                val prompt = "1 shl $shift = ?"
+                createQuestion(prompt, ans, R.string.playground_math_category_bitwise, R.string.playground_math_explanation_bitwise, listOf(shift, ans), R.string.playground_math_prompt_bitwise)
             }
         }
     }
 
-    private fun createQuestion(prompt: String, answer: Int, category: String, explanation: String): MathQuestion {
+
+    private fun createQuestion(
+        prompt: String,
+        answer: Int,
+        @StringRes categoryResId: Int,
+        @StringRes explanationResId: Int,
+        explanationArgs: List<Any>,
+        @StringRes promptSuffixResId: Int? = null
+    ): MathQuestion {
         val distractorSet = mutableSetOf<Int>()
         val candidateDeltas = intArrayOf(1, -1, 10, -10, 2, -2, 5, -5, 3, -3)
 
@@ -204,8 +216,10 @@ class SpeedMathEngine(private val random: Random = Random()) {
             prompt = prompt,
             options = options,
             correctIndex = correctIndex,
-            category = category,
-            explanation = explanation
+            categoryResId = categoryResId,
+            explanationResId = explanationResId,
+            explanationArgs = explanationArgs,
+            promptSuffixResId = promptSuffixResId
         )
     }
 

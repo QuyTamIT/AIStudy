@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.aistudy.aistudy.R
 import com.aistudy.aistudy.xp.UnlockCatalog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -21,6 +22,7 @@ data class ProfileUiState(
 class ProfileViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = StudentProfileRepository(application)
+    private val appContext = application.applicationContext
     private val _uiState = MutableLiveData(ProfileUiState(isLoading = true))
     val uiState: LiveData<ProfileUiState> = _uiState
 
@@ -40,7 +42,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                 _uiState.value = ProfileUiState(
                     isLoading = false,
                     profile = null,
-                    errorMessage = e.localizedMessage ?: "Không thể tải hồ sơ học sinh"
+                    errorMessage = e.localizedMessage ?: appContext.getString(R.string.profile_error_load)
                 )
             }
         }
@@ -60,12 +62,12 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                 _uiState.value = current.copy(
                     isSaving = false,
                     profile = updated,
-                    successMessage = "Cập nhật họ và tên thành công!"
+                    successMessage = appContext.getString(R.string.profile_name_saved_success)
                 )
             } else {
                 _uiState.value = current.copy(
                     isSaving = false,
-                    errorMessage = result.exceptionOrNull()?.localizedMessage ?: "Lỗi khi cập nhật họ và tên"
+                    errorMessage = result.exceptionOrNull()?.localizedMessage ?: appContext.getString(R.string.profile_name_save_error)
                 )
             }
         }
@@ -86,15 +88,15 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                     isSaving = false,
                     profile = updated,
                     successMessage = if (UnlockCatalog.isCustomAvatar(avatarId)) {
-                        "Đã cập nhật ảnh đại diện từ thiết bị!"
+                        appContext.getString(R.string.profile_avatar_device_saved)
                     } else {
-                        "Đã đổi ảnh đại diện linh vật!"
+                        appContext.getString(R.string.profile_avatar_saved)
                     }
                 )
             } else {
                 _uiState.value = current.copy(
                     isSaving = false,
-                    errorMessage = result.exceptionOrNull()?.localizedMessage ?: "Lỗi khi cập nhật ảnh đại diện"
+                    errorMessage = result.exceptionOrNull()?.localizedMessage ?: appContext.getString(R.string.profile_avatar_save_error)
                 )
             }
         }
@@ -119,12 +121,12 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                 _uiState.value = current.copy(
                     isSaving = false,
                     profile = updated,
-                    successMessage = "Đã lưu tùy chọn học tập!"
+                    successMessage = appContext.getString(R.string.profile_preferences_saved)
                 )
             } else {
                 _uiState.value = current.copy(
                     isSaving = false,
-                    errorMessage = result.exceptionOrNull()?.localizedMessage ?: "Lỗi khi lưu tùy chọn"
+                    errorMessage = result.exceptionOrNull()?.localizedMessage ?: appContext.getString(R.string.profile_preferences_save_error)
                 )
             }
         }
@@ -141,9 +143,10 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                 repository.changePassword(userId, oldPass, newPass)
             }
             if (result.isSuccess) {
-                onResult(true, "Đổi mật khẩu thành công!")
+                onResult(true, appContext.getString(R.string.profile_password_changed))
             } else {
-                val msg = result.exceptionOrNull()?.localizedMessage ?: "Không thể đổi mật khẩu"
+                val msg = result.exceptionOrNull()?.localizedMessage
+                    ?: appContext.getString(R.string.profile_password_change_error)
                 onResult(false, msg)
             }
         }

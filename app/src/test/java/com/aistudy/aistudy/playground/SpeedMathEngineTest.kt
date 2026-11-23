@@ -26,8 +26,8 @@ class SpeedMathEngineTest {
             assertEquals(4, q.options.size)
             assertTrue(q.correctIndex in 0..3)
             assertEquals(4, q.options.toSet().size) // All 4 choices must be strictly unique!
-            assertNotNull(q.category)
-            assertNotNull(q.explanation)
+            assertTrue(q.categoryResId != 0)
+            assertTrue(q.explanationResId != 0)
         }
     }
 

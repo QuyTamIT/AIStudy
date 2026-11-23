@@ -188,8 +188,8 @@ class SpeedMathActivity : AppCompatActivity() {
         currentQuestion = engine.generateQuestion()
         val q = currentQuestion ?: return
 
-        tvCategory.text = q.category
-        tvQuestion.text = q.prompt
+        tvCategory.text = getString(q.categoryResId)
+        tvQuestion.text = q.promptSuffixResId?.let { getString(it, q.prompt) } ?: q.prompt
 
         for (i in optionButtons.indices) {
             val btn = optionButtons[i]
@@ -233,7 +233,8 @@ class SpeedMathActivity : AppCompatActivity() {
             selectedBtn.setBackgroundResource(R.drawable.bg_playground_choice_wrong)
             optionButtons[q.correctIndex].setBackgroundResource(R.drawable.bg_playground_choice_correct)
 
-            tvFeedbackHint.text = "Tiếc quá! ${q.explanation}"
+            val explanation = getString(q.explanationResId, *q.explanationArgs.toTypedArray())
+            tvFeedbackHint.text = getString(R.string.game_speed_math_wrong_feedback, explanation)
             tvFeedbackHint.setTextColor(ContextCompat.getColor(this, R.color.answer_error))
             tvFeedbackHint.visibility = View.VISIBLE
         }
@@ -250,7 +251,7 @@ class SpeedMathActivity : AppCompatActivity() {
     }
 
     private fun updateScoreAndComboUI() {
-        tvScore.text = "$currentScore điểm"
+        tvScore.text = getString(R.string.game_speed_math_score, currentScore)
         if (currentCombo >= 2) {
             tvComboBadge.visibility = View.VISIBLE
             tvComboBadge.text = getString(R.string.game_speed_math_combo, currentCombo)

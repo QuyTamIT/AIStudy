@@ -392,7 +392,7 @@ class ProgressFragment : Fragment() {
             val unlocked = UnlockCatalog.isThemeUnlocked(themeId, currentLevel)
             val isSelected = themeId == selected
             val chip = buildChip(
-                UnlockCatalog.labelForTheme(themeId),
+                getString(UnlockCatalog.labelResForTheme(themeId)),
                 unlocked,
                 isSelected,
                 UnlockCatalog.requiredLevelForTheme(themeId),

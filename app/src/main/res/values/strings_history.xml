@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="history_title">Thư viện bài học</string>
-    <string name="history_search_hint">Tìm kiếm câu hỏi…</string>
-    <string name="history_chip_all">Tất cả</string>
-    <string name="history_chip_starred">★ Đã lưu</string>
-    <string name="history_empty">Chưa có câu hỏi nào. Hãy đặt câu hỏi cho AI để bắt đầu!</string>
-    <string name="history_just_now">Vừa xong</string>
-    <string name="history_hours_ago">%d giờ trước</string>
-    <string name="history_days_ago">%d ngày trước</string>
+    <string name="history_title">Lesson library</string>
+    <string name="history_search_hint">Search questions…</string>
+    <string name="history_chip_all">All</string>
+    <string name="history_chip_starred">★ Starred</string>
+    <string name="history_empty">No questions yet. Ask AI a question to get started!</string>
+    <string name="history_just_now">Just now</string>
+    <string name="history_hours_ago">%d hours ago</string>
+    <string name="history_days_ago">%d days ago</string>
     <string name="history_star">★</string>
-    <string name="history_delete_item">Xóa câu hỏi</string>
-    <string name="history_clear_all">Xóa tất cả</string>
-    <string name="history_dialog_delete_title">Xóa câu hỏi?</string>
-    <string name="history_dialog_delete_message">Bạn có chắc chắn muốn xóa câu hỏi này khỏi lịch sử học tập không?</string>
-    <string name="history_dialog_clear_title">Xóa toàn bộ lịch sử?</string>
-    <string name="history_dialog_clear_message">Tất cả câu hỏi đã lưu trong lịch sử sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn tác.</string>
-    <string name="history_delete_confirm">Xóa</string>
-    <string name="history_clear_confirm">Xóa tất cả</string>
-    <string name="history_delete_cancel">Hủy</string>
-    <string name="history_deleted_single">Đã xóa câu hỏi khỏi lịch sử</string>
-    <string name="history_deleted_all">Đã xóa toàn bộ lịch sử câu hỏi</string>
+    <string name="history_delete_item">Delete question</string>
+    <string name="history_clear_all">Clear all</string>
+    <string name="history_dialog_delete_title">Delete question?</string>
+    <string name="history_dialog_delete_message">Are you sure you want to delete this question from your study history?</string>
+    <string name="history_dialog_clear_title">Clear all history?</string>
+    <string name="history_dialog_clear_message">All questions saved in your history will be permanently deleted. This action cannot be undone.</string>
+    <string name="history_delete_confirm">Delete</string>
+    <string name="history_clear_confirm">Clear all</string>
+    <string name="history_delete_cancel">Cancel</string>
+    <string name="history_deleted_single">Question deleted from history</string>
+    <string name="history_deleted_all">All question history deleted</string>
 </resources>

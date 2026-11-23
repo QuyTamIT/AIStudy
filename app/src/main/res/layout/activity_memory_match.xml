@@ -43,7 +43,7 @@
             android:background="@drawable/bg_history_chip"
             android:paddingHorizontal="12dp"
             android:paddingVertical="4dp"
-            android:text="00:00"
+            tools:text="00:00"
             android:textColor="@color/answer_primary"
             android:textSize="13sp"
             android:textStyle="bold" />
@@ -65,7 +65,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Lượt lật: 0"
+            tools:text="@string/game_memory_moves"
             android:textColor="@color/answer_foreground_secondary"
             android:textSize="13sp"
             android:textStyle="bold" />
@@ -74,7 +74,7 @@
             android:id="@+id/tv_matched_pairs"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Đã ghép: 0 / 6 cặp"
+            tools:text="@string/game_memory_pairs_matched"
             android:textColor="@color/answer_primary"
             android:textSize="13sp"
             android:textStyle="bold" />
@@ -122,7 +122,7 @@
                 android:id="@+id/tv_stars"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="⭐⭐⭐"
+                tools:text="⭐⭐⭐"
                 android:textSize="32sp" />
 
             <TextView
@@ -141,7 +141,7 @@
                 android:background="@drawable/bg_history_chip_active"
                 android:paddingHorizontal="16dp"
                 android:paddingVertical="6dp"
-                android:text="+45 XP"
+                tools:text="@string/game_result_xp_earned"
                 android:textColor="@color/answer_on_primary"
                 android:textSize="16sp"
                 android:textStyle="bold" />
@@ -156,7 +156,7 @@
                     android:id="@+id/tv_result_moves"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Số lượt lật: 12 lượt"
+                    tools:text="@string/game_result_moves_label"
                     android:textAppearance="@style/TextAppearance.AIStudy.Answer.Body" />
 
                 <TextView
@@ -164,7 +164,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="Thời gian hoàn thành: 00:45"
+                    tools:text="@string/game_result_time_label"
                     android:textAppearance="@style/TextAppearance.AIStudy.Answer.Body" />
             </LinearLayout>
 

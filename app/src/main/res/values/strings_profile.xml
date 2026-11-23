@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="profile_language">Language</string>
+    <string name="profile_language_desc">Choose app language</string>
+    <string name="profile_language_title">App language</string>
+    <string name="profile_language_vietnamese">Tiếng Việt</string>
+    <string name="profile_language_english">English</string>
+    <string name="profile_notifications_enabled">Study reminders enabled</string>
+    <string name="profile_notifications_disabled">Study reminders disabled</string>
+    <string name="profile_photo_error">Couldn\'t upload photo. Choose another photo and try again.</string>
+    <string name="profile_avatar_custom_selected">Using personal photo ✓</string>
+    <string name="profile_avatar_custom_reuse">Tap to reuse or upload a new photo</string>
+    <string name="profile_avatar_custom_choose">Choose a photo from your library</string>
+    <string name="profile_avatar_dialog_hint">Upload a photo or choose a study mascot</string>
+    <string name="profile_avatar_custom_title">Photo from your device</string>
+    <string name="profile_avatar_upload">Upload</string>
+    <string name="profile_avatar_level_hint">Or choose a mascot by level:</string>
+    <string name="profile_avatar_fox_name">Wise Fox</string>
+    <string name="profile_avatar_owl_name">Knowledge Owl</string>
+    <string name="profile_avatar_locked_level_2">Unlock at Level 2</string>
+    <string name="profile_avatar_cat_name">Super Cat</string>
+    <string name="profile_avatar_locked_level_3">Unlock at Level 3</string>
+    <string name="profile_avatar_rocket_name">Explorer Rocket</string>
+    <string name="profile_avatar_locked_level_4">Unlock at Level 4</string>
+    <string name="profile_name_saved_success">Name updated successfully!</string>
+    <string name="profile_name_save_error">Couldn\'t update name.</string>
+    <string name="profile_avatar_device_saved">Profile photo updated!</string>
+    <string name="profile_avatar_saved">Mascot avatar updated!</string>
+    <string name="profile_avatar_save_error">Couldn\'t update avatar.</string>
+    <string name="profile_preferences_saved">Learning preferences saved!</string>
+    <string name="profile_preferences_save_error">Couldn\'t save preferences.</string>
+    <string name="profile_password_change_error">Couldn\'t change password. Try again later.</string>
+    <string name="profile_error_user_profile_not_found">Profile not found.</string>
+    <string name="profile_default_student_name">AIStudy student</string>
+    <string name="profile_error_user_not_found">User not found.</string>
+</resources>

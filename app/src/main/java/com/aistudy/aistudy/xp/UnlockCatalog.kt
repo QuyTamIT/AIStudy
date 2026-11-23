@@ -1,5 +1,6 @@
 package com.aistudy.aistudy.xp
 
+import androidx.annotation.StringRes
 import com.aistudy.aistudy.R
 
 object UnlockCatalog {
@@ -65,12 +66,11 @@ object UnlockCatalog {
         }
     }
 
-    fun labelForTheme(themeId: String?): String {
-        return when (themeId) {
-            THEME_NIGHT -> "Ban đêm"
-            THEME_PASTEL -> "Pastel"
-            else -> "Mặc định"
-        }
+    @StringRes
+    fun labelResForTheme(themeId: String?): Int = when (themeId) {
+        THEME_NIGHT -> R.string.progress_theme_night
+        THEME_PASTEL -> R.string.progress_theme_pastel
+        else -> R.string.progress_theme_default
     }
 
     fun backgroundColorRes(themeId: String?): Int {

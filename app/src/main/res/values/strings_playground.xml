@@ -1,59 +1,149 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Playground Tab & Navigation -->
-    <string name="nav_playground">Sân chơi</string>
-    <string name="playground_title">Sân Chơi Học Tập</string>
-    <string name="playground_subtitle">Luyện phản xạ tính toán, củng cố kiến thức và tích lũy XP qua các mini-game giáo dục mỗi ngày!</string>
-    <string name="playground_daily_challenge">Thử Thách Trí Tuệ</string>
-    <string name="playground_daily_challenge_desc">Chơi ít nhất 1 trò chơi để duy trì chuỗi ngày học tập và thăng hạng!</string>
-    <string name="playground_hero_title">Học Vui · Nhớ Lâu</string>
-    <string name="playground_hero_sub">Thử thách trí tuệ mỗi ngày giúp kích hoạt tư duy và duy trì chuỗi học tập (Streak).</string>
-    <string name="playground_stat_xp">XP Sân Chơi</string>
-    <string name="playground_stat_games">Ván đã chơi</string>
-    <string name="playground_stat_streak">Chuỗi ngày</string>
+    <string name="nav_playground">Playground</string>
+    <string name="playground_title">Learning Playground</string>
+    <string name="playground_subtitle">Build calculation speed, reinforce knowledge, and earn XP with daily educational mini-games!</string>
+    <string name="playground_daily_challenge">Brain Challenge</string>
+    <string name="playground_daily_challenge_desc">Play at least one game to keep your learning streak and climb the ranks!</string>
+    <string name="playground_hero_title">Learn &amp; Remember</string>
+    <string name="playground_hero_sub">Daily brain challenges sharpen thinking and keep your streak going.</string>
+    <string name="playground_stat_xp">Playground XP</string>
+    <string name="playground_stat_games">Games played</string>
+    <string name="playground_stat_streak">Day streak</string>
 
     <!-- Speed Math & Logic Blitz -->
-    <string name="game_speed_math_title">Đấu Trí Siêu Tốc</string>
-    <string name="game_speed_math_badge">Phản xạ &amp; Tính toán</string>
-    <string name="game_speed_math_desc">45 giây rèn luyện tốc độ tính nhẩm, công thức và tư duy logic với chuỗi Combo bùng nổ điểm số!</string>
-    <string name="game_speed_math_play">Bắt đầu chơi</string>
-    <string name="game_speed_math_best_score">Kỷ lục: %1$d điểm</string>
+    <string name="game_speed_math_title">Speed Math</string>
+    <string name="game_speed_math_badge">Reflex &amp; Math</string>
+    <string name="game_speed_math_desc">45 seconds to train mental math, formulas, and logic with explosive combo scoring!</string>
+    <string name="game_speed_math_play">Start game</string>
+    <string name="game_speed_math_best_score">Best: %1$d pts</string>
     <string name="game_speed_math_combo">COMBO x%1$d 🔥</string>
     <string name="game_speed_math_time_left">%1$ds</string>
-    <string name="game_speed_math_score">Điểm: %1$d</string>
-    <string name="game_speed_math_question_progress">Câu %1$d</string>
+    <string name="game_speed_math_score">Score: %1$d</string>
+    <string name="game_speed_math_question_progress">Q %1$d</string>
 
     <!-- Concept Memory Match -->
-    <string name="game_memory_title">Ghép Cặp Trí Tuệ</string>
-    <string name="game_memory_badge">Ghi nhớ &amp; Khái niệm</string>
-    <string name="game_memory_desc">Lật thẻ tìm cặp thuật ngữ, công thức và kiến thức liên môn (Toán, Khoa học, Lập trình, Lịch sử, Ngoại ngữ)!</string>
-    <string name="game_memory_play">Bắt đầu chơi</string>
-    <string name="game_memory_best_moves">Kỷ lục: %1$d lượt</string>
-    <string name="game_memory_moves">Lượt lật: %1$d</string>
-    <string name="game_memory_pairs_matched">Đã ghép: %1$d / %2$d cặp</string>
-    <string name="game_memory_time">Thời gian: %1$02d:%2$02d</string>
+    <string name="game_memory_title">Memory Match</string>
+    <string name="game_memory_badge">Memory &amp; Concepts</string>
+    <string name="game_memory_desc">Flip cards to match terms, formulas, and cross-subject knowledge in Math, Science, Coding, History, and Languages!</string>
+    <string name="game_memory_play">Start game</string>
+    <string name="game_memory_best_moves">Best: %1$d moves</string>
+    <string name="game_memory_moves">Moves: %1$d</string>
+    <string name="game_memory_pairs_matched">Matched: %1$d / %2$d pairs</string>
+    <string name="game_memory_time">Time: %1$02d:%2$02d</string>
 
     <!-- Results & Dialogs -->
-    <string name="game_result_congrats">Xuất Sắc!</string>
-    <string name="game_result_game_over">Hết Giờ!</string>
-    <string name="game_result_victory">Chiến Thắng Hoàn Hảo!</string>
+    <string name="game_result_congrats">Great!</string>
+    <string name="game_result_game_over">Time\'s Up!</string>
+    <string name="game_result_victory">Perfect Victory!</string>
     <string name="game_result_xp_earned">+%1$d XP</string>
-    <string name="game_result_score_label">Tổng điểm: %1$d</string>
-    <string name="game_result_correct_label">Số câu đúng: %1$d / %2$d</string>
-    <string name="game_result_accuracy_label">Độ chính xác: %1$d%%</string>
-    <string name="game_result_max_combo">Chuỗi combo cao nhất: x%1$d</string>
-    <string name="game_result_moves_label">Số lượt lật: %1$d lượt</string>
-    <string name="game_result_time_label">Thời gian hoàn thành: %1$s</string>
-    <string name="game_btn_play_again">Chơi lại</string>
-    <string name="game_btn_back_playground">Về Sân Chơi</string>
-    <string name="game_quit_confirm_title">Dừng ván chơi?</string>
-    <string name="game_quit_confirm_message">Tiến trình ván chơi này sẽ không được tính. Bạn có chắc muốn thoát?</string>
-    <string name="game_quit_stay">Tiếp tục chơi</string>
-    <string name="game_quit_exit">Thoát</string>
+    <string name="game_result_score_label">Total score: %1$d</string>
+    <string name="game_result_correct_label">Correct: %1$d / %2$d</string>
+    <string name="game_result_accuracy_label">Accuracy: %1$d%%</string>
+    <string name="game_result_max_combo">Best combo: x%1$d</string>
+    <string name="game_result_moves_label">Moves: %1$d</string>
+    <string name="game_result_time_label">Completion time: %1$s</string>
+    <string name="game_btn_play_again">Play again</string>
+    <string name="game_btn_back_playground">Back to Playground</string>
+    <string name="game_quit_confirm_title">Quit game?</string>
+    <string name="game_quit_confirm_message">This game progress will not count. Are you sure you want to quit?</string>
+    <string name="game_quit_stay">Keep playing</string>
+    <string name="game_quit_exit">Quit</string>
 
     <!-- Home Banner -->
-    <string name="home_playground_banner_tag">SÂN CHƠI TRÍ TUỆ</string>
-    <string name="home_playground_banner_title">Rèn luyện phản xạ &amp; Nhận XP</string>
-    <string name="home_playground_banner_sub">Chinh phục Đấu Trí Siêu Tốc và Ghép Cặp Khái Niệm để tích lũy điểm thưởng.</string>
-    <string name="home_playground_banner_cta">Chơi ngay ›</string>
+    <string name="home_playground_banner_tag">BRAIN PLAYGROUND</string>
+    <string name="home_playground_banner_title">Train Reflexes &amp; Earn XP</string>
+    <string name="home_playground_banner_sub">Master Speed Math and Concept Match to earn bonus points.</string>
+    <string name="home_playground_banner_cta">Play now ›</string>
+
+    <string name="playground_games_section">LEARNING GAMES</string>
+    <string name="playground_total_xp">Total earned: %1$d XP</string>
+    <string name="game_speed_math_best_score_empty">Best: 0 pts</string>
+    <string name="game_memory_best_moves_empty">Best: —</string>
+    <string name="game_speed_math_score_zero">0 pts</string>
+    <string name="game_speed_math_wrong_feedback">Not quite! %1$s</string>
+
+    <!-- Speed Math generated content -->
+    <string name="playground_math_category_addition">Addition</string>
+    <string name="playground_math_category_subtraction">Subtraction</string>
+    <string name="playground_math_category_multiplication">Multiplication</string>
+    <string name="playground_math_category_division">Division</string>
+    <string name="playground_math_category_order">Order of operations</string>
+    <string name="playground_math_category_parentheses">Parentheses</string>
+    <string name="playground_math_category_power">Powers</string>
+    <string name="playground_math_category_square_root">Square root</string>
+    <string name="playground_math_category_equation">Equation</string>
+    <string name="playground_math_category_modulo">Modulo operator</string>
+    <string name="playground_math_category_bitwise">Bitwise operation</string>
+    <string name="playground_math_prompt_modulo">%1$s (remainder)</string>
+    <string name="playground_math_explanation_addition">%1$d + %2$d = %3$d</string>
+    <string name="playground_math_explanation_subtraction">%1$d − %2$d = %3$d</string>
+    <string name="playground_math_explanation_multiplication">%1$d × %2$d = %3$d</string>
+    <string name="playground_math_explanation_division">%1$d ÷ %2$d = %3$d</string>
+    <string name="playground_math_explanation_order_multiply_add">(%1$d × %2$d) + %3$d = %4$d + %3$d = %5$d</string>
+    <string name="playground_math_explanation_order_subtract_multiply">%1$d − (%2$d × %3$d) = %1$d − %4$d = %5$d</string>
+    <string name="playground_math_explanation_parentheses">(%1$d + %2$d) × %3$d = %4$d × %3$d = %5$d</string>
+    <string name="playground_math_explanation_power_subtract">2^%1$d = %2$d, %2$d − %3$d = %4$d</string>
+    <string name="playground_math_explanation_power_add">3^%1$d = %2$d, %2$d + %3$d = %4$d</string>
+    <string name="playground_math_explanation_square_root">√%1$d = %2$d, %2$d + %3$d = %4$d</string>
+    <string name="playground_math_explanation_equation">%1$d·x = %2$d − %3$d = %4$d ⇒ x = %5$d</string>
+    <string name="playground_math_explanation_modulo">%1$d = %2$d × %3$d + %4$d ⇒ remainder is %4$d</string>
+    <string name="playground_math_explanation_bitwise">1 &lt;&lt; %1$d = 2^%1$d = %2$d</string>
+
+    <!-- Memory Match generated content -->
+    <string name="memory_subject_math">Math</string>
+    <string name="memory_subject_science">Science</string>
+    <string name="memory_subject_programming">Programming</string>
+    <string name="memory_subject_history">History</string>
+    <string name="memory_subject_language">Languages</string>
+    <string name="playground_math_prompt_bitwise">1 shl %1$d (left shift 1 &lt;&lt; %1$d) = ?</string>
+    <string name="memory_term_pythagorean">Pythagorean theorem</string>
+    <string name="memory_term_pi">Pi (π)</string>
+    <string name="memory_term_derivative">Derivative of x²</string>
+    <string name="memory_term_circle_area">Circle area</string>
+    <string name="memory_term_thales">Thales\' theorem</string>
+    <string name="memory_term_water_formula">Water formula</string>
+    <string name="memory_term_carbon_dioxide">Carbon dioxide</string>
+    <string name="memory_term_relativity">Theory of relativity</string>
+    <string name="memory_term_newton_second_law">Newton\'s second law</string>
+    <string name="memory_term_light_speed">Speed of light</string>
+    <string name="memory_term_table_salt">Table salt</string>
+    <string name="memory_term_constant_complexity">O(1) complexity</string>
+    <string name="memory_term_binary_search">Binary search</string>
+    <string name="memory_term_sql">SQL language</string>
+    <string name="memory_term_fifo">FIFO structure</string>
+    <string name="memory_term_lifo">LIFO structure</string>
+    <string name="memory_term_http_404">HTTP 404</string>
+    <string name="memory_term_year_1945">Year 1945</string>
+    <string name="memory_term_year_1975">Year 1975</string>
+    <string name="memory_term_year_1911">Year 1911</string>
+    <string name="memory_term_synonym">Synonym</string>
+    <string name="memory_term_antonym">Antonym</string>
+    <string name="memory_term_metaphor">Metaphor</string>
+    <string name="memory_definition_pythagorean">a² + b² = c²</string>
+    <string name="memory_definition_pi">≈ 3.14159</string>
+    <string name="memory_definition_derivative">2x</string>
+    <string name="memory_definition_circle_area">S = π · r²</string>
+    <string name="memory_definition_thales">Parallel proportion</string>
+    <string name="memory_definition_water_formula">H₂O</string>
+    <string name="memory_definition_carbon_dioxide">CO₂</string>
+    <string name="memory_definition_relativity">E = m · c²</string>
+    <string name="memory_definition_newton_second_law">F = m · a</string>
+    <string name="memory_definition_light_speed">≈ 300.000 km/s</string>
+    <string name="memory_definition_table_salt">NaCl</string>
+    <string name="memory_definition_constant_complexity">Constant time</string>
+    <string name="memory_definition_binary_search">O(log n) complexity</string>
+    <string name="memory_definition_sql">Data query</string>
+    <string name="memory_definition_fifo">Queue</string>
+    <string name="memory_definition_lifo">Stack</string>
+    <string name="memory_definition_http_404">Not found</string>
+    <string name="memory_definition_year_1945">August Revolution &amp; Independence</string>
+    <string name="memory_definition_year_1975">National reunification</string>
+    <string name="memory_definition_year_1911">Ho Chi Minh seeks a path</string>
+    <string name="memory_definition_synonym">Words with similar meaning</string>
+    <string name="memory_definition_antonym">Words with opposite meaning</string>
+    <string name="memory_definition_metaphor">Figurative comparison</string>
+    <string name="memory_card_hidden_description">Memory card. Tap to reveal.</string>
+    <string name="memory_card_revealed_description">%1$s: %2$s</string>
 </resources>

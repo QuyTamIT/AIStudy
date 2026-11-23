@@ -1,32 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="auth_app_title">AI Study Mentor</string>
-    <string name="auth_app_subtitle">Học tập thông minh cùng AI mọi lúc mọi nơi</string>
+    <string name="auth_app_subtitle">Study smarter with AI, anytime, anywhere</string>
 
-    <string name="auth_login_title">Đăng nhập</string>
-    <string name="auth_login_subtitle">Tiếp tục hành trình chinh phục tri thức của bạn.</string>
-    <string name="auth_login_submit">Đăng nhập</string>
-    <string name="auth_login_toggle">Chưa có tài khoản? Đăng ký ngay</string>
+    <string name="auth_login_title">Log in</string>
+    <string name="auth_login_subtitle">Continue your journey to master new knowledge.</string>
+    <string name="auth_login_submit">Log in</string>
+    <string name="auth_login_toggle">Don\'t have an account? Sign up</string>
 
-    <string name="auth_register_title">Tạo tài khoản</string>
-    <string name="auth_register_subtitle">Lưu lịch sử câu hỏi, tích lũy XP và duy trì chuỗi học tập.</string>
-    <string name="auth_register_submit">Đăng ký</string>
-    <string name="auth_register_toggle">Đã có tài khoản? Đăng nhập</string>
+    <string name="auth_register_title">Create account</string>
+    <string name="auth_register_subtitle">Save question history, earn XP, and keep your study streak.</string>
+    <string name="auth_register_submit">Sign up</string>
+    <string name="auth_register_toggle">Already have an account? Log in</string>
 
-    <string name="auth_label_name">Họ và tên</string>
+    <string name="auth_label_name">Full name</string>
     <string name="auth_label_email">Email</string>
-    <string name="auth_label_password">Mật khẩu</string>
-    <string name="auth_hint_name">Nhập họ và tên của bạn</string>
+    <string name="auth_label_password">Password</string>
+    <string name="auth_hint_name">Enter your full name</string>
     <string name="auth_hint_email">you@school.edu.vn</string>
-    <string name="auth_hint_password">Tối thiểu 6 ký tự</string>
-    <string name="auth_submit_loading">Đang xử lý…</string>
+    <string name="auth_hint_password">At least 6 characters</string>
+    <string name="auth_submit_loading">Processing…</string>
 
-    <string name="auth_error_empty_fields">Vui lòng điền đầy đủ các trường thông tin.</string>
-    <string name="auth_error_name_required">Vui lòng nhập họ và tên của bạn.</string>
-    <string name="auth_error_invalid_email">Vui lòng nhập địa chỉ email hợp lệ.</string>
-    <string name="auth_error_password_short">Mật khẩu phải có ít nhất 6 ký tự.</string>
-    <string name="auth_error_email_taken">Email này đã được đăng ký trước đó.</string>
-    <string name="auth_error_invalid_credentials">Email hoặc mật khẩu không chính xác.</string>
-    <string name="auth_error_unknown">Đã xảy ra lỗi. Vui lòng thử lại sau.</string>
-    <string name="auth_success_register">Đăng ký tài khoản thành công!</string>
+    <string name="auth_error_empty_fields">Please fill in all fields.</string>
+    <string name="auth_error_name_required">Please enter your full name.</string>
+    <string name="auth_error_invalid_email">Please enter a valid email address.</string>
+    <string name="auth_error_password_short">Password must be at least 6 characters.</string>
+    <string name="auth_error_email_taken">This email is already registered.</string>
+    <string name="auth_error_invalid_credentials">Incorrect email or password.</string>
+    <string name="auth_error_unknown">Something went wrong. Please try again later.</string>
+    <string name="auth_success_register">Account created successfully!</string>
 </resources>

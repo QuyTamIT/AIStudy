@@ -2,7 +2,6 @@ package com.aistudy.aistudy.navigation
 
 import com.aistudy.aistudy.R
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -14,23 +13,18 @@ class CurvedAnimatedBottomNavTest {
         assertEquals("Must contain exactly 5 navigation tabs", 5, tabs.size)
 
         assertEquals(R.id.nav_home, tabs[0].id)
-        assertEquals("Trang chủ", tabs[0].label)
         assertTrue(tabs[0].iconRes != 0)
 
         assertEquals(R.id.nav_ask, tabs[1].id)
-        assertEquals("Hỏi đáp", tabs[1].label)
         assertTrue(tabs[1].iconRes != 0)
 
         assertEquals(R.id.nav_playground, tabs[2].id)
-        assertEquals("Sân chơi", tabs[2].label)
         assertTrue(tabs[2].iconRes != 0)
 
         assertEquals(R.id.nav_history, tabs[3].id)
-        assertEquals("Lịch sử", tabs[3].label)
         assertTrue(tabs[3].iconRes != 0)
 
         assertEquals(R.id.nav_progress, tabs[4].id)
-        assertEquals("Tiến độ", tabs[4].label)
         assertTrue(tabs[4].iconRes != 0)
     }
 

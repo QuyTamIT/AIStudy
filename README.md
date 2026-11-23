@@ -128,6 +128,8 @@ Model selection is defined in `GeminiClient.CANDIDATE_MODELS`. A request starts 
 
 ## 9. User Guide
 
+AIStudy defaults to English. To change the interface language, open the profile from Home and go to **Account & security** (**Cài đặt tài khoản & Bảo mật**) → **Language** (**Ngôn ngữ**). Choose **English** or **Tiếng Việt**. Android remembers the selection when you reopen AIStudy. Saved questions and answers keep their original language. The step labels below use Vietnamese.
+
 1. **Create a controlled test account.** On **Đăng nhập**, select **Chưa có tài khoản? Đăng ký ngay**. Enter a fictional name, a unique test address such as `learner-a@example.test`, and a private password of at least six characters. Tap **Đăng ký**. Registration starts a local session. For a returning account, enter its credentials on the same installation and tap **Đăng nhập**.
 2. **Complete onboarding.** Choose the learner's level, tap **Tiếp tục**, select at least one subject, tap **Tiếp tục**, then choose an explanation style. Tap **Bắt đầu học ngay** to open **Trang chủ** (Home). To change preferences later, follow step 8.
 3. **Ask a text question.** Open **Hỏi đáp** (Ask) or tap **Đặt câu hỏi mới** on Home. Type the question and tap **Nhận lời giải**.

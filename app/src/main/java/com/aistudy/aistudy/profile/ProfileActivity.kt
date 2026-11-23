@@ -1,9 +1,11 @@
 package com.aistudy.aistudy.profile
 
+import android.app.LocaleManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.LocaleList
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.GridLayout
@@ -20,6 +22,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import com.aistudy.aistudy.AIStudyApp
 import com.aistudy.aistudy.MainActivity
 import com.aistudy.aistudy.R
 import com.aistudy.aistudy.answer.AnswerActivity
@@ -84,7 +87,7 @@ class ProfileActivity : AppCompatActivity() {
             try {
                 val avatarFile = File(filesDir, "avatars/avatar_${userId}.jpg")
                 replaceCustomAvatar(avatarFile) {
-                    contentResolver.openInputStream(uri) ?: throw IOException("Không thể đọc tệp ảnh đã chọn")
+                    contentResolver.openInputStream(uri) ?: throw IOException()
                 }
 
                 val customAvatarId = "custom:" + avatarFile.absolutePath
@@ -95,7 +98,7 @@ class ProfileActivity : AppCompatActivity() {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(
                         this@ProfileActivity,
-                        "Không thể tải ảnh: ${e.localizedMessage ?: "Lỗi xử lý"}",
+                        R.string.profile_photo_error,
                         Toast.LENGTH_LONG
                     ).show()
                 }
@@ -121,6 +124,7 @@ class ProfileActivity : AppCompatActivity() {
 
     // Settings
     private lateinit var rowChangePassword: View
+    private lateinit var rowAppLanguage: View
     private lateinit var switchNotifications: SwitchMaterial
     private lateinit var btnLogout: MaterialButton
 
@@ -192,6 +196,7 @@ class ProfileActivity : AppCompatActivity() {
         btnHistoryAll = findViewById(R.id.btn_profile_history_all)
 
         rowChangePassword = findViewById(R.id.row_change_password)
+        rowAppLanguage = findViewById(R.id.row_app_language)
         switchNotifications = findViewById(R.id.switch_notifications)
         btnLogout = findViewById(R.id.btn_profile_logout)
     }
@@ -214,6 +219,10 @@ class ProfileActivity : AppCompatActivity() {
         rowChangePassword.setOnClickListener {
             showChangePasswordDialog()
         }
+        rowAppLanguage.setOnClickListener {
+            showLanguageDialog()
+        }
+
 
         val prefs = getSharedPreferences(NotificationScheduler.PREFS_NOTIF, MODE_PRIVATE)
         val notifEnabled = prefs.getBoolean(NotificationScheduler.KEY_NOTIF_ENABLED, true)
@@ -227,7 +236,7 @@ class ProfileActivity : AppCompatActivity() {
             }
             Toast.makeText(
                 this,
-                if (isChecked) "Đã bật nhắc nhở học tập" else "Đã tắt nhắc nhở học tập",
+                if (isChecked) R.string.profile_notifications_enabled else R.string.profile_notifications_disabled,
                 Toast.LENGTH_SHORT
             ).show()
         }
@@ -235,6 +244,30 @@ class ProfileActivity : AppCompatActivity() {
         btnLogout.setOnClickListener {
             showLogoutConfirmation()
         }
+    }
+    private fun showLanguageDialog() {
+        val localeManager = getSystemService(LocaleManager::class.java)
+        val selectedLanguage = if (
+            AIStudyApp.isVietnameseLocaleTag(
+                localeManager.applicationLocales.toLanguageTags(),
+                resources.configuration.locales.toLanguageTags()
+            )
+        ) 1 else 0
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.profile_language_title)
+            .setSingleChoiceItems(
+                arrayOf(
+                    getString(R.string.profile_language_english),
+                    getString(R.string.profile_language_vietnamese)
+                ),
+                selectedLanguage
+            ) { dialog, which ->
+                val tag = if (which == 1) AIStudyApp.VIETNAMESE_LANGUAGE_TAG else AIStudyApp.DEFAULT_LANGUAGE_TAG
+                localeManager.applicationLocales = LocaleList.forLanguageTags(tag)
+                dialog.dismiss()
+            }
+            .setNegativeButton(R.string.logout_cancel, null)
+            .show()
     }
 
     private fun renderUiState(state: ProfileUiState) {
@@ -447,11 +480,15 @@ class ProfileActivity : AppCompatActivity() {
 
         if (isCurrentCustom) {
             cardCustom.strokeColor = strokeSelected
-            tvStatusCustom.text = "Đang sử dụng ảnh cá nhân ✓"
+            tvStatusCustom.text = getString(R.string.profile_avatar_custom_selected)
             tvStatusCustom.setTextColor(ContextCompat.getColor(this, R.color.answer_primary))
         } else {
             cardCustom.strokeColor = strokeDefault
-            tvStatusCustom.text = if (customPath != null) "Nhấn để dùng lại hoặc tải ảnh mới" else "Chọn ảnh từ thư viện của bạn"
+            tvStatusCustom.text = if (customPath != null) {
+                getString(R.string.profile_avatar_custom_reuse)
+            } else {
+                getString(R.string.profile_avatar_custom_choose)
+            }
             tvStatusCustom.setTextColor(ContextCompat.getColor(this, R.color.answer_foreground_secondary))
         }
 

@@ -52,15 +52,11 @@ class UnlockCatalogTest {
     }
 
     @Test
-    fun testEmojiAndLabels() {
+    fun testAvatarEmoji() {
         assertEquals("🦊", UnlockCatalog.emojiForAvatar(UnlockCatalog.AVATAR_FOX))
         assertEquals("🦉", UnlockCatalog.emojiForAvatar(UnlockCatalog.AVATAR_OWL))
         assertEquals("🐱", UnlockCatalog.emojiForAvatar(UnlockCatalog.AVATAR_CAT))
         assertEquals("🚀", UnlockCatalog.emojiForAvatar(UnlockCatalog.AVATAR_ROCKET))
-
-        assertEquals("Mặc định", UnlockCatalog.labelForTheme(UnlockCatalog.THEME_DEFAULT))
-        assertEquals("Ban đêm", UnlockCatalog.labelForTheme(UnlockCatalog.THEME_NIGHT))
-        assertEquals("Pastel", UnlockCatalog.labelForTheme(UnlockCatalog.THEME_PASTEL))
     }
 }
 

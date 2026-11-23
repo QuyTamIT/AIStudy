@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onboarding_step_level_title">Trình độ học tập của bạn là gì?</string>
+    <string name="onboarding_step_level_subtitle">AI sẽ tự động điều chỉnh độ khó và cách giải phù hợp với bạn.</string>
+
+    <string name="onboarding_step_subjects_title">Các môn học bạn quan tâm</string>
+    <string name="onboarding_step_subjects_subtitle">Chọn ít nhất một môn học để AI tập trung hỗ trợ.</string>
+
+    <string name="onboarding_step_style_title">Bạn thích phong cách giải thích nào?</string>
+    <string name="onboarding_step_style_subtitle">AI sẽ trả lời theo đúng phong cách bạn yêu thích.</string>
+
+    <string name="onboarding_level_junior">Trung học cơ sở</string>
+    <string name="onboarding_level_junior_hint">Lớp 6 – Lớp 9</string>
+    <string name="onboarding_level_high">Trung học phổ thông</string>
+    <string name="onboarding_level_high_hint">Lớp 10 – Lớp 12</string>
+    <string name="onboarding_level_uni">Đại học / Cao đẳng</string>
+    <string name="onboarding_level_uni_hint">Sinh viên &amp; Người tự học</string>
+
+    <string name="onboarding_subject_math">Toán học</string>
+    <string name="onboarding_subject_science">Khoa học</string>
+    <string name="onboarding_subject_code">Lập trình</string>
+    <string name="onboarding_subject_history">Lịch sử</string>
+    <string name="onboarding_subject_language">Ngoại ngữ</string>
+    <string name="onboarding_subject_other">Khác</string>
+
+    <string name="onboarding_style_short">Ngắn gọn</string>
+    <string name="onboarding_style_short_hint">Tập trung cốt lõi, súc tích</string>
+    <string name="onboarding_style_stepwise">Từng bước một</string>
+    <string name="onboarding_style_stepwise_hint">Từng bước rõ ràng, dễ hiểu</string>
+    <string name="onboarding_style_detailed">Chi tiết, đào sâu</string>
+    <string name="onboarding_style_detailed_hint">Phân tích toàn diện kèm ví dụ</string>
+
+    <string name="onboarding_back">Quay lại</string>
+    <string name="onboarding_continue">Tiếp tục</string>
+    <string name="onboarding_finish">Bắt đầu học ngay</string>
+    <string name="onboarding_pick_subject">Vui lòng chọn ít nhất một môn học.</string>
+    <string name="onboarding_step_progress">Bước %1$d / 3</string>
+    <string name="onboarding_error_load">Không thể tải hồ sơ. Vui lòng mở lại ứng dụng.</string>
+    <string name="onboarding_error_save">Không thể lưu lựa chọn. Vui lòng thử lại.</string>
+</resources>
