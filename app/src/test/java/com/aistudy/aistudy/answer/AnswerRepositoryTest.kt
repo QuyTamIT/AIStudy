@@ -187,6 +187,7 @@ class AnswerRepositoryTest {
                 starred = stored.starred; createdAt = stored.createdAt; difficulty = stored.difficulty
                 extrasJson = stored.extrasJson; reviewedAt = stored.reviewedAt
                 imagePath = stored.imagePath; reviewedSeconds = stored.reviewedSeconds
+                reviewIntervalDays = stored.reviewIntervalDays; reviewDueAt = stored.reviewDueAt
             }
         }
         override fun updateSteps(id: Long, userId: Long, previousSteps: String?, steps: String): Int {
@@ -205,6 +206,10 @@ class AnswerRepositoryTest {
         }
         override fun updateReviewedAt(id: Long, userId: Long, previousReviewedAt: Long, reviewedAt: Long): Int =
             error("Expansion must not change review state")
+        override fun updateReviewSchedule(id: Long, userId: Long, intervalDays: Int, dueAt: Long, reviewedAt: Long): Int =
+            error("Expansion must not change review state")
+        override fun getDueReviews(userId: Long, now: Long, limit: Int) = emptyList<QuestionAnswer>()
+        override fun countDueReviews(userId: Long, now: Long) = 0
         override fun getAllByUserId(userId: Long) = listOf(row).filter { it.userId == userId }
         override fun getLatestByUserId(userId: Long) = row.takeIf { it.userId == userId }
         override fun toggleStar(id: Long, userId: Long): Int = error("Expansion must not change stars")

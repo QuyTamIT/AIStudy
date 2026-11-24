@@ -16,7 +16,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         QuizItem::class,
         Friend::class
     ],
-    version = 8,
+    version = 9,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -143,6 +143,13 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `question_answers` ADD COLUMN `reviewIntervalDays` INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE `question_answers` ADD COLUMN `reviewDueAt` INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
         @Volatile
         private var instance: AppDatabase? = null
 
@@ -156,7 +163,7 @@ abstract class AppDatabase : RoomDatabase() {
             .allowMainThreadQueries()
             .addMigrations(
                 MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5,
-                MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8
+                MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9
             )
             .build()
 

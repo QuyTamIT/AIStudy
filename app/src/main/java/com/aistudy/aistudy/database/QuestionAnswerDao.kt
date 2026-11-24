@@ -34,6 +34,15 @@ interface QuestionAnswerDao {
     @Query("UPDATE question_answers SET reviewedAt = :reviewedAt WHERE id = :id AND userId = :userId AND reviewedAt = :previousReviewedAt")
     fun updateReviewedAt(id: Long, userId: Long, previousReviewedAt: Long, reviewedAt: Long): Int
 
+    @Query("UPDATE question_answers SET reviewIntervalDays = :intervalDays, reviewDueAt = :dueAt, reviewedAt = :reviewedAt WHERE id = :id AND userId = :userId")
+    fun updateReviewSchedule(id: Long, userId: Long, intervalDays: Int, dueAt: Long, reviewedAt: Long): Int
+
+    @Query("SELECT * FROM question_answers WHERE userId = :userId AND reviewDueAt <= :now ORDER BY reviewDueAt ASC, createdAt ASC LIMIT :limit")
+    fun getDueReviews(userId: Long, now: Long, limit: Int): List<QuestionAnswer>
+
+    @Query("SELECT COUNT(*) FROM question_answers WHERE userId = :userId AND reviewDueAt <= :now")
+    fun countDueReviews(userId: Long, now: Long): Int
+
     @Query("UPDATE question_answers SET reviewedSeconds = reviewedSeconds + :delta WHERE id = :id AND userId = :userId AND :delta > 0")
     fun addReviewedSeconds(id: Long, userId: Long, delta: Int): Int
 

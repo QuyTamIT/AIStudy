@@ -28,6 +28,8 @@ import com.aistudy.aistudy.database.ProfileDefaults
 import com.aistudy.aistudy.database.QuestionAnswer
 import com.aistudy.aistudy.database.QuestionAnswerDao
 import com.aistudy.aistudy.quiz.QuizActivity
+import com.aistudy.aistudy.study.RecallRating
+import com.aistudy.aistudy.study.SpacedReviewSchedule
 import com.aistudy.aistudy.xp.XpRules
 import com.google.android.material.button.MaterialButton
 import java.util.Calendar
@@ -119,6 +121,10 @@ class AnswerActivity : AppCompatActivity() {
         btnMistakes.setOnClickListener { onExtraAction(KEY_MISTAKES) }
         btnFollowups.setOnClickListener { onExtraAction(KEY_FOLLOWUPS) }
         btnMarkReviewed.setOnClickListener { markReviewed() }
+        findViewById<MaterialButton>(R.id.btn_recall_again).setOnClickListener { saveRecall(RecallRating.AGAIN) }
+        findViewById<MaterialButton>(R.id.btn_recall_hard).setOnClickListener { saveRecall(RecallRating.HARD) }
+        findViewById<MaterialButton>(R.id.btn_recall_good).setOnClickListener { saveRecall(RecallRating.GOOD) }
+        findViewById<MaterialButton>(R.id.btn_recall_easy).setOnClickListener { saveRecall(RecallRating.EASY) }
 
         extrasExecutor = Executors.newSingleThreadExecutor()
 
@@ -420,6 +426,43 @@ class AnswerActivity : AppCompatActivity() {
         val doneToday = item.reviewedAt != 0L && isSameDay(item.reviewedAt, now)
         btnMarkReviewed.isEnabled = !doneToday
         btnMarkReviewed.setText(if (doneToday) R.string.answer_reviewed else R.string.answer_mark_reviewed)
+    }
+
+    private var recallSaving = false
+
+    private fun saveRecall(rating: RecallRating) {
+        if (recallSaving || !isCurrentSession()) return
+        val item = currentQa ?: return
+        val now = System.currentTimeMillis()
+        val schedule = SpacedReviewSchedule.next(item.reviewIntervalDays, rating, now)
+        val intervalDays = schedule.intervalDays
+        val dueAt = schedule.dueAt
+        recallSaving = true
+        listOf(R.id.btn_recall_again, R.id.btn_recall_hard, R.id.btn_recall_good, R.id.btn_recall_easy)
+            .forEach { findViewById<MaterialButton>(it).isEnabled = false }
+        extrasExecutor?.execute {
+            val updated = qaDao?.updateReviewSchedule(item.id, userId, intervalDays, dueAt, now) == 1
+            runOnUiThread {
+                if (isFinishing || isDestroyed) return@runOnUiThread
+                if (updated && isCurrentSession()) {
+                    item.reviewIntervalDays = intervalDays
+                    item.reviewDueAt = dueAt
+                    item.reviewedAt = now
+                    val message = if (rating == RecallRating.AGAIN) getString(R.string.review_again_scheduled)
+                        else getString(R.string.review_scheduled, intervalDays)
+                    Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+                    finish()
+                } else {
+                    recallSaving = false
+                    refreshRecallButtons()
+                }
+            }
+        }
+    }
+
+    private fun refreshRecallButtons() {
+        listOf(R.id.btn_recall_again, R.id.btn_recall_hard, R.id.btn_recall_good, R.id.btn_recall_easy)
+            .forEach { findViewById<MaterialButton>(it).isEnabled = !recallSaving }
     }
 
     // Phase 9: Learning Extras Actions & On-demand Gemini caching

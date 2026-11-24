@@ -53,6 +53,22 @@ class UserIsolationTest {
             return 1
         }
 
+        override fun updateReviewSchedule(id: Long, userId: Long, intervalDays: Int, dueAt: Long, reviewedAt: Long): Int {
+            val item = rows.firstOrNull { it.id == id && it.userId == userId } ?: return 0
+            item.reviewIntervalDays = intervalDays
+            item.reviewDueAt = dueAt
+            item.reviewedAt = reviewedAt
+            return 1
+        }
+
+        override fun getDueReviews(userId: Long, now: Long, limit: Int): List<QuestionAnswer> =
+            rows.filter { it.userId == userId && it.reviewDueAt <= now }
+                .sortedBy { it.reviewDueAt }
+                .take(limit)
+
+        override fun countDueReviews(userId: Long, now: Long): Int =
+            rows.count { it.userId == userId && it.reviewDueAt <= now }
+
         override fun addReviewedSeconds(id: Long, userId: Long, delta: Int): Int {
             val item = rows.firstOrNull { it.id == id && it.userId == userId && delta > 0 } ?: return 0
             item.reviewedSeconds += delta

@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="review_recall_prompt">Bạn nhớ bài này tốt đến đâu?</string>
+    <string name="review_again">Quên</string>
+    <string name="review_hard">Khó</string>
+    <string name="review_good">Tốt</string>
+    <string name="review_easy">Dễ</string>
     <string name="answer_screen_title">Lời giải</string>
     <string name="answer_more_heading">Khám phá sâu hơn</string>
     <string name="answer_step_index">%1$02d</string>

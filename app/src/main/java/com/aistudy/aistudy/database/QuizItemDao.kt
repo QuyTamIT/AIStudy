@@ -36,4 +36,10 @@ interface QuizItemDao {
 
     @Query("SELECT qs.subject FROM quiz_items qi INNER JOIN quiz_sessions qs ON qi.sessionId = qs.id WHERE qs.userId = :userId AND qi.isCorrect = 0 AND qs.createdAt >= :fromMs GROUP BY qs.subject HAVING COUNT(*) >= 2 LIMIT 1")
     fun findSubjectWithRepeatedMistakes(userId: Long, fromMs: Long): String?
+
+    @Query("SELECT qi.* FROM quiz_items qi INNER JOIN quiz_sessions qs ON qi.sessionId = qs.id WHERE qs.userId = :userId AND qi.isCorrect = 0 ORDER BY qs.createdAt DESC, qi.id DESC LIMIT :limit")
+    fun getIncorrectByUserId(userId: Long, limit: Int): List<QuizItem>
+
+    @Query("SELECT COUNT(*) FROM quiz_items qi INNER JOIN quiz_sessions qs ON qi.sessionId = qs.id WHERE qs.userId = :userId AND qi.isCorrect = 0")
+    fun countIncorrectByUserId(userId: Long): Int
 }
