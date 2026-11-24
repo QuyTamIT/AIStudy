@@ -147,6 +147,9 @@ class HomeFragment : Fragment() {
         }
 
         btnAsk.setOnClickListener { selectTab(R.id.nav_ask) }
+        view.findViewById<View>(R.id.btn_study_tools).setOnClickListener {
+            startActivity(Intent(requireContext(), com.aistudy.aistudy.study.StudyToolsActivity::class.java))
+        }
         btnPracticeRecent.setOnClickListener {
             latestSubject?.let { openPractice(it) }
         }

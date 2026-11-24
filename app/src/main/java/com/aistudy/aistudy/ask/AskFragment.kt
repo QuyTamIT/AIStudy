@@ -404,6 +404,8 @@ class AskFragment : Fragment() {
                 item.imagePath = imagePath
                 item.reviewedSeconds = 0
                 item.createdAt = System.currentTimeMillis()
+                item.reviewIntervalDays = 1
+                item.reviewDueAt = item.createdAt + 24L * 60L * 60L * 1000L
 
                 val qaId = database.runInTransaction<Long> {
                     if (Thread.currentThread().isInterrupted) throw InterruptedException()

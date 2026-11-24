@@ -32,6 +32,7 @@ class ProfileMigrationInstrumentedTest {
     @Test fun migratesV5() = verifyUpgrade(5)
     @Test fun migratesV6() = verifyUpgrade(6)
     @Test fun migratesV7() = verifyUpgrade(7)
+    @Test fun migratesV8() = verifyUpgrade(8)
 
     @Test fun unsupportedVersionFailsWithoutDeletingAccount() = verifyUnsupportedVersion { db ->
         assertThrows(IllegalStateException::class.java) { db.openHelper.writableDatabase }
@@ -63,13 +64,13 @@ class ProfileMigrationInstrumentedTest {
         val name = "missing-migration-${UUID.randomUUID()}.db"
         context.openOrCreateDatabase(name, Context.MODE_PRIVATE, null).use { sql ->
             createUsers(sql)
-            sql.version = 9
+            sql.version = 10
         }
         val db = AppDatabase.create(context, name)
         try {
             check(db)
             SQLiteDatabase.openDatabase(context.getDatabasePath(name).path, null, SQLiteDatabase.OPEN_READONLY).use { sql ->
-                assertEquals(9, sql.version)
+                assertEquals(10, sql.version)
                 sql.rawQuery("SELECT password FROM users WHERE id = 42", null).use {
                     assertTrue(it.moveToFirst())
                     assertEquals("LegacyPass123", it.getString(0))
@@ -120,6 +121,9 @@ class ProfileMigrationInstrumentedTest {
                 assertEquals(if (version >= 4) "{\"simplify\":\"saved\"}" else null, qa.extrasJson)
                 assertEquals(if (version >= 4) 54321L else 0L, qa.reviewedAt)
                 assertEquals(if (version >= 7) 77 else 0, qa.reviewedSeconds)
+                assertEquals(0, qa.reviewIntervalDays)
+                assertEquals(0L, qa.reviewDueAt)
+                assertEquals(1, db.questionAnswerDao().countDueReviews(42L, System.currentTimeMillis()))
                 if (version >= 5) {
                     assertEquals(image.path, qa.imagePath)
                     val restored = requireNotNull(BitmapFactory.decodeFile(qa.imagePath))
@@ -139,7 +143,7 @@ class ProfileMigrationInstrumentedTest {
             database = AppDatabase.create(context, name)
             assertEquals("LegacyPass123", database.userDao().getById(42L)?.password)
             assertEquals(if (version == 1) 0 else 123, database.profileDao().getByUserId(42L)?.xp)
-            assertEquals(8, database.openHelper.readableDatabase.version)
+            assertEquals(9, database.openHelper.readableDatabase.version)
         } finally {
             database?.close()
             context.deleteDatabase(name)
@@ -157,8 +161,14 @@ class ProfileMigrationInstrumentedTest {
         context.openOrCreateDatabase(name, Context.MODE_PRIVATE, null).use { sql ->
             createUsers(sql)
             if (version >= 2) {
-                sql.execSQL("CREATE TABLE profiles (userId INTEGER NOT NULL PRIMARY KEY, onboarded INTEGER NOT NULL, level TEXT, subjects TEXT, style TEXT, xp INTEGER NOT NULL, streak INTEGER NOT NULL)")
-                sql.execSQL("INSERT INTO profiles VALUES (42, 1, 'uni', 'code', 'detailed', 123, 4)")
+                if (version >= 8) {
+                    sql.execSQL("CREATE TABLE profiles (userId INTEGER NOT NULL PRIMARY KEY, onboarded INTEGER NOT NULL, level TEXT, subjects TEXT, style TEXT, xp INTEGER NOT NULL, streak INTEGER NOT NULL, avatarId TEXT, themeId TEXT, weeklyXp INTEGER NOT NULL, weekStartMs INTEGER NOT NULL, lastActiveDay TEXT)")
+                    sql.execSQL("INSERT INTO profiles VALUES (42, 1, 'uni', 'code', 'detailed', 123, 4, 'fox', 'default', 30, 1000, '2026-11-24')")
+                    sql.execSQL("CREATE TABLE friends (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, ownerUserId INTEGER NOT NULL, displayName TEXT, weeklyXp INTEGER NOT NULL)")
+                } else {
+                    sql.execSQL("CREATE TABLE profiles (userId INTEGER NOT NULL PRIMARY KEY, onboarded INTEGER NOT NULL, level TEXT, subjects TEXT, style TEXT, xp INTEGER NOT NULL, streak INTEGER NOT NULL)")
+                    sql.execSQL("INSERT INTO profiles VALUES (42, 1, 'uni', 'code', 'detailed', 123, 4)")
+                }
             }
             if (version >= 3) {
                 val extraColumns = buildString {

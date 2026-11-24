@@ -20,4 +20,6 @@ class QuestionAnswer {
     var reviewedAt: Long = 0
     var imagePath: String? = null
     var reviewedSeconds: Int = 0
+    var reviewIntervalDays: Int = 0
+    var reviewDueAt: Long = 0
 }

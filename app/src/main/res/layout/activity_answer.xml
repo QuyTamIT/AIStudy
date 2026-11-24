@@ -416,6 +416,25 @@
                     app:icon="@drawable/ic_answer_check"
                     app:iconGravity="textStart"
                     app:iconTint="@color/answer_primary" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:text="@string/review_recall_prompt"
+                    android:textColor="@color/answer_foreground"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal">
+                    <com.google.android.material.button.MaterialButton android:id="@+id/btn_recall_again" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:insetTop="0dp" android:insetBottom="0dp" android:text="@string/review_again" android:textSize="11sp" app:cornerRadius="12dp" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/btn_recall_hard" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="0dp" android:layout_height="48dp" android:layout_marginStart="4dp" android:layout_weight="1" android:insetTop="0dp" android:insetBottom="0dp" android:text="@string/review_hard" android:textSize="11sp" app:cornerRadius="12dp" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/btn_recall_good" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="0dp" android:layout_height="48dp" android:layout_marginStart="4dp" android:layout_weight="1" android:insetTop="0dp" android:insetBottom="0dp" android:text="@string/review_good" android:textSize="11sp" app:cornerRadius="12dp" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/btn_recall_easy" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="0dp" android:layout_height="48dp" android:layout_marginStart="4dp" android:layout_weight="1" android:insetTop="0dp" android:insetBottom="0dp" android:text="@string/review_easy" android:textSize="11sp" app:cornerRadius="12dp" />
+                </LinearLayout>
             </LinearLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>

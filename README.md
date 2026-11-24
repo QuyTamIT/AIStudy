@@ -13,7 +13,9 @@ For a first installation, follow sections 6–9. The application uses Google's G
 | AI question submission | Implemented | Type a question, attach a camera or gallery image, or submit the image alone. Ask rejects an empty submission. |
 | AI answer generation | Implemented, service-dependent | Receive an explanation adapted to the selected level and style. The client checks the response structure before saving it. A response can also ask for clarification. |
 | Question history | Implemented | Reopen an answer, search question text, filter by subject or star, and delete one entry or the account's entire question history. |
-| Basic progress tracking | Implemented | See saved-question counts, subject totals, starred items, XP, level, streak, review time and accuracy on attempted quiz items. |
+| Progress and daily study plan | Implemented | See saved-question counts, subject totals, XP, streak, quiz accuracy, a daily checklist, and review or mistake queues. |
+| Spaced lesson review | Implemented | Rate recall as Again, Hard, Good or Easy to schedule the next review from 10 minutes to progressively longer intervals. |
+| Quiz mistake review | Implemented | Revisit missed answers with the learner's response, correct answer and explanation. |
 
 | Supporting feature | Implementation and scope |
 | --- | --- |
@@ -76,7 +78,7 @@ settings.gradle.kts                     Includes the single :app module
 3. After validation, the app copies any attachment to private storage. A Room transaction rechecks the active user, inserts the question and answer, records daily activity and awards 50 XP.
 4. Once the transaction succeeds, Ask clears the draft and opens `AnswerActivity` with the saved row ID. Opening a lesson for the first time that day also marks it reviewed automatically and awards 10 XP (`XpRules.REVIEW`). Library and Progress read the account's records from the same database. A failed request creates no completed lesson.
 
-The Room database (`aistudy.db`, schema version 8) holds users, profiles, question/answer records, quiz sessions and items, and local leaderboard entries. Game bests use SharedPreferences keys that include the user ID. The profile package contains a Firestore payload formatter. Account authentication and persistence run locally. The application has no active Firebase Authentication, Firestore transport or Cloud Functions integration.
+The Room database (`aistudy.db`, schema version 9) holds users, profiles, question/answer records (including spaced-review intervals), quiz sessions and items, and local leaderboard entries. Game bests and daily plan completion use user-scoped or local SharedPreferences state. The profile package contains a Firestore payload formatter. Account authentication and persistence run locally. The application has no active Firebase Authentication, Firestore transport or Cloud Functions integration.
 
 ## 6. Development Environment
 
