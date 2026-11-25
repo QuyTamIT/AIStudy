@@ -171,7 +171,7 @@ class QuizRestoreInstrumentedTest {
                 QuizViewModel(context.applicationContext as Application, apiKey = "fixture") { _, _, _, _, _ ->
                     requestCount.incrementAndGet()
                     started.countDown()
-                    check(respond.await(15, TimeUnit.SECONDS))
+                    respond.await()
                     """{"items":[
                         {"type":"short","prompt":"2 + 2?","options":[],"correctAnswer":"4","explanation":"Two plus two equals four."},
                         {"type":"short","prompt":"3 + 1?","options":[],"correctAnswer":"4","explanation":"Three plus one equals four."},
@@ -310,7 +310,7 @@ class QuizRestoreInstrumentedTest {
             initializer {
                 QuizViewModel(context.applicationContext as Application, apiKey = "fixture") { _, _, _, _, _ ->
                     calls.incrementAndGet()
-                    check(respond.await(15, TimeUnit.SECONDS))
+                    respond.await()
                     throw GeminiClient.RequestException(429, GeminiClient.ErrorReason.QUOTA_EXHAUSTED)
                 }
             }
@@ -333,7 +333,9 @@ class QuizRestoreInstrumentedTest {
                 onView(withText(R.string.ask_error_quota_exhausted)).perform(scrollTo()).check(matches(isCompletelyDisplayed()))
                 assertEquals(1, calls.get())
                 scenario.onActivity { expectedExit = it }
-                onView(withText(R.string.quiz_back)).perform(scrollTo(), click())
+                onView(withId(R.id.btn_error_home)).perform(scrollTo())
+                    .check(matches(withText(R.string.ai_action_home)))
+                    .perform(click())
                 assertTrue("Back did not close the quiz", exited.await(8, TimeUnit.SECONDS))
                 assertEquals(listOf(sessionId), db.quizSessionDao().getAllByUserId(owner).map { it.id })
                 assertEquals(11, db.profileDao().getByUserId(owner)?.xp)

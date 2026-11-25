@@ -8,7 +8,6 @@ import android.util.Patterns
 import android.view.View
 import android.widget.EditText
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -41,9 +40,7 @@ class RegisterActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         setTheme(R.style.Theme_AIStudy_Study)
         super.onCreate(savedInstanceState)
-        val userId = getSharedPreferences(LoginActivity.PREFS_AUTH, MODE_PRIVATE)
-            .getLong(LoginActivity.KEY_USER_ID, 0L)
-        if (userId > 0L) {
+        if (getSharedPreferences(LoginActivity.PREFS_AUTH, MODE_PRIVATE).contains(LoginActivity.KEY_USER_ID)) {
             startActivity(Intent(this, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             })
@@ -87,19 +84,19 @@ class RegisterActivity : AppCompatActivity() {
         val password = editPassword.text.toString()
 
         if (fullName.isBlank()) {
-            showToast(R.string.auth_error_name_required)
+            formUi.showError(R.string.auth_error_name_required)
             return
         }
         if (email.isBlank() || password.isBlank()) {
-            showToast(R.string.auth_error_empty_fields)
+            formUi.showError(R.string.auth_error_empty_fields)
             return
         }
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            showToast(R.string.auth_error_invalid_email)
+            formUi.showError(R.string.auth_error_invalid_email)
             return
         }
         if (password.length < LoginActivity.MIN_PASSWORD_LENGTH) {
-            showToast(R.string.auth_error_password_short)
+            formUi.showError(R.string.auth_error_password_short)
             return
         }
 
@@ -122,28 +119,23 @@ class RegisterActivity : AppCompatActivity() {
                     }
                 }
                 if (userId == null) {
-                    showToast(R.string.auth_error_email_taken)
+                    formUi.showError(R.string.auth_error_email_taken)
                     return@launch
                 }
 
                 check(userId > 0)
-                getSharedPreferences(LoginActivity.PREFS_AUTH, MODE_PRIVATE)
-                    .edit()
-                    .putLong(LoginActivity.KEY_USER_ID, userId)
-                    .apply()
-
-                showToast(R.string.auth_success_register)
-                startActivity(Intent(this@RegisterActivity, MainActivity::class.java).apply {
+                startActivity(Intent(this@RegisterActivity, LoginActivity::class.java).apply {
+                    putExtra(LoginActivity.EXTRA_REGISTERED, true)
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 })
                 finish()
             } catch (error: CancellationException) {
                 throw error
             } catch (error: SQLiteConstraintException) {
-                showToast(R.string.auth_error_email_taken)
+                formUi.showError(R.string.auth_error_email_taken)
             } catch (error: Exception) {
-                Log.e(TAG, "Unable to register", error)
-                showToast(R.string.auth_error_unknown)
+                Log.e(TAG, "Unable to register (${error.javaClass.simpleName})")
+                formUi.showError(R.string.auth_error_unknown)
             } finally {
                 setSubmitting(false)
             }
@@ -160,14 +152,6 @@ class RegisterActivity : AppCompatActivity() {
         buttonSubmit.setText(
             if (submitting) R.string.auth_submit_loading else R.string.auth_register_submit
         )
-    }
-
-    private fun showToast(messageResId: Int) {
-        if (messageResId == R.string.auth_success_register) {
-            Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show()
-        } else {
-            formUi.showError(messageResId)
-        }
     }
 
     companion object {

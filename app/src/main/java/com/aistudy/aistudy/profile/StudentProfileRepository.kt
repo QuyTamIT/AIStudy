@@ -55,7 +55,7 @@ class StudentProfileRepository(
             0
         }
 
-        val favSubjects = (profile.subjects ?: "math,science")
+        val favSubjects = profile.subjects.orEmpty()
             .split(",")
             .map { it.trim() }
             .filter { it.isNotEmpty() }

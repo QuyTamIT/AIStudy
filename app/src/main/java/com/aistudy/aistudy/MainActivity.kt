@@ -9,6 +9,7 @@ import android.view.View
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
@@ -17,8 +18,8 @@ import androidx.fragment.app.Fragment
 import com.aistudy.aistudy.answer.AnswerActivity
 import com.aistudy.aistudy.ask.AskFragment
 import com.aistudy.aistudy.auth.LoginActivity
+import com.aistudy.aistudy.auth.restoreSessionProfile
 import com.aistudy.aistudy.database.AppDatabase
-import com.aistudy.aistudy.database.ProfileDefaults
 import com.aistudy.aistudy.history.HistoryFragment
 import com.aistudy.aistudy.home.HomeFragment
 import com.aistudy.aistudy.notify.NotificationScheduler
@@ -39,6 +40,7 @@ class MainActivity : AppCompatActivity() {
         const val TAB_PLAYGROUND = "playground"
         const val TAB_HISTORY = "history"
         const val TAB_PROGRESS = "progress"
+        private const val STATE_SELECTED_TAB = "selected_tab"
     }
 
     private lateinit var bottomNav: CurvedAnimatedBottomNav
@@ -52,23 +54,27 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val userId = getSharedPreferences(LoginActivity.PREFS_AUTH, MODE_PRIVATE)
-            .getLong(LoginActivity.KEY_USER_ID, -1L)
-        if (userId == -1L) {
-            startActivity(Intent(this, LoginActivity::class.java))
+        val profile = try {
+            restoreSessionProfile(this)
+        } catch (error: Exception) {
+            AlertDialog.Builder(this)
+                .setTitle(R.string.startup_database_error_title)
+                .setMessage(R.string.startup_database_error_message)
+                .setPositiveButton(android.R.string.ok, null)
+                .setOnDismissListener { finish() }
+                .show()
+            return
+        }
+        if (profile == null || !profile.onboarded) {
+            val destination = if (profile == null) LoginActivity::class.java else OnboardingActivity::class.java
+            startActivity(Intent(this, destination).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            })
             finish()
             return
         }
 
-        ProfileDefaults.ensureExists(AppDatabase.getInstance(this).profileDao(), userId)
-        val profile = AppDatabase.getInstance(this).profileDao().getByUserId(userId)
-        if (profile != null && !profile.onboarded) {
-            startActivity(Intent(this, OnboardingActivity::class.java))
-            finish()
-            return
-        }
-
-        FriendSeeder.ensureSeeded(AppDatabase.getInstance(this).friendDao(), userId)
+        FriendSeeder.ensureSeeded(AppDatabase.getInstance(this).friendDao(), profile.userId)
 
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
@@ -78,13 +84,15 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        if (profile != null) {
-            findViewById<View>(R.id.main).setBackgroundResource(
-                UnlockCatalog.backgroundColorRes(UnlockCatalog.normalizeThemeId(profile.themeId))
-            )
-        }
+        findViewById<View>(R.id.main).setBackgroundResource(
+            UnlockCatalog.backgroundColorRes(UnlockCatalog.normalizeThemeId(profile.themeId))
+        )
 
         bottomNav = findViewById(R.id.bottom_nav)
+        if (savedInstanceState != null) {
+            // FragmentManager restores the screen. Select its tab before navigation callbacks are attached.
+            bottomNav.selectedItemId = savedInstanceState.getInt(STATE_SELECTED_TAB, View.NO_ID)
+        }
         bottomNav.setOnItemSelectedListener { item ->
             val fragment: Fragment = when (item.itemId) {
                 R.id.nav_home -> HomeFragment()
@@ -109,10 +117,15 @@ class MainActivity : AppCompatActivity() {
         NotificationScheduler.schedule(this)
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        if (::bottomNav.isInitialized) outState.putInt(STATE_SELECTED_TAB, bottomNav.selectedItemId)
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        handleOpenIntent(intent)
+        if (::bottomNav.isInitialized) handleOpenIntent(intent)
     }
 
     private fun handleOpenIntent(intent: Intent?) {

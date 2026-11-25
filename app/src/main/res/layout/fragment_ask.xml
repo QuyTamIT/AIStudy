@@ -147,37 +147,41 @@
                     android:textAppearance="@style/TextAppearance.AIStudy.Answer.Label" />
             </LinearLayout>
 
-            <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/answer_space_8" android:layout_marginBottom="@dimen/answer_space_2"
-                android:accessibilityHeading="true" android:text="@string/ask_suggestions_title"
-                android:textAppearance="@style/TextAppearance.AIStudy.Answer.Section" />
-            <FrameLayout android:layout_width="match_parent" android:layout_height="wrap_content">
-                <com.google.android.material.button.MaterialButton android:id="@+id/btn_suggestion_1"
-                    style="@style/Widget.AIStudy.Study.Suggestion" android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:text="@string/ask_suggestion_1" app:icon="@drawable/ic_study_math" />
-                <ImageView style="@style/Widget.AIStudy.Study.RowArrow" />
-            </FrameLayout>
-            <View style="@style/Widget.AIStudy.Study.Rule" />
-            <FrameLayout android:layout_width="match_parent" android:layout_height="wrap_content">
-                <com.google.android.material.button.MaterialButton android:id="@+id/btn_suggestion_2"
-                    style="@style/Widget.AIStudy.Study.Suggestion" android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:text="@string/ask_suggestion_2" app:icon="@drawable/ic_study_science" />
-                <ImageView style="@style/Widget.AIStudy.Study.RowArrow" />
-            </FrameLayout>
-            <View style="@style/Widget.AIStudy.Study.Rule" />
-            <FrameLayout android:layout_width="match_parent" android:layout_height="wrap_content">
-                <com.google.android.material.button.MaterialButton android:id="@+id/btn_suggestion_3"
-                    style="@style/Widget.AIStudy.Study.Suggestion" android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:text="@string/ask_suggestion_3" app:icon="@drawable/ic_study_code" />
-                <ImageView style="@style/Widget.AIStudy.Study.RowArrow" />
-            </FrameLayout>
-            <View style="@style/Widget.AIStudy.Study.Rule" />
-            <FrameLayout android:layout_width="match_parent" android:layout_height="wrap_content">
-                <com.google.android.material.button.MaterialButton android:id="@+id/btn_suggestion_4"
-                    style="@style/Widget.AIStudy.Study.Suggestion" android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:text="@string/ask_suggestion_4" app:icon="@drawable/ic_study_language" />
-                <ImageView style="@style/Widget.AIStudy.Study.RowArrow" />
-            </FrameLayout>
+            <LinearLayout android:id="@+id/ask_suggestions" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:orientation="vertical"
+                android:visibility="invisible" tools:visibility="visible">
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/answer_space_8" android:layout_marginBottom="@dimen/answer_space_2"
+                    android:accessibilityHeading="true" android:text="@string/ask_suggestions_title"
+                    android:textAppearance="@style/TextAppearance.AIStudy.Answer.Section" />
+                <FrameLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+                    <com.google.android.material.button.MaterialButton android:id="@+id/btn_suggestion_1"
+                        style="@style/Widget.AIStudy.Study.Suggestion" android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                    <ImageView style="@style/Widget.AIStudy.Study.RowArrow" />
+                </FrameLayout>
+                <View style="@style/Widget.AIStudy.Study.Rule" />
+                <FrameLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+                    <com.google.android.material.button.MaterialButton android:id="@+id/btn_suggestion_2"
+                        style="@style/Widget.AIStudy.Study.Suggestion" android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                    <ImageView style="@style/Widget.AIStudy.Study.RowArrow" />
+                </FrameLayout>
+                <View style="@style/Widget.AIStudy.Study.Rule" />
+                <FrameLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+                    <com.google.android.material.button.MaterialButton android:id="@+id/btn_suggestion_3"
+                        style="@style/Widget.AIStudy.Study.Suggestion" android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                    <ImageView style="@style/Widget.AIStudy.Study.RowArrow" />
+                </FrameLayout>
+                <View style="@style/Widget.AIStudy.Study.Rule" />
+                <FrameLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+                    <com.google.android.material.button.MaterialButton android:id="@+id/btn_suggestion_4"
+                        style="@style/Widget.AIStudy.Study.Suggestion" android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                    <ImageView style="@style/Widget.AIStudy.Study.RowArrow" />
+                </FrameLayout>
+            </LinearLayout>
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

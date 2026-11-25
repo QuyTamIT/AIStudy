@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="ask_questions_math">
+        <item>Giải phương trình x² − 5x + 6 = 0.</item>
+        <item>Làm thế nào để cộng hai phân số khác mẫu số?</item>
+        <item>Vì sao tổng ba góc trong một tam giác bằng 180°?</item>
+        <item>Làm sao để tính xác suất khi gieo hai con xúc xắc?</item>
+    </string-array>
+
+    <string-array name="ask_questions_science">
+        <item>Tại sao Trái Đất lại có bốn mùa?</item>
+        <item>Quang hợp giúp cây tạo ra chất gì?</item>
+        <item>Vì sao ta thấy tia chớp trước khi nghe tiếng sấm?</item>
+        <item>Vì sao muối tan được trong nước?</item>
+    </string-array>
+
+    <string-array name="ask_questions_code">
+        <item>Vòng lặp for trong Python hoạt động như thế nào?</item>
+        <item>Khi nào nên dùng danh sách thay cho tập hợp trong Python?</item>
+        <item>Làm sao để tìm lỗi trong một hàm trả về kết quả sai?</item>
+        <item>Đệ quy hoạt động ra sao khi tính giai thừa?</item>
+    </string-array>
+
+    <string-array name="ask_questions_history">
+        <item>Con đường Tơ lụa đã kết nối các xã hội như thế nào?</item>
+        <item>Cách mạng Công nghiệp đã thay đổi đời sống đô thị ra sao?</item>
+        <item>Sử liệu gốc khác gì với tài liệu nghiên cứu viết sau này?</item>
+        <item>Vì sao nhiều nền văn minh cổ đại hình thành bên các dòng sông?</item>
+    </string-array>
+
+    <string-array name="ask_questions_language">
+        <item>Khi nào nên dùng thì hiện tại hoàn thành trong tiếng Anh?</item>
+        <item>Làm sao để đoán nghĩa một từ mới dựa vào ngữ cảnh?</item>
+        <item>Câu chủ động và câu bị động trong tiếng Anh khác nhau thế nào?</item>
+        <item>Có thể dùng những từ nối nào để so sánh hai ý trong một đoạn văn?</item>
+    </string-array>
+
+    <string-array name="ask_questions_general">
+        <item>Làm sao để chia một bài học khó thành các phần nhỏ?</item>
+        <item>Làm sao để ôn bài bằng cách tự kiểm tra?</item>
+        <item>Làm thế nào để lập kế hoạch ôn tập trong một tuần?</item>
+        <item>Sau khi làm sai một bài tập, mình nên xem lại những gì?</item>
+    </string-array>
+</resources>

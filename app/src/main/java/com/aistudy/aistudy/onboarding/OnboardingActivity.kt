@@ -19,6 +19,7 @@ import androidx.lifecycle.lifecycleScope
 import com.aistudy.aistudy.MainActivity
 import com.aistudy.aistudy.R
 import com.aistudy.aistudy.auth.LoginActivity
+import com.aistudy.aistudy.auth.restoreSessionProfile
 import com.aistudy.aistudy.database.AppDatabase
 import com.aistudy.aistudy.database.ProfileDefaults
 import com.google.android.material.button.MaterialButton
@@ -50,9 +51,7 @@ class OnboardingActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         setTheme(R.style.Theme_AIStudy_Study)
         super.onCreate(savedInstanceState)
-        userId = getSharedPreferences(LoginActivity.PREFS_AUTH, MODE_PRIVATE)
-            .getLong(LoginActivity.KEY_USER_ID, 0L)
-        if (userId <= 0L) {
+        if (!getSharedPreferences(LoginActivity.PREFS_AUTH, MODE_PRIVATE).contains(LoginActivity.KEY_USER_ID)) {
             navigateTo(LoginActivity::class.java)
             return
         }
@@ -102,8 +101,13 @@ class OnboardingActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val profile = withContext(Dispatchers.IO) {
-                    ProfileDefaults.ensureExists(database.profileDao(), userId)
+                    restoreSessionProfile(applicationContext)
                 }
+                if (profile == null) {
+                    navigateTo(LoginActivity::class.java)
+                    return@launch
+                }
+                userId = profile.userId
                 if (profile.onboarded) {
                     navigateTo(MainActivity::class.java)
                     return@launch
@@ -123,7 +127,7 @@ class OnboardingActivity : AppCompatActivity() {
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
-                Log.e(TAG, "Unable to load onboarding", error)
+                Log.e(TAG, "Unable to load onboarding (${error.javaClass.simpleName})")
                 Toast.makeText(this@OnboardingActivity, R.string.onboarding_error_load, Toast.LENGTH_LONG).show()
                 finish()
             } finally {
@@ -238,7 +242,7 @@ class OnboardingActivity : AppCompatActivity() {
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
-                Log.e(TAG, "Unable to save onboarding", error)
+                Log.e(TAG, "Unable to save onboarding (${error.javaClass.simpleName})")
                 Toast.makeText(this@OnboardingActivity, R.string.onboarding_error_save, Toast.LENGTH_LONG).show()
             } finally {
                 setBusy(false)

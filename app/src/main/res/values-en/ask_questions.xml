@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ask_suggestions_title">Suggested questions</string>
+
+    <string-array name="ask_questions_math">
+        <item>How do I solve x² − 5x + 6 = 0?</item>
+        <item>How do I add two fractions with different denominators?</item>
+        <item>Why do the angles of a triangle add up to 180°?</item>
+        <item>How do I calculate probabilities when rolling two dice?</item>
+    </string-array>
+
+    <string-array name="ask_questions_science">
+        <item>Why does Earth have four seasons?</item>
+        <item>What do plants produce through photosynthesis?</item>
+        <item>Why do we see lightning before we hear thunder?</item>
+        <item>Why does salt dissolve in water?</item>
+    </string-array>
+
+    <string-array name="ask_questions_code">
+        <item>How does a for loop work in Python?</item>
+        <item>When should I use a list instead of a set in Python?</item>
+        <item>How can I debug a function that returns the wrong result?</item>
+        <item>How does recursion work when calculating a factorial?</item>
+    </string-array>
+
+    <string-array name="ask_questions_history">
+        <item>How did the Silk Road connect different societies?</item>
+        <item>How did the Industrial Revolution change life in cities?</item>
+        <item>How does a primary source differ from a later historical account?</item>
+        <item>Why did many ancient civilizations develop along rivers?</item>
+    </string-array>
+
+    <string-array name="ask_questions_language">
+        <item>When should I use the present perfect tense in English?</item>
+        <item>How can I infer the meaning of a new word from context?</item>
+        <item>How do active and passive sentences differ in English?</item>
+        <item>Which linking words can I use to compare two ideas in a paragraph?</item>
+    </string-array>
+
+    <string-array name="ask_questions_general">
+        <item>How can I break a difficult lesson into smaller parts?</item>
+        <item>How can I use self-testing to review a lesson?</item>
+        <item>How can I plan a week of revision?</item>
+        <item>What should I review after getting a practice question wrong?</item>
+    </string-array>
+</resources>

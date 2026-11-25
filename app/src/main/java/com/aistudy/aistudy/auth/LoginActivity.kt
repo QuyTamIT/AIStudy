@@ -18,6 +18,7 @@ import com.aistudy.aistudy.database.AppDatabase
 import com.aistudy.aistudy.database.ProfileDefaults
 import com.aistudy.aistudy.onboarding.OnboardingActivity
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.snackbar.Snackbar
 import java.util.Locale
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -37,9 +38,10 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         setTheme(R.style.Theme_AIStudy_Study)
         super.onCreate(savedInstanceState)
-        val userId = getSharedPreferences(PREFS_AUTH, MODE_PRIVATE)
-            .getLong(KEY_USER_ID, 0L)
-        if (userId > 0L) {
+        val preferences = getSharedPreferences(PREFS_AUTH, MODE_PRIVATE)
+        // Older releases wrote this key for both registration and password-verified login.
+        if (preferences.contains("user_id")) preferences.edit().remove("user_id").apply()
+        if (preferences.contains(KEY_USER_ID)) {
             startActivity(Intent(this, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             })
@@ -48,8 +50,14 @@ class LoginActivity : AppCompatActivity() {
         }
         enableEdgeToEdge()
         setContentView(R.layout.auth_activity_login)
-
         val content = findViewById<View>(android.R.id.content)
+        if (intent.getBooleanExtra(EXTRA_REGISTERED, false)) {
+            findViewById<TextView>(R.id.tv_auth_subtitle).setText(R.string.auth_login_after_register)
+            if (savedInstanceState == null) {
+                Snackbar.make(content, R.string.auth_success_register, Snackbar.LENGTH_LONG).show()
+            }
+        }
+
         ViewCompat.setOnApplyWindowInsetsListener(content) { view, insets ->
             val padding = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout() or WindowInsetsCompat.Type.ime()
@@ -128,7 +136,7 @@ class LoginActivity : AppCompatActivity() {
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
-                Log.e(TAG, "Unable to sign in", error)
+                Log.e(TAG, "Unable to sign in (${error.javaClass.simpleName})")
                 showToast(R.string.auth_error_unknown)
             } finally {
                 setSubmitting(false)
@@ -153,7 +161,8 @@ class LoginActivity : AppCompatActivity() {
 
     companion object {
         const val PREFS_AUTH = "auth"
-        const val KEY_USER_ID = "user_id"
+        const val KEY_USER_ID = "authenticated_user_id"
+        internal const val EXTRA_REGISTERED = "registration_success"
         internal const val MIN_PASSWORD_LENGTH = 6
         private const val TAG = "LoginActivity"
     }

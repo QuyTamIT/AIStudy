@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ProfileDao {
@@ -17,4 +18,7 @@ interface ProfileDao {
 
     @Query("SELECT * FROM profiles WHERE userId = :userId LIMIT 1")
     fun getByUserId(userId: Long): Profile?
+
+    @Query("SELECT subjects FROM profiles WHERE userId = :userId")
+    fun observeSubjects(userId: Long): Flow<String?>
 }

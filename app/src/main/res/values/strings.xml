@@ -15,10 +15,6 @@
     <string name="ask_send">Nhận lời giải</string>
     <string name="ask_sending">Đang suy nghĩ…</string>
     <string name="ask_suggestions_title">Gợi ý câu hỏi</string>
-    <string name="ask_suggestion_1">Giải phương trình x² − 5x + 6 = 0.</string>
-    <string name="ask_suggestion_2">Tại sao Trái Đất lại có 4 mùa trong năm?</string>
-    <string name="ask_suggestion_3">Giải thích vòng lặp for trong Python kèm ví dụ.</string>
-    <string name="ask_suggestion_4">Cách sử dụng thì hiện tại hoàn thành trong tiếng Anh?</string>
     <string name="ask_error_empty">Vui lòng nhập câu hỏi trước.</string>
     <string name="ask_error_key_missing">Hệ thống AI chưa được cấu hình. Vui lòng thử lại sau.</string>
     <string name="ask_error_key_invalid">Xác thực AI không thành công: Khóa API không hợp lệ hoặc đã hết hạn.</string>

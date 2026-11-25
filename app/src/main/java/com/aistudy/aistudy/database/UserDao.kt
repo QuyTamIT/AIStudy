@@ -17,6 +17,9 @@ interface UserDao {
     @Query("SELECT * FROM users WHERE id = :userId LIMIT 1")
     fun getById(userId: Long): User?
 
+    @Query("SELECT EXISTS(SELECT 1 FROM users WHERE id = :userId)")
+    fun accountExists(userId: Long): Boolean
+
     @Query("UPDATE users SET fullName = :fullName WHERE id = :userId")
     fun updateFullName(userId: Long, fullName: String): Int
 

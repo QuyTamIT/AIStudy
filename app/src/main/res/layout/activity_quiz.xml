@@ -50,7 +50,6 @@
                 android:visibility="gone" />
 
             <include
-                android:id="@+id/layout_quiz_ai_error"
                 layout="@layout/view_ai_error_state"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

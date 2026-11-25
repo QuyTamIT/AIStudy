@@ -5,8 +5,7 @@ import android.os.SystemClock
 import androidx.room.Room
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
+import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -73,9 +72,8 @@ class LegacyPasswordUpgradeInstrumentedTest {
             assertTrue(preferences.edit().remove(LoginActivity.KEY_USER_ID).commit())
             ActivityScenario.launch(LoginActivity::class.java).use {
                 onView(withId(R.id.edit_email)).perform(replaceText(email))
-                onView(withId(R.id.edit_password)).perform(replaceText("LegacyPass123"), closeSoftKeyboard())
-                onView(withId(R.id.btn_submit)).perform(click())
-                val deadline = SystemClock.uptimeMillis() + 10_000L
+                onView(withId(R.id.edit_password)).perform(replaceText("LegacyPass123"), pressImeActionButton())
+                val deadline = SystemClock.uptimeMillis() + AUTH_TIMEOUT_MS
                 while (preferences.getLong(LoginActivity.KEY_USER_ID, 0L) != userId &&
                     SystemClock.uptimeMillis() < deadline) {
                     SystemClock.sleep(50)
@@ -116,8 +114,7 @@ class LegacyPasswordUpgradeInstrumentedTest {
             assertTrue(preferences.edit().remove(LoginActivity.KEY_USER_ID).commit())
             ActivityScenario.launch(LoginActivity::class.java).use { scenario ->
                 onView(withId(R.id.edit_email)).perform(replaceText(email))
-                onView(withId(R.id.edit_password)).perform(replaceText(digest), closeSoftKeyboard())
-                onView(withId(R.id.btn_submit)).perform(click())
+                onView(withId(R.id.edit_password)).perform(replaceText(digest), pressImeActionButton())
                 val deadline = SystemClock.uptimeMillis() + 10_000L
                 var rejected = false
                 while (!rejected && SystemClock.uptimeMillis() < deadline) {
@@ -131,9 +128,8 @@ class LegacyPasswordUpgradeInstrumentedTest {
                 assertTrue("Stored SHA-256 must not authenticate", rejected)
                 assertEquals(0L, preferences.getLong(LoginActivity.KEY_USER_ID, 0L))
                 assertEquals(digest, database.userDao().getById(userId)?.password)
-                onView(withId(R.id.edit_password)).perform(replaceText("password"), closeSoftKeyboard())
-                onView(withId(R.id.btn_submit)).perform(click())
-                val successDeadline = SystemClock.uptimeMillis() + 10_000L
+                onView(withId(R.id.edit_password)).perform(replaceText("password"), pressImeActionButton())
+                val successDeadline = SystemClock.uptimeMillis() + AUTH_TIMEOUT_MS
                 while (preferences.getLong(LoginActivity.KEY_USER_ID, 0L) != userId && SystemClock.uptimeMillis() < successDeadline) {
                     SystemClock.sleep(50)
                 }

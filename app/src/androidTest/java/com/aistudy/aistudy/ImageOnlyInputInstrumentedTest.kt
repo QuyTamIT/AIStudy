@@ -40,6 +40,9 @@ class ImageOnlyInputInstrumentedTest {
         scenario.recreate()
         onView(withId(R.id.layout_image_preview)).check(matches(isDisplayed()))
         assertTrue(draft.exists())
+        onView(withId(R.id.nav_ask)).perform(click())
+        onView(withId(R.id.layout_image_preview)).check(matches(isDisplayed()))
+        assertTrue("Reselecting Ask after recreation must preserve its draft", draft.exists())
         // Send must pass the empty-text validation but stop before network: no active account.
         assertTrue(preferences.edit().remove(LoginActivity.KEY_USER_ID).commit())
         onView(withId(R.id.btn_send)).perform(scrollTo(), click())

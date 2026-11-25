@@ -566,7 +566,6 @@ class ProfileActivity : AppCompatActivity() {
                 if (dialogView.findViewById<Chip>(R.id.chip_subject_code).isChecked) selectedSubjects.add("code")
                 if (dialogView.findViewById<Chip>(R.id.chip_subject_history).isChecked) selectedSubjects.add("history")
                 if (dialogView.findViewById<Chip>(R.id.chip_subject_language).isChecked) selectedSubjects.add("language")
-                if (selectedSubjects.isEmpty()) selectedSubjects.add("math")
 
                 viewModel.updateName(userId, newName)
                 viewModel.updatePreferences(userId, selectedLevel, selectedStyle, selectedSubjects)

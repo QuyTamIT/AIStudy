@@ -20,6 +20,7 @@ class XpRulesTest {
             return 1
         }
         override fun getByUserId(userId: Long): Profile? = updatedProfile
+        override fun observeSubjects(userId: Long) = kotlinx.coroutines.flow.flowOf(getByUserId(userId)?.subjects)
     }
 
     @Test

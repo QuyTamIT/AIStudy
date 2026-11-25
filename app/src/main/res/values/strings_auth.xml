@@ -29,4 +29,5 @@
     <string name="auth_error_invalid_credentials">Email hoặc mật khẩu không chính xác.</string>
     <string name="auth_error_unknown">Đã xảy ra lỗi. Vui lòng thử lại sau.</string>
     <string name="auth_success_register">Đăng ký tài khoản thành công!</string>
+    <string name="auth_login_after_register">Vui lòng đăng nhập bằng tài khoản vừa tạo.</string>
 </resources>

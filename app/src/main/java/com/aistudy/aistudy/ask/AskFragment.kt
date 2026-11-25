@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
@@ -28,6 +29,9 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.aistudy.aistudy.BuildConfig
 import com.aistudy.aistudy.R
 import com.aistudy.aistudy.answer.AnswerActivity
@@ -44,6 +48,12 @@ import java.io.File
 import java.io.IOException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -171,19 +181,16 @@ class AskFragment : Fragment() {
             R.id.btn_suggestion_1, R.id.btn_suggestion_2,
             R.id.btn_suggestion_3, R.id.btn_suggestion_4
         ).map { view.findViewById<MaterialButton>(it) }
-        val suggestions = listOf(
-            R.string.ask_suggestion_1, R.string.ask_suggestion_2,
-            R.string.ask_suggestion_3, R.string.ask_suggestion_4
-        )
-        suggestionButtons.forEachIndexed { index, button ->
+        suggestionButtons.forEach { button ->
             button.setOnClickListener {
-                editQuestion.setText(suggestions[index])
+                editQuestion.setText(button.text)
                 editQuestion.setSelection(editQuestion.text.length)
                 editQuestion.requestFocus()
                 textError.visibility = View.GONE
                 WindowCompat.getInsetsController(requireActivity().window, editQuestion).show(WindowInsetsCompat.Type.ime())
             }
         }
+        observeSuggestions(view.findViewById(R.id.ask_suggestions))
         pendingAnswerId = savedInstanceState?.getLong("pendingQaId") ?: 0L
         pendingUserId = savedInstanceState?.getLong("pendingUserId") ?: 0L
         executor = Executors.newSingleThreadExecutor()
@@ -195,6 +202,37 @@ class AskFragment : Fragment() {
         }
         savedInstanceState?.getString("cameraImagePath")?.let { path ->
             File(path).takeIf { isDraft(it) }?.let { cameraFile = it }
+        }
+    }
+
+    private fun observeSuggestions(section: View) {
+        val session = requireContext().getSharedPreferences(LoginActivity.PREFS_AUTH, Context.MODE_PRIVATE)
+        val profiles = AppDatabase.getInstance(requireContext()).profileDao()
+        val userIds = callbackFlow {
+            fun readSession() { trySend(session.getLong(LoginActivity.KEY_USER_ID, 0L)) }
+            val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+                if (key == LoginActivity.KEY_USER_ID || key == null) readSession()
+            }
+            session.registerOnSharedPreferenceChangeListener(listener)
+            readSession()
+            awaitClose { session.unregisterOnSharedPreferenceChangeListener(listener) }
+        }.distinctUntilChanged()
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                userIds.collectLatest { userId ->
+                    section.visibility = View.INVISIBLE
+                    val subjects = if (userId > 0L) profiles.observeSubjects(userId) else flowOf(null)
+                    subjects.distinctUntilChanged().collect { saved ->
+                        val questions = AskSuggestions.forSubjects(resources, saved, suggestionButtons.size)
+                        suggestionButtons.zip(questions).forEach { (button, question) ->
+                            button.text = question.text
+                            button.setIconResource(question.icon)
+                        }
+                        section.visibility = View.VISIBLE
+                    }
+                }
+            }
         }
     }
 

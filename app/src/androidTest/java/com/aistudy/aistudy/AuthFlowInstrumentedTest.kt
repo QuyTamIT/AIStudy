@@ -1,9 +1,11 @@
 package com.aistudy.aistudy
 
+import android.Manifest
 import android.app.Activity
 import android.app.ActivityManager
 import android.content.Context
-import android.content.Intent
+import android.graphics.Bitmap
+import android.os.Build
 import android.os.SystemClock
 import android.view.View
 import androidx.test.core.app.ActivityScenario
@@ -13,28 +15,40 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.action.ViewActions.scrollTo
+import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.isDescendantOfA
 import androidx.test.espresso.matcher.ViewMatchers.isSelected
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
 import androidx.test.runner.lifecycle.Stage
 import com.aistudy.aistudy.auth.LoginActivity
+import com.aistudy.aistudy.auth.PasswordHasher
 import com.aistudy.aistudy.auth.RegisterActivity
 import com.aistudy.aistudy.database.AppDatabase
+import com.aistudy.aistudy.database.ProfileDefaults
+import com.aistudy.aistudy.database.User
+import com.aistudy.aistudy.navigation.CurvedAnimatedBottomNav
 import com.aistudy.aistudy.onboarding.OnboardingActivity
 import java.io.File
-import android.graphics.Bitmap
 import java.util.UUID
+import org.hamcrest.CoreMatchers.allOf
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+
+// Password verification and legacy hash upgrades run off the UI thread.
+internal const val AUTH_TIMEOUT_MS = 60_000L
 
 @RunWith(AndroidJUnit4::class)
 class AuthFlowInstrumentedTest {
@@ -42,18 +56,48 @@ class AuthFlowInstrumentedTest {
     private val context = instrumentation.targetContext
     private val preferences = context.getSharedPreferences(LoginActivity.PREFS_AUTH, Context.MODE_PRIVATE)
     private val database = AppDatabase.getInstance(context)
+    private val sessionKeys = setOf(LoginActivity.KEY_USER_ID, "user_id")
+    private val savedIds = sessionKeys.filter(preferences::contains).associateWith { preferences.getLong(it, 0L) }
+    private val fixtureIds = mutableSetOf<Long>()
+    private val fixturePassword = "TestPass123!"
+
+    @Before
+    fun startSignedOut() {
+        assertTrue(preferences.edit().apply { sessionKeys.forEach { remove(it) } }.commit())
+        if (Build.VERSION.SDK_INT >= 33) {
+            instrumentation.uiAutomation.grantRuntimePermission(context.packageName, Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
+    @After
+    fun restoreState() {
+        val activity = resumedActivity()
+        instrumentation.runOnMainSync { activity?.finishAndRemoveTask() }
+        try {
+            val sql = database.openHelper.writableDatabase
+            fixtureIds.forEach { id ->
+                sql.execSQL("DELETE FROM friends WHERE ownerUserId = ?", arrayOf(id))
+                sql.execSQL("DELETE FROM profiles WHERE userId = ?", arrayOf(id))
+                sql.execSQL("DELETE FROM users WHERE id = ?", arrayOf(id))
+            }
+        } finally {
+            val editor = preferences.edit()
+            sessionKeys.forEach { editor.remove(it) }
+            savedIds.forEach { (key, id) -> editor.putLong(key, id) }
+            assertTrue(editor.commit())
+        }
+    }
 
     @Test
     fun registerLoginLogoutPreservesAccountAndClearsBackStack() {
         val email = "auth-${UUID.randomUUID()}@example.com"
-        val password = "TestPass123!"
-        val originalUserId = preferences.getLong(LoginActivity.KEY_USER_ID, 0L)
+        val password = fixturePassword
         val originalUserCount = userCount()
-        instrumentation.uiAutomation.executeShellCommand("pm grant ${context.packageName} android.permission.POST_NOTIFICATIONS").close()
-        assertTrue(preferences.edit().remove(LoginActivity.KEY_USER_ID).commit())
         try {
             ActivityScenario.launch(LoginActivity::class.java).use {
                 awaitActivity(LoginActivity::class.java)
+                val registrationNotice = onView(withId(com.google.android.material.R.id.snackbar_text))
+                registrationNotice.check(doesNotExist())
                 onView(withId(R.id.btn_toggle_mode)).perform(scrollTo(), click())
                 awaitActivity(RegisterActivity::class.java)
                 onView(withId(R.id.edit_full_name)).perform(replaceText("Auth Regression"))
@@ -71,21 +115,29 @@ class AuthFlowInstrumentedTest {
 
                 onView(withId(R.id.edit_password)).perform(replaceText(password), closeSoftKeyboard())
                 onView(withId(R.id.btn_submit)).perform(scrollTo(), click())
-                awaitActivity(OnboardingActivity::class.java)
+                awaitActivity(LoginActivity::class.java)
+                registrationNotice.check(matches(allOf(isDisplayed(), withText(R.string.auth_success_register))))
+                onView(withId(R.id.tv_auth_subtitle)).check(matches(withText(R.string.auth_login_after_register)))
+                assertNoSession()
                 val account = database.userDao().findByEmail(email)
                 assertNotNull(account)
                 val userId = requireNotNull(account).id
                 assertTrue(userId > 0L)
                 assertEquals("Auth Regression", account.fullName)
                 assertEquals(originalUserCount + 1, userCount())
-                assertEquals(userId, preferences.getLong(LoginActivity.KEY_USER_ID, 0L))
                 val defaultProfile = requireNotNull(database.profileDao().getByUserId(userId))
                 assertFalse(defaultProfile.onboarded)
                 assertEquals(0, defaultProfile.xp)
                 assertEquals(0, defaultProfile.streak)
 
+                fillLogin(email, password)
+                onView(withId(R.id.btn_submit)).perform(scrollTo(), click())
+                awaitActivity(OnboardingActivity::class.java)
+                assertEquals(userId, preferences.getLong(LoginActivity.KEY_USER_ID, 0L))
+                restartFromLauncher()
+                awaitActivity(OnboardingActivity::class.java)
                 completeOnboarding(userId)
-                awaitActivity(MainActivity::class.java)
+                assertEquals(userId, preferences.getLong(LoginActivity.KEY_USER_ID, 0L))
                 logoutAndAssertAccount(email, userId)
                 onView(withId(R.id.btn_toggle_mode)).perform(scrollTo(), click())
                 awaitActivity(RegisterActivity::class.java)
@@ -112,10 +164,7 @@ class AuthFlowInstrumentedTest {
                 awaitActivity(MainActivity::class.java)
                 assertEquals(userId, preferences.getLong(LoginActivity.KEY_USER_ID, 0L))
 
-                // Recreate the launch Activity without clearing the session or Room data.
-                val main = requireNotNull(resumedActivity())
-                instrumentation.runOnMainSync { main.finish() }
-                launchMain()
+                restartFromLauncher()
                 awaitActivity(MainActivity::class.java)
                 onView(withId(R.id.btn_logout)).check(matches(isDisplayed()))
 
@@ -123,36 +172,76 @@ class AuthFlowInstrumentedTest {
 
                 pressBackUnconditionally()
                 instrumentation.waitForIdleSync()
-                assertFalse(resumedActivity() is MainActivity)
+                val afterBack = resumedActivity()
+                assertTrue(afterBack == null || afterBack is LoginActivity)
                 assertNoSession()
 
                 // Reopening the launcher must still require sign-in after logout.
                 launchMain()
                 awaitActivity(LoginActivity::class.java)
+                assertNoSession()
                 fillLogin(email, password)
                 onView(withId(R.id.btn_submit)).perform(scrollTo(), click())
                 awaitActivity(MainActivity::class.java)
                 assertEquals(userId, preferences.getLong(LoginActivity.KEY_USER_ID, 0L))
                 // All four existing navigation destinations must remain usable.
-                listOf(R.id.nav_ask, R.id.nav_history, R.id.nav_progress, R.id.nav_home).forEach { id ->
-                    onView(withId(id)).perform(click())
-                }
+                listOf(R.id.nav_ask, R.id.nav_history, R.id.nav_progress, R.id.nav_home).forEach(::selectTab)
                 logoutAndAssertAccount(email, userId)
                 assertEquals(originalUserCount + 1, userCount())
             }
         } finally {
-            val activity = resumedActivity()
-            instrumentation.runOnMainSync { activity?.finishAndRemoveTask() }
-            database.userDao().findByEmail(email)?.id?.let { createdId ->
-                database.openHelper.writableDatabase.execSQL("DELETE FROM friends WHERE ownerUserId = ?", arrayOf(createdId))
-                database.openHelper.writableDatabase.execSQL("DELETE FROM profiles WHERE userId = ?", arrayOf(createdId))
-                database.openHelper.writableDatabase.execSQL("DELETE FROM users WHERE id = ?", arrayOf(createdId))
-            }
-            preferences.edit().remove(LoginActivity.KEY_USER_ID).also {
-                if (originalUserId > 0L) it.putLong(LoginActivity.KEY_USER_ID, originalUserId)
-            }.commit()
+            database.userDao().findByEmail(email)?.id?.let(fixtureIds::add)
         }
     }
+
+    @Test
+    fun launcherRejectsMissingRoomAccountBeforeCreatingProfile() {
+        val email = "removed-${UUID.randomUUID()}@example.com"
+        val id = insertAccount(email)
+        database.openHelper.writableDatabase.execSQL("DELETE FROM users WHERE id = ?", arrayOf(id))
+        assertTrue(preferences.edit().putLong(LoginActivity.KEY_USER_ID, id).commit())
+
+        launchMain()
+        awaitActivity(LoginActivity::class.java)
+        assertNoSession()
+        assertNull(database.profileDao().getByUserId(id))
+    }
+
+    @Test
+    fun legacySessionRequiresLoginAndEachAccountUsesItsOwnOnboardingStatus() {
+        val existingEmail = "existing-${UUID.randomUUID()}@example.com"
+        val newEmail = "new-${UUID.randomUUID()}@example.com"
+        val existingId = insertAccount(existingEmail)
+        val newId = insertAccount(newEmail)
+        val existingProfile = ProfileDefaults.createDefault(existingId).apply {
+            onboarded = true
+            xp = 78
+        }
+        database.profileDao().insert(existingProfile)
+        assertTrue(preferences.edit().putLong("user_id", existingId).commit())
+
+        launchMain()
+        awaitActivity(LoginActivity::class.java)
+        assertNoSession()
+        fillLogin(existingEmail, fixturePassword)
+        onView(withId(R.id.btn_submit)).perform(scrollTo(), click())
+        awaitActivity(MainActivity::class.java)
+        logoutAndAssertAccount(existingEmail, existingId)
+
+        fillLogin(newEmail, fixturePassword)
+        onView(withId(R.id.btn_submit)).perform(scrollTo(), click())
+        awaitActivity(OnboardingActivity::class.java)
+        assertEquals(newId, preferences.getLong(LoginActivity.KEY_USER_ID, 0L))
+        assertFalse(requireNotNull(database.profileDao().getByUserId(newId)).onboarded)
+        val savedProfile = requireNotNull(database.profileDao().getByUserId(existingId))
+        assertTrue(savedProfile.onboarded)
+        assertEquals(78, savedProfile.xp)
+    }
+
+    private fun insertAccount(email: String): Long = database.userDao().insert(User().apply {
+        this.email = email
+        password = PasswordHasher.hash(fixturePassword)
+    }).also(fixtureIds::add)
 
     private fun completeOnboarding(userId: Long) {
         onView(withId(R.id.choice_level_uni)).perform(scrollTo(), click())
@@ -210,9 +299,15 @@ class AuthFlowInstrumentedTest {
     }
 
     private fun launchMain() {
-        context.startActivity(Intent(context, MainActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        })
+        val launchIntent = requireNotNull(context.packageManager.getLaunchIntentForPackage(context.packageName))
+        context.startActivity(launchIntent)
+    }
+
+    private fun restartFromLauncher() {
+        val activity = requireNotNull(resumedActivity())
+        instrumentation.runOnMainSync { activity.finishAndRemoveTask() }
+        instrumentation.waitForIdleSync()
+        launchMain()
     }
 
     private fun fillLogin(email: String, password: String) {
@@ -221,7 +316,7 @@ class AuthFlowInstrumentedTest {
     }
 
     private fun logoutAndAssertAccount(email: String, userId: Long) {
-        onView(withId(R.id.nav_progress)).perform(click())
+        selectTab(R.id.nav_progress)
         onView(withId(R.id.btn_logout)).perform(click())
         onView(withId(android.R.id.button1)).perform(click())
         awaitActivity(LoginActivity::class.java)
@@ -230,10 +325,15 @@ class AuthFlowInstrumentedTest {
         assertEquals(userId, database.userDao().findByEmail(email)?.id)
     }
 
+    private fun selectTab(id: Int) {
+        val label = CurvedAnimatedBottomNav.TABS.single { it.id == id }.label
+        onView(allOf(withText(label), isDescendantOfA(withId(R.id.bottom_nav)))).perform(click())
+    }
+
     private fun submitExpectingToast(message: Int, buttonId: Int = R.id.btn_submit) {
         onView(withId(buttonId)).perform(scrollTo(), click())
         val expected = context.getString(message)
-        val deadline = SystemClock.uptimeMillis() + 10_000L
+        val deadline = SystemClock.uptimeMillis() + AUTH_TIMEOUT_MS
         while (SystemClock.uptimeMillis() < deadline) {
             var displayed = false
             instrumentation.runOnMainSync {
@@ -286,7 +386,7 @@ class AuthFlowInstrumentedTest {
     }
 
     private fun awaitActivity(expected: Class<out Activity>) {
-        val deadline = SystemClock.uptimeMillis() + 10_000L
+        val deadline = SystemClock.uptimeMillis() + AUTH_TIMEOUT_MS
         while (SystemClock.uptimeMillis() < deadline) {
             instrumentation.waitForIdleSync()
             val activity = resumedActivity()
