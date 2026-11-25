@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="language_title">App language</string>
+    <string name="language_switch">Language · English</string>
+    <string name="language_current">English</string>
+    <string name="language_vietnamese" translatable="false">Tiếng Việt</string>
+    <string name="language_english" translatable="false">English</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_ask">Ask</string>
+    <string name="nav_history">History</string>
+    <string name="nav_progress">Progress</string>
+    <string name="profile_student_fallback">AIStudy student</string>
+    <string name="profile_user_not_found">User not found.</string>
+    <string name="profile_avatar_error">Could not update your avatar.</string>
+    <string name="profile_avatar_updated">Avatar updated!</string>
+    <string name="profile_image_unreadable">Could not read the selected image.</string>
+    <string name="profile_image_error">Could not load the image. Please try again.</string>
+    <string name="profile_reminders_enabled">Learning reminders enabled</string>
+    <string name="profile_reminders_disabled">Learning reminders disabled</string>
+    <string name="profile_custom_avatar_active">Using your photo ✓</string>
+    <string name="profile_custom_avatar_reuse">Tap to use again or upload a new photo</string>
+    <string name="profile_custom_avatar_choose">Choose a photo from your library</string>
+    <string name="profile_avatar_intro">Upload a photo from your device or choose a learning mascot</string>
+    <string name="profile_avatar_device">Photo from your device</string>
+    <string name="profile_avatar_library">Choose a personal avatar from your library</string>
+    <string name="profile_avatar_upload">Upload photo</string>
+    <string name="profile_avatar_mascots">Or choose a mascot by level:</string>
+    <string name="profile_avatar_fox">Wise Fox</string>
+    <string name="profile_avatar_owl">Knowledge Owl</string>
+    <string name="profile_avatar_cat">Super Cat</string>
+    <string name="profile_avatar_rocket">Explorer Rocket</string>
+    <string name="profile_sync_success">Student profile synced successfully.</string>
+    <string name="profile_sync_error">Could not sync your profile. Please try again.</string>
+    <string name="profile_password_error">Could not change your password. Please try again.</string>
+    <string name="playground_total_xp">Total earned: %1$d XP</string>
+    <string name="playground_games_heading">LEARNING GAMES</string>
+    <string name="playground_no_best">Best: —</string>
+    <string name="speed_math_incorrect">Incorrect! %1$s</string>
+    <string name="speed_math_points">%1$d points</string>
+    <string name="theme_default">Default</string>
+    <string name="theme_night">Night</string>
+    <string name="theme_pastel">Pastel</string>
+</resources>

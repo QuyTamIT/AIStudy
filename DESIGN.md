@@ -8,6 +8,18 @@ description: Premium EdTech Design System — Deep Forest Green + Warm Neutral w
 Approved design direction: **Deep Forest Green + Warm Neutral Editorial Learning Workspace**.
 Built natively with Kotlin, Android Views/XML, AppCompat, and Material Components (Material 3).
 
+App language: English and Tiếng Việt. Keep interface text in Android string resources
+(`values` for English, `values-vi` for Vietnamese), including navigation labels and
+profile feedback. Use the language picker on sign-in, registration, or account settings.
+Android stores the selection through `AppCompatDelegate.setApplicationLocales` on the
+supported Android 13+ devices and also exposes both languages in system app settings.
+Use native language names in the picker and keep its touch targets at least 48dp high.
+The auth language control uses a compact sage pill with a globe, the native language
+name, and a down chevron. Its accessible label includes the language setting context.
+Place it at the end of the auth header, on the same row as the AIStudy brand.
+Use semantic surface, outline, and foreground colors so it adapts to dark mode.
+Saved questions, answers, and learning records retain their original content.
+
 ---
 
 ## 1. Design Philosophy & Vision

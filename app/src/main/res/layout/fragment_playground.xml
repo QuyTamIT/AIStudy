@@ -151,7 +151,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/answer_space_6"
-                android:text="LEARNING GAMES"
+                android:text="@string/playground_games_heading"
                 android:textAllCaps="true"
                 android:textColor="@color/answer_foreground_secondary"
                 android:textSize="11sp"
@@ -211,7 +211,7 @@
                         android:background="@drawable/bg_history_chip"
                         android:paddingHorizontal="10dp"
                         android:paddingVertical="4dp"
-                        android:text="Best: 0"
+                        android:text="@string/playground_no_best"
                         android:textColor="@color/answer_foreground_secondary"
                         android:textSize="11sp"
                         android:textStyle="bold" />
@@ -290,7 +290,7 @@
                         android:background="@drawable/bg_history_chip"
                         android:paddingHorizontal="10dp"
                         android:paddingVertical="4dp"
-                        android:text="Best: —"
+                        android:text="@string/playground_no_best"
                         android:textColor="@color/answer_foreground_secondary"
                         android:textSize="11sp"
                         android:textStyle="bold" />

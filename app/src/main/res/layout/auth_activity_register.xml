@@ -13,10 +13,10 @@
             android:paddingVertical="@dimen/answer_space_8"
             app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" app:layout_constraintWidth_max="@dimen/study_form_width">
-            <include layout="@layout/include_study_brand" />
+            <include layout="@layout/include_auth_header" />
 
             <TextView android:id="@+id/tv_auth_title" android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/answer_space_12" android:accessibilityHeading="true"
+                android:layout_marginTop="@dimen/answer_space_6" android:accessibilityHeading="true"
                 android:text="@string/auth_register_title" android:textAppearance="@style/TextAppearance.AIStudy.Study.Display" />
             <TextView android:id="@+id/tv_auth_subtitle" android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/answer_space_2" android:text="@string/auth_register_subtitle"

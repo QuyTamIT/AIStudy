@@ -2,6 +2,7 @@ package com.aistudy.aistudy.profile
 
 import android.content.Context
 import android.util.Log
+import com.aistudy.aistudy.R
 
 /**
  * Handles Firebase Authentication and Firestore synchronization for student profiles.
@@ -76,7 +77,7 @@ object FirebaseStudentSync {
 
             return SyncResult(
                 isSuccess = true,
-                message = "Đã đồng bộ hóa hồ sơ học sinh an toàn với Firebase."
+                message = context.getString(R.string.profile_sync_success)
             )
         } catch (sec: SecurityException) {
             throw sec
@@ -84,7 +85,7 @@ object FirebaseStudentSync {
             Log.w(TAG, "Firebase sync exception: ${e.message}")
             return SyncResult(
                 isSuccess = false,
-                message = "Lỗi đồng bộ Firebase: ${e.localizedMessage}"
+                message = context.getString(R.string.profile_sync_error)
             )
         }
     }

@@ -103,10 +103,19 @@ class MainActivity : AppCompatActivity() {
 
         if (savedInstanceState == null) {
             handleOpenIntent(intent)
+        } else {
+            // Restore the navigation label and indicator after a locale change without
+            // replacing the fragment already restored by FragmentManager.
+            bottomNav.restoreSelectedItem(savedInstanceState.getInt("selected_tab", R.id.nav_home))
         }
 
         requestNotificationPermissionIfNeeded()
         NotificationScheduler.schedule(this)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        if (::bottomNav.isInitialized) outState.putInt("selected_tab", bottomNav.selectedItemId)
+        super.onSaveInstanceState(outState)
     }
 
     override fun onNewIntent(intent: Intent) {

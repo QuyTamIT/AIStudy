@@ -14,6 +14,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.aistudy.aistudy.MainActivity
 import com.aistudy.aistudy.R
+import com.aistudy.aistudy.settings.AppLanguage
 import com.aistudy.aistudy.database.AppDatabase
 import com.aistudy.aistudy.database.ProfileDefaults
 import com.aistudy.aistudy.onboarding.OnboardingActivity
@@ -48,6 +49,7 @@ class LoginActivity : AppCompatActivity() {
         }
         enableEdgeToEdge()
         setContentView(R.layout.auth_activity_login)
+        findViewById<View>(R.id.btn_language).setOnClickListener { AppLanguage.showPicker(this) }
 
         val content = findViewById<View>(android.R.id.content)
         ViewCompat.setOnApplyWindowInsetsListener(content) { view, insets ->

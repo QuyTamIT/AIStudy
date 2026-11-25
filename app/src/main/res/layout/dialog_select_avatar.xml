@@ -21,7 +21,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:gravity="center"
-        android:text="Tải ảnh riêng từ thiết bị hoặc chọn linh vật học tập"
+        android:text="@string/profile_avatar_intro"
         android:textColor="@color/answer_foreground_secondary"
         android:textSize="12sp" />
 
@@ -85,7 +85,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Ảnh từ thiết bị của bạn"
+                    android:text="@string/profile_avatar_device"
                     android:textColor="@color/answer_foreground"
                     android:textSize="13sp"
                     android:textStyle="bold" />
@@ -95,7 +95,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="Chọn ảnh đại diện riêng từ thư viện"
+                    android:text="@string/profile_avatar_library"
                     android:textColor="@color/answer_foreground_secondary"
                     android:textSize="11sp" />
             </LinearLayout>
@@ -107,7 +107,7 @@
                 android:layout_height="36dp"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
-                android:text="Tải ảnh"
+                android:text="@string/profile_avatar_upload"
                 android:textSize="12sp"
                 app:cornerRadius="10dp" />
         </LinearLayout>
@@ -118,7 +118,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:layout_marginStart="6dp"
-        android:text="Hoặc chọn linh vật theo cấp độ:"
+        android:text="@string/profile_avatar_mascots"
         android:textColor="@color/answer_foreground_secondary"
         android:textSize="12sp"
         android:textStyle="bold" />
@@ -163,7 +163,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:text="Cáo Thông Thái"
+                    android:text="@string/profile_avatar_fox"
                     android:textColor="@color/answer_foreground"
                     android:textSize="13sp"
                     android:textStyle="bold" />
@@ -210,7 +210,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:text="Cú Tri Thức"
+                    android:text="@string/profile_avatar_owl"
                     android:textColor="@color/answer_foreground"
                     android:textSize="13sp"
                     android:textStyle="bold" />
@@ -220,7 +220,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="Mở khóa Cấp 2"
+                    android:text="@string/profile_avatar_unlocked"
                     android:textColor="@color/answer_foreground_secondary"
                     android:textSize="11sp" />
             </LinearLayout>
@@ -257,7 +257,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:text="Mèo Siêu Phàm"
+                    android:text="@string/profile_avatar_cat"
                     android:textColor="@color/answer_foreground"
                     android:textSize="13sp"
                     android:textStyle="bold" />
@@ -267,7 +267,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="Mở khóa Cấp 3"
+                    android:text="@string/profile_avatar_unlocked"
                     android:textColor="@color/answer_foreground_secondary"
                     android:textSize="11sp" />
             </LinearLayout>
@@ -304,7 +304,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:text="Tên Lửa Khám Phá"
+                    android:text="@string/profile_avatar_rocket"
                     android:textColor="@color/answer_foreground"
                     android:textSize="13sp"
                     android:textStyle="bold" />
@@ -314,7 +314,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="Mở khóa Cấp 4"
+                    android:text="@string/profile_avatar_unlocked"
                     android:textColor="@color/answer_foreground_secondary"
                     android:textSize="11sp" />
             </LinearLayout>

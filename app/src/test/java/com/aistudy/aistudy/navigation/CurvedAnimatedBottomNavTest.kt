@@ -14,23 +14,23 @@ class CurvedAnimatedBottomNavTest {
         assertEquals("Must contain exactly 5 navigation tabs", 5, tabs.size)
 
         assertEquals(R.id.nav_home, tabs[0].id)
-        assertEquals("Home", tabs[0].label)
+        assertEquals(R.string.nav_home, tabs[0].labelRes)
         assertTrue(tabs[0].iconRes != 0)
 
         assertEquals(R.id.nav_ask, tabs[1].id)
-        assertEquals("Ask", tabs[1].label)
+        assertEquals(R.string.nav_ask, tabs[1].labelRes)
         assertTrue(tabs[1].iconRes != 0)
 
         assertEquals(R.id.nav_playground, tabs[2].id)
-        assertEquals("Playground", tabs[2].label)
+        assertEquals(R.string.nav_playground, tabs[2].labelRes)
         assertTrue(tabs[2].iconRes != 0)
 
         assertEquals(R.id.nav_history, tabs[3].id)
-        assertEquals("History", tabs[3].label)
+        assertEquals(R.string.nav_history, tabs[3].labelRes)
         assertTrue(tabs[3].iconRes != 0)
 
         assertEquals(R.id.nav_progress, tabs[4].id)
-        assertEquals("Progress", tabs[4].label)
+        assertEquals(R.string.nav_progress, tabs[4].labelRes)
         assertTrue(tabs[4].iconRes != 0)
     }
 

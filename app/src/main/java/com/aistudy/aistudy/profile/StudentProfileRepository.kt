@@ -1,6 +1,7 @@
 package com.aistudy.aistudy.profile
 
 import android.content.Context
+import com.aistudy.aistudy.R
 import com.aistudy.aistudy.auth.PasswordHasher
 import com.aistudy.aistudy.database.AppDatabase
 import com.aistudy.aistudy.database.ProfileDefaults
@@ -20,11 +21,11 @@ class StudentProfileRepository(
         FirebaseStudentSync.validateUserOwnership(currentUserId, currentUserId)
 
         val user = userDao.getById(currentUserId)
-            ?: throw IllegalStateException("Không tìm thấy thông tin người dùng với ID $currentUserId")
+            ?: throw IllegalStateException(context.getString(R.string.profile_user_not_found))
         val profile = ProfileDefaults.ensureExists(profileDao, currentUserId)
 
         val levelNumber = XpRules.levelFromXp(profile.xp)
-        val levelTitle = "Học giả"
+        val levelTitle = context.getString(R.string.home_scholar)
         val xpProgress = XpRules.progressPercentToNext(profile.xp)
         val xpToNext = XpRules.xpToNextLevel(profile.xp)
         val nextThreshold = XpRules.nextLevelThreshold(profile.xp)
@@ -62,7 +63,7 @@ class StudentProfileRepository(
 
         return StudentProfileData(
             userId = currentUserId,
-            fullName = user.fullName.orEmpty().ifBlank { "Học sinh AIStudy" },
+            fullName = user.fullName.orEmpty().ifBlank { context.getString(R.string.profile_student_fallback) },
             email = user.email.orEmpty(),
             levelNumber = levelNumber,
             levelTitle = levelTitle,
@@ -90,13 +91,13 @@ class StudentProfileRepository(
         FirebaseStudentSync.validateUserOwnership(currentUserId, currentUserId)
         val trimmed = newName.trim()
         if (trimmed.isBlank()) {
-            return Result.failure(IllegalArgumentException("Họ và tên không được để trống"))
+            return Result.failure(IllegalArgumentException(context.getString(R.string.profile_error_name_empty)))
         }
         val affected = userDao.updateFullName(currentUserId, trimmed)
         return if (affected > 0) {
             Result.success(Unit)
         } else {
-            Result.failure(IllegalStateException("Không thể cập nhật họ và tên"))
+            Result.failure(IllegalStateException(context.getString(R.string.profile_error_save)))
         }
     }
 
@@ -107,7 +108,7 @@ class StudentProfileRepository(
 
         if (!UnlockCatalog.isAvatarUnlocked(avatarId, currentLevel)) {
             val req = UnlockCatalog.requiredLevelForAvatar(avatarId)
-            return Result.failure(IllegalStateException("Linh vật này yêu cầu đạt Cấp $req để mở khóa"))
+            return Result.failure(IllegalStateException(context.getString(R.string.profile_avatar_locked, req)))
         }
 
         profile.avatarId = avatarId
@@ -115,7 +116,7 @@ class StudentProfileRepository(
         return if (affected > 0) {
             Result.success(Unit)
         } else {
-            Result.failure(IllegalStateException("Không thể cập nhật ảnh đại diện"))
+            Result.failure(IllegalStateException(context.getString(R.string.profile_avatar_error)))
         }
     }
 
@@ -136,7 +137,7 @@ class StudentProfileRepository(
         return if (affected > 0) {
             Result.success(Unit)
         } else {
-            Result.failure(IllegalStateException("Không thể lưu tùy chọn học tập"))
+            Result.failure(IllegalStateException(context.getString(R.string.profile_error_save)))
         }
     }
 
@@ -147,15 +148,15 @@ class StudentProfileRepository(
     ): Result<Unit> {
         FirebaseStudentSync.validateUserOwnership(currentUserId, currentUserId)
         if (newPass.length < 6) {
-            return Result.failure(IllegalArgumentException("Mật khẩu mới phải có ít nhất 6 ký tự"))
+            return Result.failure(IllegalArgumentException(context.getString(R.string.profile_password_too_short)))
         }
 
         val user = userDao.getById(currentUserId)
-            ?: return Result.failure(IllegalStateException("Không tìm thấy người dùng"))
+            ?: return Result.failure(IllegalStateException(context.getString(R.string.profile_user_not_found)))
 
         val stored = user.password ?: ""
         if (!PasswordHasher.matches(oldPass, stored)) {
-            return Result.failure(IllegalArgumentException("Mật khẩu hiện tại không chính xác"))
+            return Result.failure(IllegalArgumentException(context.getString(R.string.profile_password_wrong_old)))
         }
 
         val newHashed = PasswordHasher.hash(newPass)
@@ -163,7 +164,7 @@ class StudentProfileRepository(
         return if (affected > 0) {
             Result.success(Unit)
         } else {
-            Result.failure(IllegalStateException("Không thể đổi mật khẩu, vui lòng thử lại sau"))
+            Result.failure(IllegalStateException(context.getString(R.string.profile_password_error)))
         }
     }
 

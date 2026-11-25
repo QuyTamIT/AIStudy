@@ -22,6 +22,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.aistudy.aistudy.MainActivity
 import com.aistudy.aistudy.R
+import com.aistudy.aistudy.settings.AppLanguage
 import com.aistudy.aistudy.answer.AnswerActivity
 import com.aistudy.aistudy.ask.ImagePreparation
 import com.aistudy.aistudy.auth.LoginActivity
@@ -89,7 +90,7 @@ class ProfileActivity : AppCompatActivity() {
                 val avatarFile = File(avatarsDir, "avatar_${userId}.jpg")
                 contentResolver.openInputStream(uri)?.use { input ->
                     ImagePreparation.copyBounded(input, avatarFile, ImagePreparation.MAX_INPUT_BYTES)
-                } ?: throw IOException("Không thể đọc tệp ảnh đã chọn")
+                } ?: throw IOException(getString(R.string.profile_image_unreadable))
 
                 val customAvatarId = "custom:" + avatarFile.absolutePath
                 withContext(Dispatchers.Main) {
@@ -99,7 +100,7 @@ class ProfileActivity : AppCompatActivity() {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(
                         this@ProfileActivity,
-                        "Không thể tải ảnh: ${e.localizedMessage ?: "Lỗi xử lý"}",
+                        getString(R.string.profile_image_error),
                         Toast.LENGTH_LONG
                     ).show()
                 }
@@ -205,6 +206,7 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun setupListeners() {
+        findViewById<View>(R.id.btn_language).setOnClickListener { AppLanguage.showPicker(this) }
         findViewById<View>(R.id.btn_profile_back).setOnClickListener { finish() }
         findViewById<View>(R.id.btn_edit_profile_action).setOnClickListener { showEditProfileDialog() }
         btnRetry.setOnClickListener { viewModel.loadProfile(userId) }
@@ -239,7 +241,7 @@ class ProfileActivity : AppCompatActivity() {
             }
             Toast.makeText(
                 this,
-                if (isChecked) "Đã bật nhắc nhở học tập" else "Đã tắt nhắc nhở học tập",
+                if (isChecked) R.string.profile_reminders_enabled else R.string.profile_reminders_disabled,
                 Toast.LENGTH_SHORT
             ).show()
         }
@@ -462,11 +464,11 @@ class ProfileActivity : AppCompatActivity() {
 
         if (isCurrentCustom) {
             cardCustom.strokeColor = strokeSelected
-            tvStatusCustom.text = "Đang sử dụng ảnh cá nhân ✓"
+            tvStatusCustom.setText(R.string.profile_custom_avatar_active)
             tvStatusCustom.setTextColor(ContextCompat.getColor(this, R.color.answer_primary))
         } else {
             cardCustom.strokeColor = strokeDefault
-            tvStatusCustom.text = if (customPath != null) "Nhấn để dùng lại hoặc tải ảnh mới" else "Chọn ảnh từ thư viện của bạn"
+            tvStatusCustom.setText(if (customPath != null) R.string.profile_custom_avatar_reuse else R.string.profile_custom_avatar_choose)
             tvStatusCustom.setTextColor(ContextCompat.getColor(this, R.color.answer_foreground_secondary))
         }
 

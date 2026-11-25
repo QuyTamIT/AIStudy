@@ -44,16 +44,16 @@ class CurvedAnimatedBottomNav @JvmOverloads constructor(
     data class TabDefinition(
         val id: Int,
         val iconRes: Int,
-        val label: String
+        val labelRes: Int
     )
 
     companion object {
         val TABS = listOf(
-            TabDefinition(R.id.nav_home, R.drawable.ic_nav_home, "Home"),
-            TabDefinition(R.id.nav_ask, R.drawable.ic_nav_ask, "Ask"),
-            TabDefinition(R.id.nav_playground, R.drawable.ic_nav_playground, "Playground"),
-            TabDefinition(R.id.nav_history, R.drawable.ic_nav_history, "History"),
-            TabDefinition(R.id.nav_progress, R.drawable.ic_nav_progress, "Progress")
+            TabDefinition(R.id.nav_home, R.drawable.ic_nav_home, R.string.nav_home),
+            TabDefinition(R.id.nav_ask, R.drawable.ic_nav_ask, R.string.nav_ask),
+            TabDefinition(R.id.nav_playground, R.drawable.ic_nav_playground, R.string.nav_playground),
+            TabDefinition(R.id.nav_history, R.drawable.ic_nav_history, R.string.nav_history),
+            TabDefinition(R.id.nav_progress, R.drawable.ic_nav_progress, R.string.nav_progress)
         )
     }
 
@@ -182,7 +182,7 @@ class CurvedAnimatedBottomNav @JvmOverloads constructor(
                 topMargin = dpInt(2f)
                 gravity = Gravity.CENTER_HORIZONTAL
             }
-            text = tab.label
+            setText(tab.labelRes)
             textSize = 11f
             setTextColor(ContextCompat.getColor(context, R.color.answer_foreground_secondary))
             typeface = Typeface.DEFAULT
@@ -291,6 +291,11 @@ class CurvedAnimatedBottomNav @JvmOverloads constructor(
         this.onItemSelectedListener = listener
     }
 
+    fun restoreSelectedItem(itemId: Int) {
+        val index = TABS.indexOfFirst { it.id == itemId }
+        if (index >= 0) selectTab(index, animate = false, notifyListener = false)
+    }
+
     private fun selectTab(targetIndex: Int, animate: Boolean, notifyListener: Boolean) {
         if (targetIndex !in TABS.indices) return
 
@@ -314,7 +319,7 @@ class CurvedAnimatedBottomNav @JvmOverloads constructor(
         currentTabIndex = targetIndex
 
         if (notifyListener) {
-            val menuItem = CurvedMenuItem(TABS[targetIndex].id, TABS[targetIndex].label)
+            val menuItem = CurvedMenuItem(TABS[targetIndex].id, context.getString(TABS[targetIndex].labelRes))
             val handled = onItemSelectedListener?.invoke(menuItem) ?: true
             if (!handled) {
                 currentTabIndex = previousIndex
