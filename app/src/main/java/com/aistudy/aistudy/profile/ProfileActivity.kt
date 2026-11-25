@@ -1,11 +1,9 @@
 package com.aistudy.aistudy.profile
 
-import android.app.LocaleManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.os.LocaleList
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.GridLayout
@@ -22,9 +20,9 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import com.aistudy.aistudy.AIStudyApp
 import com.aistudy.aistudy.MainActivity
 import com.aistudy.aistudy.R
+import com.aistudy.aistudy.settings.AppLanguage
 import com.aistudy.aistudy.answer.AnswerActivity
 import com.aistudy.aistudy.ask.ImagePreparation
 import com.aistudy.aistudy.auth.LoginActivity
@@ -246,28 +244,7 @@ class ProfileActivity : AppCompatActivity() {
         }
     }
     private fun showLanguageDialog() {
-        val localeManager = getSystemService(LocaleManager::class.java)
-        val selectedLanguage = if (
-            AIStudyApp.isVietnameseLocaleTag(
-                localeManager.applicationLocales.toLanguageTags(),
-                resources.configuration.locales.toLanguageTags()
-            )
-        ) 1 else 0
-        MaterialAlertDialogBuilder(this)
-            .setTitle(R.string.profile_language_title)
-            .setSingleChoiceItems(
-                arrayOf(
-                    getString(R.string.profile_language_english),
-                    getString(R.string.profile_language_vietnamese)
-                ),
-                selectedLanguage
-            ) { dialog, which ->
-                val tag = if (which == 1) AIStudyApp.VIETNAMESE_LANGUAGE_TAG else AIStudyApp.DEFAULT_LANGUAGE_TAG
-                localeManager.applicationLocales = LocaleList.forLanguageTags(tag)
-                dialog.dismiss()
-            }
-            .setNegativeButton(R.string.logout_cancel, null)
-            .show()
+        AppLanguage.showPicker(this)
     }
 
     private fun renderUiState(state: ProfileUiState) {

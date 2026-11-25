@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Widget.AIStudy.LanguagePicker" parent="Widget.AppCompat.Button.Borderless">
+        <item name="android:background">@drawable/bg_language_picker</item>
+        <item name="android:backgroundTint">@null</item>
+        <item name="backgroundTint">@null</item>
+        <item name="android:textColor">@color/answer_primary</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:gravity">center</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:paddingHorizontal">14dp</item>
+        <item name="android:paddingVertical">12dp</item>
+        <item name="android:drawableStart">@drawable/ic_language_globe</item>
+        <item name="android:drawableEnd">@drawable/ic_language_chevron</item>
+        <item name="android:drawablePadding">8dp</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+</resources>

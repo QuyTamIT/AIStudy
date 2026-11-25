@@ -8,6 +8,11 @@ description: Premium EdTech Design System — Deep Forest Green + Warm Neutral w
 Approved design direction: **Deep Forest Green + Warm Neutral Editorial Learning Workspace**.
 Built natively with Kotlin, Android Views/XML, AppCompat, and Material Components (Material 3).
 
+The auth language control sits beside the AIStudy brand in a shared header for sign-in
+and registration. Use a sage pill, globe icon, native language name, and down chevron,
+with a 48dp touch target and semantic colors for light and dark modes. Reuse the same
+picker in profile settings. Android stores the selection across app launches.
+
 ---
 
 ## 1. Design Philosophy & Vision
